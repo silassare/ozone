@@ -201,6 +201,76 @@ final class DbBuildTest extends TestCase
 	}
 
 	/**
+	 * The build writes the texts of the tables the project's catalog misses, under the keys a form
+	 * built from a table reads them by, and never again one a translator has written.
+	 */
+	#[DataProvider('provideDbConfig')]
+	public function testBuildWritesTheTextsTheCatalogMisses(DbTestConfig $config): void
+	{
+		$proj    = self::getProject($config);
+		$catalog = $proj->getPath() . '/app/settings/lang/oz.en.php';
+
+		$proj->oz('db', 'build', '--class-only')->mustRun();
+
+		self::assertFileExists($catalog);
+
+		$notes = self::catalog($catalog)['ENTITY']['BUILD_NOTES'] ?? null;
+
+		self::assertIsArray($notes);
+		self::assertSame('Build note', $notes['SINGULAR'] ?? null);
+		self::assertSame('Build notes', $notes['PLURAL'] ?? null);
+		self::assertSame('Title', $notes['COLUMN']['TITLE']['LABEL'] ?? null);
+
+		// A translator's text is theirs: the next build leaves it, and has nothing to write.
+		$entity                               = self::catalog($catalog)['ENTITY'];
+		$entity['BUILD_NOTES']['SINGULAR']    = 'Note';
+		$proj->setSetting('lang/oz.en', 'ENTITY', $entity);
+
+		$json = $proj->oz('db', 'build', '--class-only', '--json');
+		$json->mustRun();
+
+		self::assertSame([], \json_decode($json->getOutput(), true)['data']['texts']['written'] ?? null);
+		self::assertSame('Note', self::catalog($catalog)['ENTITY']['BUILD_NOTES']['SINGULAR'] ?? null);
+
+		// A column added to the schema: once its migration has run, as its class is, its text and
+		// only it is written, from the schema's label.
+		$proj->setSetting('oz.db.schema', 'build_notes', [
+			'plural_name'   => 'build_notes',
+			'singular_name' => 'build_note',
+			'column_prefix' => 'bn',
+			'columns'       => [
+				'id'       => ['type' => 'bigint', 'auto_increment' => true, 'unsigned' => true],
+				'title'    => ['type' => 'string', 'max' => 60],
+				'headline' => [
+					'type'     => 'string',
+					'max'      => 60,
+					'nullable' => true,
+					'meta'     => ['field.label' => 'Headline shown first'],
+				],
+			],
+			'constraints'   => [
+				['type' => 'primary_key', 'columns' => ['id']],
+			],
+		]);
+
+		$proj->oz('db', 'build')->mustRun();
+		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+
+		$json = $proj->oz('db', 'build', '--class-only', '--json');
+		$json->mustRun();
+
+		self::assertSame(
+			['lang' => 'en', 'written' => ['ENTITY.BUILD_NOTES.COLUMN.HEADLINE.LABEL']],
+			\json_decode($json->getOutput(), true)['data']['texts'] ?? null
+		);
+		self::assertSame(
+			'Headline shown first',
+			self::catalog($catalog)['ENTITY']['BUILD_NOTES']['COLUMN']['HEADLINE']['LABEL'] ?? null
+		);
+		self::assertSame('Note', self::catalog($catalog)['ENTITY']['BUILD_NOTES']['SINGULAR'] ?? null);
+	}
+
+	/**
 	 * `OZ_DB_GENERATED_TIMESTAMP` off: a header no longer carries the generation time, so a rebuild of an
 	 * unchanged schema rewrites nothing.
 	 */
@@ -252,6 +322,20 @@ final class DbBuildTest extends TestCase
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------
+
+	/**
+	 * The project's own catalog file, as it is on disk.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function catalog(string $file): array
+	{
+		$read = require $file;
+
+		self::assertIsArray($read);
+
+		return $read;
+	}
 
 	/**
 	 * Returns the project for the given RDBMS.

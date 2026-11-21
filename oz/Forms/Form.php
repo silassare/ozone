@@ -31,6 +31,7 @@ use OZONE\Core\Forms\Traits\FieldContainerHelpersTrait;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\Lang\EntityTexts;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\RouteSharedOptions;
@@ -44,6 +45,9 @@ use PHPUtils\Traits\MetaCapableTrait;
 
 /**
  * Class Form.
+ *
+ * @psalm-import-type FieldRelation from Field
+ * @psalm-import-type FieldMorph from Field
  */
 class Form extends AbstractFieldContainer implements ArrayCapableInterface, MetaCapableInterface
 {
@@ -617,9 +621,10 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 			}
 
 			$field = $form->field($column->getName())
-				->label($column->getMeta()->get('field.label'))
-				->description($column->getMeta()->get('field.description'))
-				->help($column->getMeta()->get('field.help'))
+				// The translatable key of each text where the catalog has one, else the schema's.
+				->label(EntityTexts::columnText($table, $column, 'LABEL'))
+				->description(EntityTexts::columnText($table, $column, 'DESCRIPTION'))
+				->help(EntityTexts::columnText($table, $column, 'HELP'))
 
 				->type($type)
 				// A column the database fills (a default) is never asked for.
@@ -641,7 +646,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 * when exactly one does -- its rule is what a write is checked against -- else the only one, else
 	 * none: a client draws no picker it would have to guess the relation of.
 	 *
-	 * @return null|array{name: string, entity: string, host: string, candidates: bool}
+	 * @return null|FieldRelation
 	 */
 	private static function relationOf(Table $table, Column $column): ?array
 	{
@@ -687,10 +692,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 * The targets are the morph relations declared over the pair on this side -- the child's -- which
 	 * is the list the server checks a type against, so a client offers no type it would refuse.
 	 *
-	 * @return array{
-	 *     keys: array<string, array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>}>,
-	 *     types: array<string, string>
-	 * }
+	 * @return array{keys: array<string, FieldMorph>, types: array<string, string>}
 	 */
 	private static function morphsOf(Table $table): array
 	{
@@ -707,7 +709,8 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 			$key  = $table->getColumnOrFail($link->getMorphChildKeyColumn())->getName();
 			$type = $table->getColumnOrFail($link->getMorphChildTypeColumn())->getName();
 
-			$keys[$key] ??= ['type_field' => $type, 'targets' => []];
+			// The host is this table, whose relations the candidates of each target are asked through.
+			$keys[$key] ??= ['type_field' => $type, 'host' => $table->getMorphType(), 'targets' => []];
 			$keys[$key]['targets'][] = [
 				'type'       => $link->getMorphParentType(),
 				'entity'     => $relation->getTargetTable()->getMorphType(),

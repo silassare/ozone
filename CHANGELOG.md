@@ -308,10 +308,32 @@
   only one, else none. A client draws its picker from it: the candidates route of the host's
   service, or the target's list.
 - **A morph pair is described for one control.** In a form built from a table, the key of a morph
-  pair carries `morph: {type_field, targets}` -- one target per morph relation over the pair,
-  `{type, entity, relation, candidates}` -- and its type field carries `morph_of`, the key's name.
+  pair carries `morph: {type_field, host, targets}` -- the form's table as a morph type, whose
+  relations each target's candidates are asked through, and one target per morph relation over the
+  pair, `{type, entity, relation, candidates}` -- and its type field carries `morph_of`, the key's
+  name. The shapes are named once on `Field` (`FieldRelation`, `FieldMorph`).
   Both stay fields, validated and submitted as before; a client hides the type and fills it from
   the key's control: the type first, then a record of it.
+- **The texts of the tables are translatable, under keys derived from their names**
+  (`Lang\EntityTexts`). Each table has `ENTITY.<TYPE>.SINGULAR`, `.PLURAL` and `.DESCRIPTION`, and
+  each column a client can read `ENTITY.<TYPE>.COLUMN.<NAME>.LABEL`, `.DESCRIPTION` and `.HELP`: the
+  morph type and the column's short name upper-cased, held nested in a catalog so one table's texts
+  sit together. `oz db build` writes the keys the default language's catalog misses into the
+  project's own (`app/settings/lang/oz.<lang>.php`), for the tables of the namespaces it builds and
+  as their migrations have installed them: the schema's text where it has one (`field.label`,
+  `field.description`, `field.help`, a table's `api.doc.description`), else the name made readable
+  for a label and a table's names (`first_name` -> `First name`); a description or a help nobody
+  wrote gets no key. What a translator changed is never written again, and `--json` says what was
+  written under `texts`. `Form::fromTable()` labels a field by the derived key where the catalog
+  holds it, a key the column's meta names winning, and by the schema's text otherwise, so a project
+  not rebuilt since reads what it did. Also `Polyglot::hasText()` and `Settings::setMany()`, which
+  writes several keys of a group with one write of its file.
+  A table also has `ENTITY.<TYPE>.CHOOSE`, what a picker of its records says before one is picked
+  ("Choose a client"): a sentence per language, since an article follows the noun, scaffolded as
+  "Choose" and the readable singular for a translator to finish. **OZone ships the texts of its own
+  tables in English and French**, written for readers rather than from the schema, so a project's
+  build writes none of them; `tests/Lang/EntityTextsTest` fails on any it misses in either
+  language. `Polyglot::textsOf()` is public: a catalog's texts by full key, its groups flattened.
 
 - **Writing a row's relatives in its request covers linking and removing as gobl now does.** An entry
   of a relation field carrying `_attach` links an existing record, on `POST` as on `PATCH`; `_delete`
@@ -527,6 +549,15 @@
 
 ### Fixed
 
+- **A test that sets a key of a group no longer rewrites the project's own settings with this
+  process's environment.** `OZTestProject::setSetting()` ran the group's file in the test process
+  and wrote back what it returned, so a generated `oz.db.php`, which reads `env('OZ_DB_RDBMS',
+  'mysql')`, came back naming `mysql` on `localhost` whatever the project's `.env` said: every
+  command after that connected failed with "Unable to access database". The project's file is now
+  kept as it is (`{group}.php.base`), the values set are kept apart (`{group}.php.overrides`), and
+  the group's file lays the second over the first when the project reads it. A group file rewritten
+  since by anything else is the project's file from then on, and what was set before is dropped,
+  as before.
 - **A `PATCH` writing only a row's relatives is no longer refused.** `actionUpdateOne()` updated the
   row first, and an update naming none of its columns is refused
   (`GOBL_ORM_REQUEST_NO_FIELDS_TO_UPDATE`), so linking a record or removing a relative without

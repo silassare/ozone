@@ -77,6 +77,8 @@ final class FormFromTableRelationTest extends TestCase
 
 		self::assertSame([
 			'type_field' => 'commentable_type',
+			// The table whose relations each target's candidates are asked through.
+			'host'       => 'comments',
 			'targets'    => [
 				['type' => 'posts', 'entity' => 'posts', 'relation' => 'post', 'candidates' => true],
 				['type' => 'clips', 'entity' => 'clips', 'relation' => 'video', 'candidates' => false],

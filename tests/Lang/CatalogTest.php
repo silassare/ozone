@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Lang;
 
 use OZONE\Core\App\Settings;
+use OZONE\Core\Lang\Polyglot;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -70,8 +71,9 @@ final class CatalogTest extends TestCase
 
 	public function testTranslationsUseTheSamePlaceholders(): void
 	{
-		$en = Settings::load('lang/oz.en');
-		$fr = Settings::load('lang/oz.fr');
+		// By full key: a catalog holds groups (the texts of the tables), read as `GROUP.KEY`.
+		$en = Polyglot::textsOf(Settings::load('lang/oz.en'));
+		$fr = Polyglot::textsOf(Settings::load('lang/oz.fr'));
 
 		foreach ($en as $code => $text) {
 			self::assertArrayHasKey($code, $fr);

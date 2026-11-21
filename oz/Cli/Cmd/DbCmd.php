@@ -29,12 +29,15 @@ use OLIUP\CG\PHPNamespace;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
+use OZONE\Core\Lang\EntityTexts;
+use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\Utils\Random;
 use PHPUtils\FS\PathUtils;
@@ -216,6 +219,17 @@ final class DbCmd extends Command
 			$cli->success(\sprintf('database classes generated: "%s".', $ns));
 		}
 
+		$texts = self::writeMissingTexts(\array_keys($ns_map));
+
+		if ([] !== $texts['written']) {
+			$cli->info(\sprintf(
+				'%d text(s) of the tables written to the "%s" catalog, to translate: %s',
+				\count($texts['written']),
+				$texts['lang'],
+				self::catalogPath($texts['lang'])
+			));
+		}
+
 		if (!$class_only) {
 			$cli->executeString('migrations create');
 		}
@@ -232,8 +246,46 @@ final class DbCmd extends Command
 				], \array_keys($ns_map)),
 				'migration'     => !$class_only,
 				'not_installed' => $not_installed,
+				'texts'         => $texts,
 			]);
 		}
+	}
+
+	/**
+	 * Writes the texts of the tables of the given namespaces that the default language's catalog
+	 * misses, into the project's own catalog: each key resolves from this build on, and a translator
+	 * adds the other languages.
+	 *
+	 * @param list<string> $namespaces
+	 *
+	 * @return array{lang: string, written: list<string>}
+	 */
+	private static function writeMissingTexts(array $namespaces): array
+	{
+		$db     = db();
+		$lang   = Polyglot::getDefaultLanguage();
+		$tables = [];
+
+		foreach ($namespaces as $ns) {
+			foreach ($db->getTables($ns) as $table) {
+				$tables[] = $table;
+			}
+		}
+
+		$missing = EntityTexts::missing($tables, $lang);
+
+		// The project's source settings, not its stateful ones: a catalog is checked in with the code.
+		Settings::setMany('lang/oz.' . $lang, $missing, null, false);
+
+		return ['lang' => $lang, 'written' => \array_keys($missing)];
+	}
+
+	/**
+	 * Where the project's own catalog of a language is.
+	 */
+	private static function catalogPath(string $lang): string
+	{
+		return app()->getSettingsDir()->resolve('lang/oz.' . $lang . '.php');
 	}
 
 	/**

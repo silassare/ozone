@@ -581,9 +581,19 @@ for the field's type class (`TypeError` otherwise).
   `{name, entity, host, candidates}` in the bundle, `null` for a field holding no key, so a client
   draws a picker of the target's records -- through the relation's candidates where it offers them.
   Of the relations over the column, the one offering candidates when exactly one does, else the only
-  one, else none. A **morph pair** stays two fields: the key carries `morph: {type_field, targets}`
-  (one target per morph relation over the pair: `{type, entity, relation, candidates}`) and the
+  one, else none. A **morph pair** stays two fields: the key carries `morph: {type_field, host,
+  targets}` (one target per morph relation over the pair: `{type, entity, relation, candidates}`;
+  the shapes are `Field`'s psalm types `FieldRelation` and `FieldMorph`) and the
   type carries `morph_of`, for one control that picks the type, then a record of it.
+- **A table's texts have keys derived from its names** (`Lang\EntityTexts`, which owns the
+  convention): `ENTITY.<TYPE>.SINGULAR|PLURAL|DESCRIPTION|CHOOSE` and
+  `ENTITY.<TYPE>.COLUMN.<NAME>.LABEL|DESCRIPTION|HELP`, upper-cased morph type and short column name.
+  `oz db build` writes what the default catalog misses into the project's catalog, from the schema's
+  texts or the readable name, and never rewrites a key that is there. `Form::fromTable()` labels a
+  field by its key when the catalog holds it, a key in the column's meta wins, else the meta's text.
+  A text written in the meta is in the default language; a meta value that is a key is an override.
+  OZone's own tables have theirs in `lang/oz.en` and `lang/oz.fr`, written for readers: a table or a
+  column added to `oz_schema.php` needs both, or `tests/Lang/EntityTextsTest` fails.
 - **Two numbers are the same when they are equal**: `eq`, `neq`, `in` and `not_in` are strict,
   except between an int and a float (`Rule::same()`), so a rule's literal need not match the PHP type of
   the field's clean value, and a client reading the rule from JSON (which writes `3.0` as `3`) agrees.

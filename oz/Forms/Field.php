@@ -36,6 +36,10 @@ use PHPUtils\Traits\MetaCapableTrait;
 
 /**
  * Class Field.
+ *
+ * @psalm-type FieldRelation = array{name: string, entity: string, host: string, candidates: bool}
+ * @psalm-type FieldMorphTarget = array{type: string, entity: string, relation: string, candidates: bool}
+ * @psalm-type FieldMorph = array{type_field: string, host: string, targets: list<FieldMorphTarget>}
  */
 final class Field implements ArrayCapableInterface, MetaCapableInterface
 {
@@ -60,14 +64,14 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * The relation whose key the field holds, for a client to draw a picker from.
 	 *
-	 * @var null|array{name: string, entity: string, host: string, candidates: bool}
+	 * @var null|FieldRelation
 	 */
 	private ?array $t_relation = null;
 
 	/**
 	 * The morph pair whose key the field holds: the type field beside it, and what it may point at.
 	 *
-	 * @var null|array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>}
+	 * @var null|FieldMorph
 	 */
 	private ?array $t_morph = null;
 
@@ -149,7 +153,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 * as morph types; `candidates` whether the relation offers them, which a client then asks of the
 	 * host's service rather than listing the target.
 	 *
-	 * @param null|array{name: string, entity: string, host: string, candidates: bool} $relation
+	 * @param null|FieldRelation $relation
 	 *
 	 * @return $this
 	 */
@@ -163,7 +167,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * The relation whose key the field holds, or `null`.
 	 *
-	 * @return null|array{name: string, entity: string, host: string, candidates: bool}
+	 * @return null|FieldRelation
 	 */
 	public function getRelation(): ?array
 	{
@@ -175,7 +179,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 * morph relation over the pair -- what the type column holds for it, its table as a morph type,
 	 * the relation, and whether it offers candidates. A client draws one control, the type first.
 	 *
-	 * @param null|array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>} $morph
+	 * @param null|FieldMorph $morph
 	 *
 	 * @return $this
 	 */
@@ -189,7 +193,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * The morph pair whose key the field holds, or `null`.
 	 *
-	 * @return null|array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>}
+	 * @return null|FieldMorph
 	 */
 	public function getMorph(): ?array
 	{
@@ -560,8 +564,8 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 *  hidden: bool,
 	 *  multiple: bool,
 	 *  if: ?RuleSet,
-	 *  relation: null|array{name: string, entity: string, host: string, candidates: bool},
-	 *  morph: null|array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>},
+	 *  relation: null|FieldRelation,
+	 *  morph: null|FieldMorph,
 	 *  morph_of: null|string
 	 * }
 	 *

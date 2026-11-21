@@ -335,6 +335,39 @@ final class Settings
 	}
 
 	/**
+	 * Sets several keys of a setting group, the group's file written once.
+	 *
+	 * What `set()` does for each, without rendering and writing the file again per key: a tool
+	 * writing hundreds of keys in one go (a catalog's scaffold) would otherwise write it hundreds
+	 * of times.
+	 *
+	 * @param string               $group    the setting group name
+	 * @param array<string, mixed> $values   the values, by key (a `.` path where nested)
+	 * @param null|ScopeInterface  $scope    the scope to use (default: current app scope)
+	 * @param bool                 $stateful true -> the stateful dir, false -> the source dir (app/settings/)
+	 */
+	public static function setMany(
+		string $group,
+		array $values,
+		?ScopeInterface $scope = null,
+		bool $stateful = true
+	): void {
+		if ([] === $values) {
+			return;
+		}
+
+		foreach ($values as $key => $_) {
+			self::assertNotLocked($group, (string) $key);
+		}
+
+		self::modify($group, static function ($current) use ($values): void {
+			foreach ($values as $key => $value) {
+				$current->set((string) $key, $value);
+			}
+		}, $scope, $stateful);
+	}
+
+	/**
 	 * Unsets value of a given key in a setting group.
 	 *
 	 * @param string              $group    the setting group name

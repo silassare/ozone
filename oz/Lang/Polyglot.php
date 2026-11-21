@@ -303,6 +303,16 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	}
 
 	/**
+	 * Whether a language's catalog (the default language's by default) holds a text for a key.
+	 *
+	 * A group of keys is not a text: `ENTITY.USER` holds the texts under it and is none itself.
+	 */
+	public static function hasText(string $key, ?string $lang = null): bool
+	{
+		return \is_string(self::catalogText($lang ?? self::getDefaultLanguage(), $key));
+	}
+
+	/**
 	 * Gets available languages list or check if a given one is defined.
 	 */
 	public static function getAvailableLanguages(): array
@@ -449,13 +459,14 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	}
 
 	/**
-	 * The texts of a catalog by key, a nested group's as `group.KEY`.
+	 * The texts of a catalog by key, a nested group's as `group.KEY`: the keys a message is looked
+	 * up by, and what a client reading an export flattens it to.
 	 *
 	 * @param array<array-key, mixed> $catalog
 	 *
 	 * @return array<string, string>
 	 */
-	private static function textsOf(array $catalog, string $prefix = ''): array
+	public static function textsOf(array $catalog, string $prefix = ''): array
 	{
 		$out = [];
 
