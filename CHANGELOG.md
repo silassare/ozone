@@ -315,7 +315,8 @@
   generated candidates contexts with `Context`, and boot hands the ORM the current one, so a
   provider decides, and a write is checked, with the request's context. `routeName()` names any
   action of the enum, so a service that redeclares `$available_actions` with a list written before
-  `get_candidates` existed keeps working: the action is off for it, not unknown.
+  `get_candidates` existed keeps working: the action is off for it, not unknown. The services export
+  lists `get_candidates` only for a table that serves it.
 
 
 - **`tnet` answers named sections** (`oz.tnet.sections`, a name to a `TNetSectionInterface`), all of

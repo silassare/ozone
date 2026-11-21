@@ -350,6 +350,21 @@ final class RESTRelationWritesTest extends TestCase
 	}
 
 	/**
+	 * What the services export lists is what answers: `get_candidates` for a table with a relation
+	 * offering candidates, and not for the others.
+	 */
+	#[DataProvider('provideDbConfig')]
+	public function testTheServicesExportListsCandidatesWhereTheyAreServed(DbTestConfig $config): void
+	{
+		$out      = self::$projects[$config->rdbms]->oz('services', 'export', '--json')->mustRun()->getOutput();
+		$services = \array_column((array) (\json_decode($out, true)['data']['services'] ?? []), 'actions', 'name');
+
+		self::assertContains('get_candidates', $services['accounts'] ?? [], $out);
+		self::assertNotContains('get_candidates', $services['transactions'] ?? [], $out);
+		self::assertNotContains('get_candidates', $services['clients'] ?? [], $out);
+	}
+
+	/**
 	 * The API docs describe each relation's candidates, and none for a relation that declares none.
 	 */
 	#[DataProvider('provideDbConfig')]

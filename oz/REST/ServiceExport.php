@@ -85,6 +85,11 @@ final class ServiceExport
 		$actions = [];
 
 		foreach (RESTFulAction::cases() as $action) {
+			// Served only where a relation offers candidates: what is listed is what answers.
+			if (RESTFulAction::GET_CANDIDATES === $action && empty(RESTFulService::candidatesRelationNames($table))) {
+				continue;
+			}
+
 			if ($service::isActionEnabled($action)) {
 				$actions[] = $action->value;
 			}

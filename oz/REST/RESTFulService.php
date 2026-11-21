@@ -632,14 +632,7 @@ abstract class RESTFulService extends Service
 			$relations_names[] = $relation->getName();
 		}
 
-		// The relations a client may ask the candidates of: only those that declare them.
-		$candidates_names = [];
-
-		foreach ($table->getRelations(false) as $relation) {
-			if ($relation->hasCandidates()) {
-				$candidates_names[] = $relation->getName();
-			}
-		}
+		$candidates_names = self::candidatesRelationNames($table);
 
 		$id_param       = $is_number ? '[0-9]+' : '[^/]+';
 		$relation_param = \implode('|', $relations_names);
@@ -669,6 +662,25 @@ abstract class RESTFulService extends Service
 		if (!empty($candidates_names)) {
 			$group->param(RESTFulAction::CANDIDATES_RELATION_PARAM, \implode('|', $candidates_names));
 		}
+	}
+
+	/**
+	 * The relations of a table a client may ask the candidates of: those that declare them, and are
+	 * not private. Without one, the table serves no `get_candidates`.
+	 *
+	 * @return list<string>
+	 */
+	public static function candidatesRelationNames(Table $table): array
+	{
+		$names = [];
+
+		foreach ($table->getRelations(false) as $relation) {
+			if ($relation->hasCandidates()) {
+				$names[] = $relation->getName();
+			}
+		}
+
+		return $names;
 	}
 
 	/**
