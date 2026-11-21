@@ -677,6 +677,15 @@ access): `Auth::provider($context, $auth)` rebuilds one with the row's reference
 `AuthorizationService` exposes `/auth/:ref/authorize|refresh|state|cancel`;
 `->withAuthorization('auth:provider:...')` guards a route with one.
 
+**`tnet` answers named sections** beside its own fields (`oz.tnet.sections`, a name to a
+`TNetSectionInterface`; `null` removes one), all of them or those `?sections=a,b` names, under
+`sections`, with `Cache-Control: no-store`. A section that needs a signed-in user is not built for
+nobody, and one that throws is left out and logged: the heartbeat never fails for a section. OZone
+registers `reader` (`Auth\TNet\ReaderSection`): the identity type and id, the roles **as the request
+decides with them** (none under a scoped auth, where a role grants nothing), and the weights of the
+project's role enum -- which makes the hierarchy visible to a signed-in user, by the owner's choice;
+a project for which it must not be replaces the section.
+
 - **A content security policy is declared as directives and never as the header string**
   (`OZ_CONTENT_SECURITY_POLICY`, `Http\ContentSecurityPolicy`): a settings map merges key by key,
   so a scope tightens one directive and keeps the rest, where a string can only be restated whole.

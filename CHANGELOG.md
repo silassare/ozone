@@ -300,6 +300,15 @@
 
 ### Added
 
+- **`tnet` answers named sections** (`oz.tnet.sections`, a name to a `TNetSectionInterface`), all of
+  them or those `GET /tnet?sections=a,b` names, under a new `sections` key. A section that needs a
+  signed-in user is not built for nobody, and one that throws is left out and logged, never failing
+  the heartbeat. `tnet` is now sent with `Cache-Control: no-store`, being per user.
+- **The `reader` section**: the signed-in identity's type and id, its roles as the request decides
+  with them (none under a scoped auth), and the weights of the project's role enum, so a client can
+  decide "this role or above" without a round trip. A project that must not show its role hierarchy
+  to signed-in users removes it (`'reader' => null`) or replaces it.
+
 - **A client can be told what each REST service answers.** `oz services export --json` lists the
   enabled `RESTFulService`s of the API router: each one's stable name, the **morph type** of the
   entity it answers, its table, the **full name** of its key column and the actions it really
