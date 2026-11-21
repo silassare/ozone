@@ -71,6 +71,62 @@ final class OZTestProjectTest extends TestCase
 		self::assertFileExists($vendor . '/autoload.php');
 	}
 
+	/**
+	 * A key set over a group leaves the project's own file of the group running in the project: a
+	 * generated `oz.db.php` reads the database from the project's `.env`, and once read in the test's
+	 * process and written back, it named `mysql` on `localhost` for every command after.
+	 */
+	public function testASettingSetOverAGroupLeavesTheProjectFileReadingItsEnvironment(): void
+	{
+		$proj = OZTestProject::create('harness-settings', fresh: true);
+
+		try {
+			$proj->writeEnv([
+				'OZ_DB_RDBMS' => 'sqlite',
+				'OZ_DB_HOST'  => $proj->getPath() . '/harness_settings.sqlite',
+			]);
+
+			$file  = $proj->getPath() . '/app/settings/oz.db.php';
+			$class = $proj->getPath() . '/app/Db/Base/HarnessNoteBase.php';
+
+			self::assertStringContainsString("env('OZ_DB_RDBMS'", (string) \file_get_contents($file));
+
+			// Two keys of the group, one after the other, and one of another group.
+			$proj->setSetting('oz.db', 'OZ_DB_GENERATED_TIMESTAMP', false);
+			$proj->setSetting('oz.db', 'OZ_DB_CHARSET', 'utf8mb4');
+			$proj->setSetting('oz.db.schema', 'harness_notes', [
+				'plural_name'   => 'harness_notes',
+				'singular_name' => 'harness_note',
+				'column_prefix' => 'hn',
+				'columns'       => [
+					'id'    => ['type' => 'bigint', 'auto_increment' => true, 'unsigned' => true],
+					'title' => ['type' => 'string', 'max' => 60],
+				],
+				'constraints'   => [['type' => 'primary_key', 'columns' => ['id']]],
+			]);
+
+			// The project reaches its own database: migrations connect to it and run.
+			$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+			$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
+			$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+			$proj->oz('db', 'build', '--class-only')->mustRun();
+
+			// And the first key held through the second: the header carries no generation time.
+			self::assertFileExists($class);
+			self::assertStringNotContainsString(' * Time: ', (string) \file_get_contents($class));
+
+			// A group file written since by anything else is the project's file from then on: what was
+			// set before is dropped, as a rewrite always dropped it, and a new key is set over it.
+			$proj->writeFile('app/settings/oz.db.php', (string) \file_get_contents($file . '.base'));
+			$proj->setSetting('oz.db', 'OZ_DB_CHARSET', 'utf8mb4');
+			$proj->oz('db', 'build', '--class-only')->mustRun();
+
+			self::assertStringContainsString(' * Time: ', (string) \file_get_contents($class));
+		} finally {
+			$proj->destroy();
+		}
+	}
+
 	public function testAServeThatExitedIsReportedWithWhatItPrinted(): void
 	{
 		$proj = OZTestProject::create('harness-server', fresh: true);

@@ -58,6 +58,13 @@ final class OZTestProject
 	/** Seconds {@see startServer()} waits for `oz project serve` to write `server.json`. */
 	public const float SERVER_JSON_WAIT = 15.0;
 
+	/**
+	 * How a settings group's file written by {@see self::setSetting()} starts: what tells it from
+	 * the project's own file of the group.
+	 */
+	private const string SETTINGS_LOADER_MARK
+		= "<?php\n\n// A settings group a test set keys of (OZTestProject::setSetting()).";
+
 	/** Seconds {@see startServer()} then waits for the port to accept a connection. */
 	public const float SERVER_PORT_WAIT = 10.0;
 
@@ -356,34 +363,72 @@ final class OZTestProject
 	}
 
 	/**
-	 * Override a single settings key in the test project by writing
-	 * (or updating) app/settings/{group}.php.
+	 * Overrides one key of a settings group of the test project, at the top level of the group.
 	 *
-	 * Multiple calls for the same group are safe - the file is read, merged,
-	 * and rewritten each time.
+	 * The project's own file of the group is never run here. It is code, and what it returns
+	 * depends on where it runs: a generated `oz.db.php` reads `env('OZ_DB_RDBMS', 'mysql')`, which
+	 * in this process answers the default and not what the project's `.env` says, so running it
+	 * here and writing back what it returned froze the project's database to `mysql` on
+	 * `localhost` for every command after.
+	 *
+	 * So the project's file is kept as it is, beside the group's (`{group}.php.base`), the values
+	 * set here are kept in a file of their own (`{group}.php.overrides`, values only), and the
+	 * group's file becomes a loader laying the second over the first when the project reads it.
+	 * Neither is a group of its own: a settings source reads `.php` files only.
+	 *
+	 * A group file rewritten since by anything else -- a command writing settings, a test writing
+	 * the file -- is the project's file from then on: it becomes the base, and what was set here
+	 * before is dropped, as a rewrite always dropped it.
 	 *
 	 * For most tests, prefer {@see writeEnv()} to inject DB config instead.
 	 */
 	public function setSetting(string $group, string $key, mixed $value): void
 	{
-		$dir  = $this->dir . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR . 'settings' . \DIRECTORY_SEPARATOR;
-		$file = $dir . $group . '.php';
-
-		$current = \is_file($file) ? (require $file) : [];
-		if (!\is_array($current)) {
-			throw new RuntimeException(\sprintf('Settings file "%s" does not return an array.', $file));
-		}
-		$current[$key] = $value;
+		$dir       = $this->dir . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR . 'settings';
+		$file      = $dir . \DIRECTORY_SEPARATOR . $group . '.php';
+		$base      = $file . '.base';
+		$overrides = $file . '.overrides';
 
 		// A group may sit in a sub-directory (`lang/oz.en`).
 		if (!\is_dir(\dirname($file))) {
 			\mkdir(\dirname($file), 0o775, true);
 		}
 
-		$content = "<?php\n\ndeclare(strict_types=1);\n\nreturn "
-			. \var_export($current, true)
-			. ";\n";
-		\file_put_contents($file, $content);
+		$current = [];
+
+		if (\is_file($file) && \str_starts_with((string) \file_get_contents($file), self::SETTINGS_LOADER_MARK)) {
+			$current = \is_file($overrides) ? (require $overrides) : [];
+
+			if (!\is_array($current)) {
+				throw new RuntimeException(\sprintf('Settings overrides "%s" do not return an array.', $overrides));
+			}
+		} elseif (\is_file($file)) {
+			\rename($file, $base);
+		} elseif (\is_file($base)) {
+			// The group's file is gone, so is the project's: the base is not its anymore.
+			\unlink($base);
+		}
+
+		$current[$key] = $value;
+
+		\file_put_contents(
+			$overrides,
+			"<?php\n\ndeclare(strict_types=1);\n\nreturn " . \var_export($current, true) . ";\n"
+		);
+
+		$name = \basename($file);
+
+		\file_put_contents($file, self::SETTINGS_LOADER_MARK . "\n" . <<<PHP
+			// The project's own file of the group is "{$name}.base", the values set over it "{$name}.overrides".
+
+			declare(strict_types=1);
+
+			return \\array_replace(
+				\\is_file(__DIR__ . '/{$name}.base') ? (require __DIR__ . '/{$name}.base') : [],
+				require __DIR__ . '/{$name}.overrides'
+			);
+
+			PHP);
 	}
 
 	/**
