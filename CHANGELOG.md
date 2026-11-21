@@ -307,6 +307,11 @@
   relations whose key is the column, the one offering candidates when exactly one does, else the
   only one, else none. A client draws its picker from it: the candidates route of the host's
   service, or the target's list.
+- **A morph pair is described for one control.** In a form built from a table, the key of a morph
+  pair carries `morph: {type_field, targets}` -- one target per morph relation over the pair,
+  `{type, entity, relation, candidates}` -- and its type field carries `morph_of`, the key's name.
+  Both stay fields, validated and submitted as before; a client hides the type and fills it from
+  the key's control: the type first, then a record of it.
 
 - **Writing a row's relatives in its request covers linking and removing as gobl now does.** An entry
   of a relation field carrying `_attach` links an existing record, on `POST` as on `PATCH`; `_delete`

@@ -16,6 +16,7 @@ namespace OZONE\Core\Forms;
 use Closure;
 use Gobl\DBAL\Column;
 use Gobl\DBAL\Relations\LinkColumns;
+use Gobl\DBAL\Relations\LinkMorph;
 use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\TypeDate;
 use JsonException;
@@ -600,6 +601,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 		}
 
 		$columns = $table->getColumns(false);
+		$morphs  = self::morphsOf($table);
 
 		$form = new self();
 
@@ -622,7 +624,9 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 				->type($type)
 				// A column the database fills (a default) is never asked for.
 				->required(!$type->isNullable() && !$type->hasDefault())
-				->relation(self::relationOf($table, $column));
+				->relation(self::relationOf($table, $column))
+				->morph($morphs['keys'][$column->getName()] ?? null)
+				->morphOf($morphs['types'][$column->getName()] ?? null);
 
 			Utils::safeFrontendMeta($column, $field);
 		}
@@ -674,6 +678,46 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 			'host'       => $table->getMorphType(),
 			'candidates' => $chosen->hasCandidates(),
 		];
+	}
+
+	/**
+	 * The morph pairs a table holds the key of, by its fields' names: for each key field, its type
+	 * field and one target per morph relation over the pair; for each type field, its key field.
+	 *
+	 * The targets are the morph relations declared over the pair on this side -- the child's -- which
+	 * is the list the server checks a type against, so a client offers no type it would refuse.
+	 *
+	 * @return array{
+	 *     keys: array<string, array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>}>,
+	 *     types: array<string, string>
+	 * }
+	 */
+	private static function morphsOf(Table $table): array
+	{
+		$keys  = [];
+		$types = [];
+
+		foreach ($table->getRelations(false) as $relation) {
+			$link = $relation->getLink();
+
+			if (!$link instanceof LinkMorph || $link->isHostParent()) {
+				continue;
+			}
+
+			$key  = $table->getColumnOrFail($link->getMorphChildKeyColumn())->getName();
+			$type = $table->getColumnOrFail($link->getMorphChildTypeColumn())->getName();
+
+			$keys[$key] ??= ['type_field' => $type, 'targets' => []];
+			$keys[$key]['targets'][] = [
+				'type'       => $link->getMorphParentType(),
+				'entity'     => $relation->getTargetTable()->getMorphType(),
+				'relation'   => $relation->getName(),
+				'candidates' => $relation->hasCandidates(),
+			];
+			$types[$type] = $key;
+		}
+
+		return ['keys' => $keys, 'types' => $types];
 	}
 
 	/**

@@ -63,6 +63,16 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 * @var null|array{name: string, entity: string, host: string, candidates: bool}
 	 */
 	private ?array $t_relation = null;
+
+	/**
+	 * The morph pair whose key the field holds: the type field beside it, and what it may point at.
+	 *
+	 * @var null|array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>}
+	 */
+	private ?array $t_morph = null;
+
+	/** The key field of the morph pair whose type this field holds. */
+	private ?string $t_morph_of = null;
 	private FieldContainerInterface $t_parent;
 	private ?self $t_double_check = null;
 
@@ -158,6 +168,53 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	public function getRelation(): ?array
 	{
 		return $this->t_relation;
+	}
+
+	/**
+	 * Says the field holds the key of a morph pair: the field holding its type, and one target per
+	 * morph relation over the pair -- what the type column holds for it, its table as a morph type,
+	 * the relation, and whether it offers candidates. A client draws one control, the type first.
+	 *
+	 * @param null|array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>} $morph
+	 *
+	 * @return $this
+	 */
+	public function morph(?array $morph): static
+	{
+		$this->t_morph = $morph;
+
+		return $this;
+	}
+
+	/**
+	 * The morph pair whose key the field holds, or `null`.
+	 *
+	 * @return null|array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>}
+	 */
+	public function getMorph(): ?array
+	{
+		return $this->t_morph;
+	}
+
+	/**
+	 * Says the field holds the type of the morph pair whose key is that field: a client fills it from
+	 * the key's control rather than asking for it.
+	 *
+	 * @return $this
+	 */
+	public function morphOf(?string $key_field): static
+	{
+		$this->t_morph_of = $key_field;
+
+		return $this;
+	}
+
+	/**
+	 * The key field of the morph pair whose type the field holds, or `null`.
+	 */
+	public function getMorphOf(): ?string
+	{
+		return $this->t_morph_of;
 	}
 
 	/**
@@ -503,7 +560,9 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 *  hidden: bool,
 	 *  multiple: bool,
 	 *  if: ?RuleSet,
-	 *  relation: null|array{name: string, entity: string, host: string, candidates: bool}
+	 *  relation: null|array{name: string, entity: string, host: string, candidates: bool},
+	 *  morph: null|array{type_field: string, targets: list<array{type: string, entity: string, relation: string, candidates: bool}>},
+	 *  morph_of: null|string
 	 * }
 	 *
 	 * @throws TypesException
@@ -524,6 +583,8 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 			'multiple'    => $this->t_multiple,
 			'if'          => $this->t_if,
 			'relation'    => $this->t_relation,
+			'morph'       => $this->t_morph,
+			'morph_of'    => $this->t_morph_of,
 		];
 	}
 

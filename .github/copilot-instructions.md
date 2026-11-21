@@ -581,7 +581,9 @@ for the field's type class (`TypeError` otherwise).
   `{name, entity, host, candidates}` in the bundle, `null` for a field holding no key, so a client
   draws a picker of the target's records -- through the relation's candidates where it offers them.
   Of the relations over the column, the one offering candidates when exactly one does, else the only
-  one, else none.
+  one, else none. A **morph pair** stays two fields: the key carries `morph: {type_field, targets}`
+  (one target per morph relation over the pair: `{type, entity, relation, candidates}`) and the
+  type carries `morph_of`, for one control that picks the type, then a record of it.
 - **Two numbers are the same when they are equal**: `eq`, `neq`, `in` and `not_in` are strict,
   except between an int and a float (`Rule::same()`), so a rule's literal need not match the PHP type of
   the field's clean value, and a client reading the rule from JSON (which writes `3.0` as `3`) agrees.

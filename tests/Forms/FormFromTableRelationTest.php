@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use Gobl\DBAL\Builders\TableBuilder;
 use Gobl\DBAL\Db;
 use Gobl\DBAL\DbConfig;
 use Gobl\DBAL\Drivers\SQLite\SQLite;
+use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Table;
 use OZONE\Core\Forms\Form;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -66,6 +68,29 @@ final class FormFromTableRelationTest extends TestCase
 	}
 
 	/**
+	 * A morph pair is two fields: the key names the pair and what it may point at, one target per
+	 * morph relation over it, and the type names its key, for a client to draw one control.
+	 */
+	public function testAMorphPairIsTheKeyNamingItsTypeAndTargets(): void
+	{
+		$form = Form::fromTable(self::morphTable());
+
+		self::assertSame([
+			'type_field' => 'commentable_type',
+			'targets'    => [
+				['type' => 'posts', 'entity' => 'posts', 'relation' => 'post', 'candidates' => true],
+				['type' => 'clips', 'entity' => 'clips', 'relation' => 'video', 'candidates' => false],
+			],
+		], $form->getField('commentable_id')?->getMorph());
+		self::assertSame('commentable_id', $form->getField('commentable_type')?->getMorphOf());
+
+		// Neither is a plain relation's key, and nothing else is a morph field.
+		self::assertNull($form->getField('commentable_id')?->getRelation());
+		self::assertNull($form->getField('body')?->getMorph());
+		self::assertNull($form->getField('body')?->getMorphOf());
+	}
+
+	/**
 	 * What the field of a column, in the form built from its table, says of its relation.
 	 *
 	 * @return null|array{name: string, entity: string, host: string, candidates: bool}
@@ -75,17 +100,39 @@ final class FormFromTableRelationTest extends TestCase
 		return Form::fromTable(self::table($table))->getField($column)?->getRelation();
 	}
 
+	/**
+	 * Comments pointing at a post or at a video, through one pair of columns.
+	 */
+	private static function morphTable(): Table
+	{
+		$db = self::db();
+		$ns = $db->ns('form_morphs');
+
+		$ns->table('posts', static function (TableBuilder $t): void {
+			$t->id();
+			$t->softDeletable();
+		});
+
+		$ns->table('videos', static function (TableBuilder $t): void {
+			$t->morphType('clips');
+			$t->id();
+			$t->softDeletable();
+		});
+
+		$ns->table('comments', static function (TableBuilder $t): void {
+			$t->id();
+			$t->string('body');
+			$t->morph('commentable');
+			$t->belongsTo('post')->from('posts')->usingMorph('commentable')->candidates();
+			$t->belongsTo('video')->from('videos')->usingMorph('commentable');
+		});
+
+		return $db->getTableOrFail('comments');
+	}
+
 	private static function table(string $name): Table
 	{
-		$db = Db::newInstanceOf(SQLite::NAME, new DbConfig([
-			'db_host'    => ':memory:',
-			'db_port'    => '',
-			'db_name'    => '',
-			'db_user'    => '',
-			'db_pass'    => '',
-			'db_charset' => 'utf8',
-			'db_collate' => 'utf8',
-		]));
+		$db = self::db();
 
 		$id = ['type' => 'bigint', 'auto_increment' => true, 'unsigned' => true];
 
@@ -137,5 +184,18 @@ final class FormFromTableRelationTest extends TestCase
 		]);
 
 		return $db->getTableOrFail($name);
+	}
+
+	private static function db(): RDBMSInterface
+	{
+		return Db::newInstanceOf(SQLite::NAME, new DbConfig([
+			'db_host'    => ':memory:',
+			'db_port'    => '',
+			'db_name'    => '',
+			'db_user'    => '',
+			'db_pass'    => '',
+			'db_charset' => 'utf8',
+			'db_collate' => 'utf8',
+		]));
 	}
 }
