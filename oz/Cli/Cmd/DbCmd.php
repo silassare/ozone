@@ -27,6 +27,7 @@ use Kli\Kli;
 use Kli\KliArgs;
 use OLIUP\CG\PHPNamespace;
 use Override;
+use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Process;
@@ -204,6 +205,8 @@ final class DbCmd extends Command
 		$gen = new CSGeneratorORM($db);
 		$gen->ignorePrivateTables(false);
 		$gen->ignorePrivateColumns(false);
+		// A candidates provider is handed the request's context: its generated context says so.
+		$gen->candidatesContextType(Context::class);
 
 		foreach ($ns_map as $ns => $_) {
 			// we (re)generate classes only for tables

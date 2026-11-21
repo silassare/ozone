@@ -22,6 +22,7 @@ use Gobl\ORM\Exceptions\ORMQueryException;
 use Gobl\ORM\Interfaces\PaginationAwareListInterface;
 use Gobl\ORM\ORM;
 use Gobl\ORM\ORMController;
+use Gobl\ORM\ORMEntity;
 use Gobl\ORM\ORMOptions;
 use InvalidArgumentException;
 use Override;
@@ -29,6 +30,7 @@ use OZONE\Core\Access\AtomicAction;
 use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Service;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Response;
@@ -74,6 +76,7 @@ abstract class RESTFulService extends Service
 		'get_one'      => true,
 		'get_all'      => true,
 		'get_relation' => true,
+		'get_candidates' => true,
 		'update_one'   => true,
 		'update_all'   => true,
 		'delete_one'   => true,
@@ -103,7 +106,9 @@ abstract class RESTFulService extends Service
 	{
 		$action = $action instanceof RESTFulAction ? $action->value : $action;
 
-		if (!isset(static::$available_actions[$action])) {
+		// An action is one of the enum's: a service's list says which are on, and a list written
+		// before an action existed does not make it invalid.
+		if (null === RESTFulAction::tryFrom($action)) {
 			throw new InvalidArgumentException('Invalid action: ' . $action);
 		}
 
@@ -205,7 +210,17 @@ abstract class RESTFulService extends Service
 
 		$db->runInTransaction(function () use ($req): void {
 			$controller = $this->ctrl();
-			$entity     = $controller->updateOneItem($req);
+
+			// A request writing only the row's relatives names none of its columns: the row itself
+			// is not updated, and the update the ORM would refuse for want of a field is not asked.
+			// The row's update check still answers whether the row may be changed through it.
+			if (empty($req->getFormData($this->table))) {
+				$controller->getCRUD()->assertUpdate(ORM::query($this->table), []);
+
+				$entity = $controller->getItem($req);
+			} else {
+				$entity = $controller->updateOneItem($req);
+			}
 
 			if (!$entity) {
 				throw new NotFoundException();
@@ -369,6 +384,76 @@ abstract class RESTFulService extends Service
 					->getMessage()
 			)
 			->setData($data);
+	}
+
+	/**
+	 * Gets a relation's candidates: the records the host may be linked to through it.
+	 *
+	 * The host is the `host` object of the query: the stored row when it names its key -- read as a
+	 * row of this service is, so the reader may read it -- with the other values laid over it, as a
+	 * form being filled in has them; or, without its key, a row not saved yet. Which records are
+	 * candidates is the relation's to decide, on the server, with this request's context; who may
+	 * read them is the target table's. The usual list parameters search and page them.
+	 *
+	 * @throws Throwable
+	 */
+	public function actionGetCandidates(RESTFulAPIRequest $req, string $relation_name): void
+	{
+		$relation = $this->table->getRelation($relation_name);
+
+		if (null === $relation || !$relation->hasCandidates()) {
+			throw new NotFoundException();
+		}
+
+		/** @psalm-suppress InvalidArgument */
+		RESTFulRelationsHelper::assertNotPrivateRelation($relation);
+
+		$results = ORM::ctrl($relation->getTargetTable())
+			->getCandidates($relation, $this->candidatesHost($req), $req, $this->getContext());
+
+		$this->json()
+			->setDone()
+			->setData($this->preparePaginatedListResponseData($results, $req));
+	}
+
+	/**
+	 * The host a relation's candidates are asked for, from the `host` object of the request.
+	 *
+	 * @throws Throwable
+	 */
+	private function candidatesHost(RESTFulAPIRequest $req): ORMEntity
+	{
+		$given = $req->getFormField('host') ?? [];
+
+		if (!\is_array($given)) {
+			throw new InvalidFormException('OZ_CANDIDATES_HOST_INVALID');
+		}
+
+		foreach ($given as $field => $_) {
+			if (!\is_string($field) || !$this->table->hasColumn($field)) {
+				throw new InvalidFormException('OZ_CANDIDATES_HOST_INVALID', ['field' => $field]);
+			}
+		}
+
+		$key = $this->table->getColumnOrFail(static::KEY_COLUMN);
+		$id  = $given[$key->getFullName()] ?? $given[$key->getName()] ?? null;
+
+		if (null !== $id) {
+			$host = $this->ctrl()->getItem(ORMOptions::makeFromFilters([$key->getFullName() => $id]));
+
+			if (null === $host) {
+				throw new NotFoundException();
+			}
+		} else {
+			$host = ORM::entity($this->table);
+		}
+
+		unset($given[$key->getFullName()], $given[$key->getName()]);
+
+		// Laid over the stored row and never saved: the host as the form has it.
+		$host->hydrate($given);
+
+		return $host;
 	}
 
 	/**
@@ -547,11 +632,24 @@ abstract class RESTFulService extends Service
 			$relations_names[] = $relation->getName();
 		}
 
+		// The relations a client may ask the candidates of: only those that declare them.
+		$candidates_names = [];
+
+		foreach ($table->getRelations(false) as $relation) {
+			if ($relation->hasCandidates()) {
+				$candidates_names[] = $relation->getName();
+			}
+		}
+
 		$id_param       = $is_number ? '[0-9]+' : '[^/]+';
 		$relation_param = \implode('|', $relations_names);
 
-		$router->group(static::SERVICE_PATH, static function (Router $router): void {
+		$group = $router->group(static::SERVICE_PATH, static function (Router $router) use ($candidates_names): void {
 			foreach (RESTFulAction::cases() as $action) {
+				if (RESTFulAction::GET_CANDIDATES === $action && empty($candidates_names)) {
+					continue;
+				}
+
 				if (!$action->onEntry() && static::isActionEnabled($action)) {
 					self::registerAction($router, $action);
 				}
@@ -565,8 +663,12 @@ abstract class RESTFulService extends Service
 				}
 			});
 		})
-			->param('relation', $relation_param)
+			->param(RESTFulAction::RELATION_PARAM, $relation_param)
 			->param(static::KEY_COLUMN, $id_param);
+
+		if (!empty($candidates_names)) {
+			$group->param(RESTFulAction::CANDIDATES_RELATION_PARAM, \implode('|', $candidates_names));
+		}
 	}
 
 	/**
@@ -631,7 +733,7 @@ abstract class RESTFulService extends Service
 		$options = $router->map(
 			$action->httpMethod(),
 			$action->path(),
-			static fn (RouteInfo $ri) => (new static($ri))->runAction($action, $ri)
+			static fn(RouteInfo $ri) => (new static($ri))->runAction($action, $ri)
 		)->name(static::routeName($action));
 
 		static::configureRoute($action, $options);
@@ -669,7 +771,8 @@ abstract class RESTFulService extends Service
 			RESTFulAction::GET_ONE      => $this->actionGetOne($req),
 			RESTFulAction::UPDATE_ONE   => $this->actionUpdateOne($req),
 			RESTFulAction::DELETE_ONE   => $this->actionDeleteOne($req),
-			RESTFulAction::GET_RELATION => $this->actionGetRelation($req, $entry_filters, $ri->param('relation')),
+			RESTFulAction::GET_RELATION   => $this->actionGetRelation($req, $entry_filters, $ri->param(RESTFulAction::RELATION_PARAM)),
+			RESTFulAction::GET_CANDIDATES => $this->actionGetCandidates($req, $ri->param(RESTFulAction::CANDIDATES_RELATION_PARAM)),
 		};
 
 		$this->afterAction($action, $req);

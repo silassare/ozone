@@ -84,7 +84,8 @@ final class RESTFulApiDoc
 		$s['relations_schemas']   = $relatives['non_paginated_relations_schemas'];
 
 		foreach (RESTFulAction::cases() as $action) {
-			if (RESTFulAction::GET_RELATION === $action || !$service::isActionEnabled($action)) {
+			// Both are documented per relation, below.
+			if (RESTFulAction::GET_RELATION === $action || RESTFulAction::GET_CANDIDATES === $action || !$service::isActionEnabled($action)) {
 				continue;
 			}
 
@@ -101,6 +102,14 @@ final class RESTFulApiDoc
 				$responses,
 				$properties
 			);
+		}
+
+		if ($service::isActionEnabled(RESTFulAction::GET_CANDIDATES)) {
+			foreach ($relatives['relations'] as $relation) {
+				if ($relation instanceof Relation && $relation->hasCandidates()) {
+					$this->candidatesOperation($relation, $s);
+				}
+			}
 		}
 
 		if (!$service::isActionEnabled(RESTFulAction::GET_RELATION)) {
@@ -137,7 +146,7 @@ final class RESTFulApiDoc
 		$item     = $doc->object(['item' => $s['entity_read']]);
 		$affected = $doc->object(['affected' => $doc->integer('The number of affected rows.')]);
 
-		$identified = static fn (string $verb) => \sprintf(
+		$identified = static fn(string $verb) => \sprintf(
 			'%s %s `%s` identified by a given `%s`',
 			$verb,
 			$s['a_an'],
@@ -200,7 +209,7 @@ final class RESTFulApiDoc
 				[
 					$doc->success(
 						$this->listSchema($s['entity_read'], $doc->object(\array_map(
-							static fn ($schema) => $doc->object(['{' . $service::KEY_COLUMN . '}' => $schema]),
+							static fn($schema) => $doc->object(['{' . $service::KEY_COLUMN . '}' => $schema]),
 							$s['relations_schemas']
 						))),
 						\sprintf('All `%s` were retrieved successfully.', $plural)
@@ -234,8 +243,64 @@ final class RESTFulApiDoc
 					'parameters'  => $this->bulkParameters($table),
 				],
 			],
-			RESTFulAction::GET_RELATION => throw new LogicException('get_relation is documented per relation.'),
+			RESTFulAction::GET_RELATION   => throw new LogicException('get_relation is documented per relation.'),
+			RESTFulAction::GET_CANDIDATES => throw new LogicException('get_candidates is documented per relation.'),
 		};
+	}
+
+	/**
+	 * Adds the `get_candidates` operation of one relation that declares candidates.
+	 *
+	 * @param Shared $s
+	 */
+	private function candidatesOperation(Relation $r, array $s): void
+	{
+		$doc    = $this->doc;
+		$r_name = $r->getName();
+
+		if (!$s['table']->getMeta()->get(\sprintf('api.doc.get_candidates.%s.enabled', $r_name), true)) {
+			return;
+		}
+
+		$target  = $r->getTargetTable();
+		$service = $this->service;
+		$r_human = ApiDoc::toHumanReadable($r_name);
+
+		$doc->addOperationFromRoute(
+			$service::routeName(RESTFulAction::GET_CANDIDATES),
+			'GET',
+			\sprintf('Get the candidates of %s %s', $s['singular'], $r_human),
+			[
+				$doc->success(
+					$this->listSchema($doc->entitySchemaForRead($target), null),
+					\sprintf('The records a `%s` may have as `%s`.', $s['singular'], $r_human)
+				),
+			],
+			[
+				'tags'        => [$s['tag']],
+				'description' => \sprintf(
+					'The records a `%1$s` may be linked to as its `%2$s`, decided by the server. `host` is the `%1$s` '
+						. 'being filled in: with its `%3$s`, the stored one under the values given; without, one not saved yet.',
+					$s['singular'],
+					$r_human,
+					ApiDoc::toHumanReadable($service::KEY_COLUMN)
+				),
+				'operationId' => \sprintf('%s.%s', $service::routeName(RESTFulAction::GET_CANDIDATES), $r_name),
+				'parameters'  => [
+					$doc->parameter('host', $doc->object([]), \sprintf('The `%s` being filled in, by its fields.', $s['singular']), 'query', [
+						'style'   => 'deepObject',
+						'explode' => true,
+					]),
+					$doc->apiMaxParameter(),
+					$doc->apiPageParameter(),
+					$doc->apiFiltersParameter('query', $target),
+					$doc->apiOrderByParameter(),
+				],
+			],
+			[
+				RESTFulAction::CANDIDATES_RELATION_PARAM => $r_name,
+			]
+		);
 	}
 
 	/**
@@ -280,7 +345,7 @@ final class RESTFulApiDoc
 				$r_params[] = $r_relatives_options['relations_parameter'];
 			}
 			$r_relations_schema = $r->isPaginated() ? $doc->object(\array_map(
-				static fn ($schema) => $doc->object(['{' . $r_pk_column . '}' => $schema]),
+				static fn($schema) => $doc->object(['{' . $r_pk_column . '}' => $schema]),
 				$r_relatives_options['non_paginated_relations_schemas']
 			)) : $doc->object($r_relatives_options['non_paginated_relations_schemas']);
 		}
@@ -316,7 +381,7 @@ final class RESTFulApiDoc
 				'parameters'  => $r_params,
 			],
 			[
-				'relation' => $r_name,
+				RESTFulAction::RELATION_PARAM => $r_name,
 			]
 		);
 	}
@@ -364,7 +429,7 @@ final class RESTFulApiDoc
 		if (!empty($collections)) {
 			$params[] = $doc->apiCollectionParameter(
 				'query',
-				\array_map(static fn ($c) => $c->getName(), $collections)
+				\array_map(static fn($c) => $c->getName(), $collections)
 			);
 		}
 

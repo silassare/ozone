@@ -300,6 +300,24 @@
 
 ### Added
 
+- **Writing a row's relatives in its request covers linking and removing as gobl now does.** An entry
+  of a relation field carrying `_attach` links an existing record, on `POST` as on `PATCH`; `_delete`
+  removes as the relation declares (gobl unlinks by default); both markers are taken off before the
+  entry is read as a row, and an entry carrying both is refused (`OZ_RELATION_ENTRY_ATTACH_OR_DELETE`).
+  A relation's own refusal (`GOBL_ORM_RELATION_*`: a field the relation fixes, a record that is not
+  a candidate, a link that cannot be removed, ...) reaches the client as itself with the `relation`
+  and the `field`, translated, instead of `OZ_RELATION_PROCESSING_FAILED`.
+- **`get_candidates`**: `GET {path}/relations/{relation}/candidates` answers the records a relation
+  declaring candidates offers, for the `host` query object -- the stored row under the values given
+  when it names the key, else a row not saved yet (`OZ_CANDIDATES_HOST_INVALID` for a field the
+  table does not have). Searched and paged like a list, read with the target's read rights, and
+  documented per relation. Registered only for a table with such a relation. `oz db build` types the
+  generated candidates contexts with `Context`, and boot hands the ORM the current one, so a
+  provider decides, and a write is checked, with the request's context. `routeName()` names any
+  action of the enum, so a service that redeclares `$available_actions` with a list written before
+  `get_candidates` existed keeps working: the action is off for it, not unknown.
+
+
 - **`tnet` answers named sections** (`oz.tnet.sections`, a name to a `TNetSectionInterface`), all of
   them or those `GET /tnet?sections=a,b` names, under a new `sections` key. A section that needs a
   signed-in user is not built for nobody, and one that throws is left out and logged, never failing
@@ -494,6 +512,13 @@
 - `REST\Enums\RESTFulAction`, the action table driving `RESTFulService` routes and docs (`REST\RESTFulApiDoc`); `RESTFulService::beforeAction()` / `afterAction()` hooks and `configureRoute()` for per-action guards, forms or middlewares; `RESTFulService::routeName()` accepts a `RESTFulAction`.
 
 ### Fixed
+
+- **A `PATCH` writing only a row's relatives is no longer refused.** `actionUpdateOne()` updated the
+  row first, and an update naming none of its columns is refused
+  (`GOBL_ORM_REQUEST_NO_FIELDS_TO_UPDATE`), so linking a record or removing a relative without
+  changing the row never reached the relations. Such a request now reads the row -- after the
+  row's update check -- and writes its relatives only.
+
 
 - **An email or phone column asked to check registration without naming a user type crashed.**
   `TypeEmail` and `TypePhone` read their `registered_as` option with no default and handed it to

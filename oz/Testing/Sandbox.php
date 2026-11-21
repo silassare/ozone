@@ -16,6 +16,7 @@ namespace OZONE\Core\Testing;
 use Composer\Autoload\ClassLoader;
 use Gobl\ORM\Generators\CSGeneratorORM;
 use Gobl\ORM\ORM;
+use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
@@ -129,6 +130,8 @@ final class Sandbox
 
 		$gen->ignorePrivateTables(false);
 		$gen->ignorePrivateColumns(false);
+		// A candidates provider is handed the request's context: its generated context says so.
+		$gen->candidatesContextType(Context::class);
 
 		foreach (Db::ormNamespaces() as $ns) {
 			$tables = $db->getTables($ns);

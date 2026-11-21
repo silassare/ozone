@@ -276,10 +276,26 @@ final class RESTFulRelationsHelper
 		array $rel_entry,
 		bool $patch
 	): void {
+		// The markers say what to do with the entry, and are not part of the row it names: gobl reads
+		// what remains as the relative's columns.
+		$delete = !empty($rel_entry[RESTFulAPIRequest::DELETE_PARAM]);
+		$attach = !empty($rel_entry[RESTFulAPIRequest::ATTACH_PARAM]);
+
+		unset($rel_entry[RESTFulAPIRequest::DELETE_PARAM], $rel_entry[RESTFulAPIRequest::ATTACH_PARAM]);
+
+		if ($delete && $attach) {
+			throw new InvalidFormException('OZ_RELATION_ENTRY_ATTACH_OR_DELETE', [
+				'relation' => $relation->getName(),
+			]);
+		}
+
 		try {
 			$r_ctrl = $relation->getController();
-			if ($patch) {
-				$delete = $rel_entry[RESTFulAPIRequest::DELETE_PARAM] ?? false;
+
+			if ($attach) {
+				// Linking an existing record, which a create picks as well as an update.
+				$r_ctrl->attach($entity, $rel_entry);
+			} elseif ($patch) {
 				if ($delete) {
 					$r_ctrl->delete($entity, $rel_entry);
 				} else {
@@ -292,6 +308,12 @@ final class RESTFulRelationsHelper
 			$data = [
 				'relation' => $relation->getName(),
 			];
+
+			// What the relation refused is said as itself, with the field it names: a client shows
+			// it on that field, where a generic failure says nothing it can act on.
+			if ($t instanceof ORMQueryException && \str_starts_with($t->getMessage(), 'GOBL_ORM_RELATION_')) {
+				throw new InvalidFormException($t->getMessage(), $data + $t->getData(), $t);
+			}
 
 			if ($t instanceof ORMQueryException) {
 				$data['previous'] = [

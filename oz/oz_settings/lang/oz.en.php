@@ -152,6 +152,14 @@ return [
 	'OZ_RELATION_IS_PAGINATED_ARRAY_OF_ARRAY_EXPECTED'                         => 'This paginated relation expects a list of items.',
 	'OZ_RELATION_IS_PAGINATED_AND_SHOULD_BE_RETRIEVED_WITH_DEDICATED_ENDPOINT' => 'This relation is paginated: fetch it through its own endpoint.',
 	'OZ_RELATION_PROCESSING_FAILED'                                            => 'The relation could not be processed.',
+	'OZ_CANDIDATES_HOST_INVALID'                                               => 'The host of the candidates names a field it does not have.',
+	'OZ_RELATION_ENTRY_ATTACH_OR_DELETE'                                       => 'A relation entry is attached or removed, not both.',
+	'GOBL_ORM_RELATION_FIXES_THIS_FIELD'                                       => 'This field is set by the relation and cannot be changed here.',
+	'GOBL_ORM_RELATION_WRITE_NOT_A_RELATIVE'                                   => 'The item would not belong to this relation.',
+	'GOBL_ORM_RELATION_CANNOT_UNLINK'                                          => 'This item cannot be detached: it must stay linked.',
+	'GOBL_ORM_RELATION_ATTACH_HELD_ELSEWHERE'                                  => 'This item already belongs to another record.',
+	'GOBL_ORM_RELATION_REFUSES_WRITES'                                         => 'This relation cannot be written.',
+	'GOBL_ORM_RELATION_NOT_A_CANDIDATE'                                        => 'This choice is not allowed here.',
 
 	// used in views templates
 	'OZ_VIEW_GO_HOME_BTN'                   => 'Go to the home page',

@@ -79,6 +79,19 @@ final class RESTFulServiceTest extends TestCase
 		}
 	}
 
+	/**
+	 * A route is named for an action of the enum, whether the service turned it on or not -- a list
+	 * of actions written before one existed does not make it unknown -- and for nothing else.
+	 */
+	public function testARouteIsNamedForAnyActionAndNoOtherWord(): void
+	{
+		self::assertSame('stub_rest_users.get_candidates', StubUsersRESTService::routeName(RESTFulAction::GET_CANDIDATES));
+
+		$this->expectException(\InvalidArgumentException::class);
+
+		StubUsersRESTService::routeName('get_everything');
+	}
+
 	public function testRoutesAreNamedAfterTheServiceNameNotItsPath(): void
 	{
 		self::assertSame('stub_rest_users.get_one', StubUsersRESTService::routeName(RESTFulAction::GET_ONE));

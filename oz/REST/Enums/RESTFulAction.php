@@ -31,6 +31,11 @@ enum RESTFulAction: string
 	case UPDATE_ONE   = 'update_one';
 	case DELETE_ONE   = 'delete_one';
 	case GET_RELATION = 'get_relation';
+	case GET_CANDIDATES = 'get_candidates';
+
+	/** The path parameter naming the relation whose candidates are asked for. */
+	public const string CANDIDATES_RELATION_PARAM = 'candidates_relation';
+	public const string RELATION_PARAM = 'relation';
 
 	/**
 	 * The HTTP method of the action's route.
@@ -39,7 +44,7 @@ enum RESTFulAction: string
 	{
 		return match ($this) {
 			self::CREATE_ONE                                 => 'POST',
-			self::GET_ALL, self::GET_ONE, self::GET_RELATION => 'GET',
+			self::GET_ALL, self::GET_ONE, self::GET_RELATION, self::GET_CANDIDATES => 'GET',
 			self::UPDATE_ALL, self::UPDATE_ONE               => 'PATCH',
 			self::DELETE_ALL, self::DELETE_ONE               => 'DELETE',
 		};
@@ -58,9 +63,16 @@ enum RESTFulAction: string
 
 	/**
 	 * The route path, relative to the service path, or to `/:<key column>` for entry actions.
+	 *
+	 * A relation's candidates are asked of the collection, not of an entry: the row picking may not
+	 * exist yet. Four segments, so a string key's `/:<key column>/:relation` never reads them.
 	 */
 	public function path(): string
 	{
-		return self::GET_RELATION === $this ? '/:relation' : '';
+		return match ($this) {
+			self::GET_RELATION   => '/:' . self::RELATION_PARAM,
+			self::GET_CANDIDATES => '/relations/:' . self::CANDIDATES_RELATION_PARAM . '/candidates',
+			default              => '',
+		};
 	}
 }

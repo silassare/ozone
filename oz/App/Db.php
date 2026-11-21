@@ -341,6 +341,10 @@ final class Db
 		$db->ns(self::getProjectDbNamespace())
 			->enableORM(self::dir()->getRoot());
 
+		// A relation's candidates are decided with the request's context; a write has none of its
+		// own to pass, so it is the current one.
+		ORM::setCandidatesContext(static fn (): Context => Context::current());
+
 		$db->lock();
 
 		// Its listeners (the CRUD listeners attach there) use the generated ORM classes: when a class

@@ -1090,8 +1090,8 @@ call site says which by the registry it asks; both return a `KeyValueStore`.
 lowercase words joined by `_` or `.`), `SERVICE_PATH` and `TABLE_NAME`, all required
 (`assertDeclared()`); its routes, and their OpenAPI `operationId`, are named `<SERVICE_NAME>.<action>`,
 so a client names a service and never depends on its path or table. Its actions are the cases of
-`REST\Enums\RESTFulAction` (`get_one`, `get_all`, `get_relation`, `update_one`, `update_all`,
-`delete_one`, `delete_all`, `create_one`), which drive both the routes and the docs
+`REST\Enums\RESTFulAction` (`get_one`, `get_all`, `get_relation`, `get_candidates`, `update_one`,
+`update_all`, `delete_one`, `delete_all`, `create_one`), which drive both the routes and the docs
 (`REST\RESTFulApiDoc`; table meta `api.doc.<action>.enabled` turns one doc off).
 
 - Customize an action with `beforeAction()` / `afterAction()` (success only) and
@@ -1108,6 +1108,19 @@ so a client names a service and never depends on its path or table. Its actions 
   `OZ_RELATION_IS_PAGINATED_AND_SHOULD_BE_RETRIEVED_WITH_DEDICATED_ENDPOINT`. It is read through
   `get_relation` (`{path}/{id}/{relation}`). What `relations` carries is keyed by relation name, then
   by the id of the entity holding it.
+- **A row's relatives are written in its own request** (`RESTFulRelationsHelper::processRelations()`,
+  inside the row's transaction): a form field named after a relation, one entry or a list of them.
+  An entry is created on `POST`, updated on `PATCH`, removed with `_delete` and linked -- an existing
+  record, on `POST` or `PATCH` -- with `_attach`; the markers never reach the row. What each does is
+  the relation's to decide (gobl: removing unlinks by default, a payload cannot move a relative to
+  another row), and a refusal reaches the client as its own `GOBL_ORM_RELATION_*` code with the
+  `relation` and the `field`. A `PATCH` naming none of the row's columns writes its relatives only.
+- **`get_candidates`** (`{path}/relations/{relation}/candidates`) answers what a relation declaring
+  candidates offers, for the row in the `host` query object -- the stored one under the values given
+  when it names its key, else one not saved yet -- searched and paged like a list. The relation
+  decides them; the target table's read rights decide who may see them; writes are checked against
+  the same rule. Providers receive OZone's `Context`: `oz db build` types the generated context so,
+  and boot hands the ORM the current one.
 - Of the CRUD actions, **`delete_all` alone is refused by default** (`CRUD::assertDeleteAll()`
   authorizes with `false`): a project allows it with a CRUD listener.
 - OpenAPI: implement `ApiDocProviderInterface::apiDoc(ApiDoc $doc)`. `ApiDoc` is a facade over the

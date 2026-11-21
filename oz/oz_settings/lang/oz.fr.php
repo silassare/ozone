@@ -152,6 +152,14 @@ return [
 	'OZ_RELATION_IS_PAGINATED_ARRAY_OF_ARRAY_EXPECTED'                         => "Cette relation paginée attend une liste d'éléments.",
 	'OZ_RELATION_IS_PAGINATED_AND_SHOULD_BE_RETRIEVED_WITH_DEDICATED_ENDPOINT' => "Cette relation est paginée : récupérez-la via son propre point d'accès.",
 	'OZ_RELATION_PROCESSING_FAILED'                                            => "La relation n'a pas pu être traitée.",
+	'OZ_CANDIDATES_HOST_INVALID'                                               => "L'hôte des candidats nomme un champ qu'il n'a pas.",
+	'OZ_RELATION_ENTRY_ATTACH_OR_DELETE'                                       => "Une entrée de relation est attachée ou retirée, pas les deux.",
+	'GOBL_ORM_RELATION_FIXES_THIS_FIELD'                                       => 'Ce champ est fixé par la relation et ne peut pas être changé ici.',
+	'GOBL_ORM_RELATION_WRITE_NOT_A_RELATIVE'                                   => "L'élément n'appartiendrait pas à cette relation.",
+	'GOBL_ORM_RELATION_CANNOT_UNLINK'                                          => 'Cet élément ne peut pas être détaché : il doit rester lié.',
+	'GOBL_ORM_RELATION_ATTACH_HELD_ELSEWHERE'                                  => 'Cet élément appartient déjà à un autre enregistrement.',
+	'GOBL_ORM_RELATION_REFUSES_WRITES'                                         => 'Cette relation ne peut pas être écrite.',
+	'GOBL_ORM_RELATION_NOT_A_CANDIDATE'                                        => "Ce choix n'est pas permis ici.",
 
 	// used in views templates
 	'OZ_VIEW_GO_HOME_BTN'                   => "Aller à l'accueil",
