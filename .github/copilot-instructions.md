@@ -731,8 +731,8 @@ a project for which it must not be replaces the section.
   authorization that is not `PENDING`, so a dead link never shows a button or a form that could only
   fail. **A verification is tied to no session**: its row holds no state ID, `GET /auth/:ref/state` is
   open to whoever holds the reference, and the link page needs no session either -- a client keeps
-  `auth_ref` outside the session and comes back to the flow after a reload (oweb's
-  `BrowserVerificationStore`, `waitForVerification()`). Only 2FA is session-bound, deliberately.
+  `auth_ref` outside the session (in the browser's storage, say) and comes back to the flow after a
+  reload. Only 2FA is session-bound, deliberately.
 - **Two-factor authentication** (`Auth2FA`, booted by default): a user with `2fa.enabled` in their data
   store has their login interrupted, the user is detached, an authorization is opened through
   `TwoFactorAuthorizationProvider` on the channel `oz.auth.2fa` selects (`totp`, `email`, `sms`), and
@@ -1184,7 +1184,7 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   the extensions, Composer and git unless `--with-php`. Preparing a server is `oz server provision`.
 - **`oz project create`** generates a `composer.json` requiring `silassare/ozone`; every package in its
   graph is on Packagist, so it needs no `repositories` and no credentials.
-- **JSON mode** (`--json`, for tools such as the O'Web Builder): `Cli::run()` sees the flag before bootstrap,
+- **JSON mode** (`--json`, for tools that drive the CLI): `Cli::run()` sees the flag before bootstrap,
   so every output goes through `Cli`: `write()` / `writeLn()` print nothing, `info()` / `warn()` /
   `success()` / `error()` are collected as `messages`, and one with an exit code ends the command in JSON.
   A command answers with `$cli->writeJson([...], $ok, $exit, $msg)`, which writes the envelope of every
