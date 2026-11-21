@@ -300,6 +300,14 @@
 
 ### Added
 
+- **A form field built from a foreign column says which relation it holds the key of.** Every field
+  of a form bundle carries `relation`: `{name, entity, host, candidates}` for a column that is the
+  key of a relation on its own table -- the relation, its target's and the form's table as morph
+  types, and whether it offers candidates -- else `null`. `Form::fromTable()` names, of the
+  relations whose key is the column, the one offering candidates when exactly one does, else the
+  only one, else none. A client draws its picker from it: the candidates route of the host's
+  service, or the target's list.
+
 - **Writing a row's relatives in its request covers linking and removing as gobl now does.** An entry
   of a relation field carrying `_attach` links an existing record, on `POST` as on `PATCH`; `_delete`
   removes as the relation declares (gobl unlinks by default); both markers are taken off before the

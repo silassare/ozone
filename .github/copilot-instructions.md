@@ -577,6 +577,11 @@ for the field's type class (`TypeError` otherwise).
 - **A refused form names what refused it**: `InvalidFormException` data carries `field` (the
   ref) for a missing or refused value and `rule` (the set's ref) for a failed rule set, which a client
   maps onto what it rendered from the bundle. What caused it (`_suspect`, `_rule`) stays private.
+- **A field built from a foreign column says its relation** (`Form::fromTable()`): `relation`
+  `{name, entity, host, candidates}` in the bundle, `null` for a field holding no key, so a client
+  draws a picker of the target's records -- through the relation's candidates where it offers them.
+  Of the relations over the column, the one offering candidates when exactly one does, else the only
+  one, else none.
 - **Two numbers are the same when they are equal**: `eq`, `neq`, `in` and `not_in` are strict,
   except between an int and a float (`Rule::same()`), so a rule's literal need not match the PHP type of
   the field's clean value, and a client reading the rule from JSON (which writes `3.0` as `3`) agrees.

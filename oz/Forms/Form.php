@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\Forms;
 
 use Closure;
+use Gobl\DBAL\Column;
+use Gobl\DBAL\Relations\LinkColumns;
 use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\TypeDate;
 use JsonException;
@@ -619,12 +621,59 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 
 				->type($type)
 				// A column the database fills (a default) is never asked for.
-				->required(!$type->isNullable() && !$type->hasDefault());
+				->required(!$type->isNullable() && !$type->hasDefault())
+				->relation(self::relationOf($table, $column));
 
 			Utils::safeFrontendMeta($column, $field);
 		}
 
 		return $form;
+	}
+
+	/**
+	 * The relation a column holds the key of, as a field says it, or `null`.
+	 *
+	 * Of the relations whose key is this one column on this table, the one that offers candidates
+	 * when exactly one does -- its rule is what a write is checked against -- else the only one, else
+	 * none: a client draws no picker it would have to guess the relation of.
+	 *
+	 * @return null|array{name: string, entity: string, host: string, candidates: bool}
+	 */
+	private static function relationOf(Table $table, Column $column): ?array
+	{
+		$over       = [];
+		$candidates = [];
+
+		foreach ($table->getRelations(false) as $relation) {
+			$link = $relation->getLink();
+
+			if (!$link instanceof LinkColumns || !$link->isHostHoldingKey()) {
+				continue;
+			}
+
+			if ([$column->getFullName()] !== \array_keys($link->getColumnsMapping())) {
+				continue;
+			}
+
+			$over[] = $relation;
+
+			if ($relation->hasCandidates()) {
+				$candidates[] = $relation;
+			}
+		}
+
+		$chosen = 1 === \count($candidates) ? $candidates[0] : (1 === \count($over) ? $over[0] : null);
+
+		if (null === $chosen) {
+			return null;
+		}
+
+		return [
+			'name'       => $chosen->getName(),
+			'entity'     => $chosen->getTargetTable()->getMorphType(),
+			'host'       => $table->getMorphType(),
+			'candidates' => $chosen->hasCandidates(),
+		];
 	}
 
 	/**

@@ -56,6 +56,13 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	private bool $t_required                  = false;
 	private bool $t_multiple                  = false;
 	private ?RuleSet $t_if                    = null;
+
+	/**
+	 * The relation whose key the field holds, for a client to draw a picker from.
+	 *
+	 * @var null|array{name: string, entity: string, host: string, candidates: bool}
+	 */
+	private ?array $t_relation = null;
 	private FieldContainerInterface $t_parent;
 	private ?self $t_double_check = null;
 
@@ -123,6 +130,34 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	public function rebind(FieldContainerInterface $parent): void
 	{
 		$this->t_parent = $parent;
+	}
+
+	/**
+	 * Says the field holds the key of a relation: what a client draws a picker of its records from.
+	 *
+	 * `name` is the relation, `entity` its target and `host` the table the field is a column of, both
+	 * as morph types; `candidates` whether the relation offers them, which a client then asks of the
+	 * host's service rather than listing the target.
+	 *
+	 * @param null|array{name: string, entity: string, host: string, candidates: bool} $relation
+	 *
+	 * @return $this
+	 */
+	public function relation(?array $relation): static
+	{
+		$this->t_relation = $relation;
+
+		return $this;
+	}
+
+	/**
+	 * The relation whose key the field holds, or `null`.
+	 *
+	 * @return null|array{name: string, entity: string, host: string, candidates: bool}
+	 */
+	public function getRelation(): ?array
+	{
+		return $this->t_relation;
 	}
 
 	/**
@@ -467,7 +502,8 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 *  required: bool,
 	 *  hidden: bool,
 	 *  multiple: bool,
-	 *  if: ?RuleSet
+	 *  if: ?RuleSet,
+	 *  relation: null|array{name: string, entity: string, host: string, candidates: bool}
 	 * }
 	 *
 	 * @throws TypesException
@@ -487,6 +523,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 			// A list of values of `type`: without it a client takes the field for a single value.
 			'multiple'    => $this->t_multiple,
 			'if'          => $this->t_if,
+			'relation'    => $this->t_relation,
 		];
 	}
 
