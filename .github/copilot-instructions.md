@@ -956,7 +956,8 @@ A plugin's **requirements are its package's Composer `require`**, among the pack
 left disabled and a cycle. Never add a second list of what a plugin requires: Composer's is the one.
 A plugin **names what it ships** -- `getSettingsSource()` and a schema file (`getSchemaFile()`, the
 shape of `oz_schema.php`) -- and `AbstractPlugin::boot()` adds them, so `oz plugins describe` reads
-them without booting it; prefer naming them to adding them from code.
+them without booting it; prefer naming them to adding them from code. A plugin that defines a kind
+of file other plugins ship says what the described one ships by listening to `PluginDescribeHook`.
 **Seeders** (`oz.seeders`, `oz db seed [--demo]`) write what is missing and never update a row: use
 `Seeders::insertMissing()`, keyed by a stable value, so a re-run on every deploy keeps every edit.
 

@@ -18,7 +18,9 @@ use Gobl\DBAL\DbConfig;
 use Gobl\DBAL\Drivers\SQLite\SQLite;
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\DbSchemaCollectHook;
+use OZONE\Core\Hooks\Events\PluginDescribeHook;
 use OZONE\Core\Plugins\AbstractPlugin;
 use OZONE\Core\Plugins\CorePlugin;
 use OZONE\Core\Plugins\Plugins;
@@ -145,6 +147,7 @@ final class PluginSourcesTest extends TestCase
 			'requires'    => [['plugin' => CorePlugin::class, 'package' => 'silassare/ozone', 'enabled' => true]],
 			'settings'    => ['oz.notes' => ['OZ_NOTES_LIMIT', 'OZ_NOTES_SHARED']],
 			'tables'      => ['acme_notes'],
+			'sections'    => [],
 		], $described);
 
 		// And nothing was booted: its settings are not read.
@@ -160,6 +163,46 @@ final class PluginSourcesTest extends TestCase
 		self::assertContains('oz_files', $described['tables']);
 		self::assertArrayHasKey('oz.routes.api', $described['settings']);
 		self::assertSame([], $described['requires']);
+	}
+
+	public function testAListenerAddsWhatItReadsOfThePluginAsASection(): void
+	{
+		$detach = PluginDescribeHook::listen(static function (PluginDescribeHook $hook): void {
+			if ($hook->plugin instanceof NotesPlugin) {
+				$hook->addSection('pages', ['view' => ['notes.list', 'notes.edit']]);
+			}
+		});
+
+		try {
+			$notes = Plugins::describe(NotesPlugin::instance(), [NotesPlugin::class => true]);
+			$ozone = Plugins::describe(Plugins::ozone(), [CorePlugin::class => true]);
+		} finally {
+			$detach();
+		}
+
+		self::assertSame(['pages' => ['view' => ['notes.list', 'notes.edit']]], $notes['sections']);
+		self::assertSame([], $ozone['sections']);
+	}
+
+	public function testTwoListenersCannotAddTheSameSection(): void
+	{
+		$add    = static function (PluginDescribeHook $hook): void {
+			$hook->addSection('pages', []);
+		};
+		$first  = PluginDescribeHook::listen($add);
+		$second = PluginDescribeHook::listen($add);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage(
+			\sprintf('The description of plugin "%s" already has a section "pages".', NotesPlugin::class)
+		);
+
+		try {
+			Plugins::describe(NotesPlugin::instance(), [NotesPlugin::class => true]);
+		} finally {
+			$first();
+			$second();
+		}
 	}
 
 	private static function memoryDb(): Db

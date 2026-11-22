@@ -329,7 +329,10 @@
   with what each requires; `describe --plugin=<class or package>` says what enabling one adds -- its
   identity, the plugins it requires, every settings group it ships with its keys (routes, commands,
   cron jobs, CRUD rules, texts) and its tables, run into a database of its own in memory -- read
-  without booting it (`Plugins::describe()`, `SettingsSchema::keysIn()`). Both take `--json`.
+  without booting it (`Plugins::describe()`, `SettingsSchema::keysIn()`). Both take `--json`. What
+  a plugin ships that another plugin defines is that plugin's to read: `describe` triggers
+  `PluginDescribeHook`, and a listener adds a section of its own (`addSection()`, names by label,
+  one listener per section), listed under `sections`.
 - **A form field built from a foreign column says which relation it holds the key of.** Every field
   of a form bundle carries `relation`: `{name, entity, host, candidates}` for a column that is the
   key of a relation on its own table -- the relation, its target's and the form's table as morph

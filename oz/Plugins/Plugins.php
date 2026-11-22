@@ -20,6 +20,7 @@ use Gobl\DBAL\Table;
 use OZONE\Core\App\Settings;
 use OZONE\Core\App\SettingsSchema;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Hooks\Events\PluginDescribeHook;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 
 /**
@@ -137,6 +138,9 @@ class Plugins
 	 * The tables are its schema file's, run into a database of its own in memory, after OZone's and
 	 * those of the plugins it requires (in boot order), since a table of it may reference theirs.
 	 *
+	 * What the plugin ships that another plugin defines is that plugin's to read, in the sections its
+	 * listener of {@see PluginDescribeHook} adds.
+	 *
 	 * @param array<class-string<PluginInterface>, bool> $listed the project's `oz.plugins`
 	 *
 	 * @return array{
@@ -150,6 +154,7 @@ class Plugins
 	 *     requires: list<array{plugin: class-string<PluginInterface>, package: string, enabled: bool}>,
 	 *     settings: array<string, list<string>>,
 	 *     tables: list<string>,
+	 *     sections: array<string, array<string, list<string>>>,
 	 * }
 	 */
 	public static function describe(PluginInterface $plugin, array $listed): array
@@ -187,6 +192,7 @@ class Plugins
 			'requires'    => $requires,
 			'settings'    => null === $source || !\is_dir($source) ? [] : SettingsSchema::keysIn($source),
 			'tables'      => self::tablesOf($plugin, \array_column($requires, 'plugin')),
+			'sections'    => new PluginDescribeHook($plugin)->dispatch()->getSections(),
 		];
 	}
 

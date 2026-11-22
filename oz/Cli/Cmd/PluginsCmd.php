@@ -88,7 +88,8 @@ final class PluginsCmd extends Command
 	}
 
 	/**
-	 * Says what enabling a plugin adds: who it is, what it requires, its settings and its tables.
+	 * Says what enabling a plugin adds: who it is, what it requires, its settings, its tables, and
+	 * what other plugins read of it.
 	 */
 	public function describePlugin(KliArgs $args): void
 	{
@@ -122,6 +123,12 @@ final class PluginsCmd extends Command
 		$tables = [] === $described['tables'] ? 'none' : \implode(', ', $described['tables']);
 
 		$cli->writeLn(\sprintf('Tables: %s', $tables));
+
+		foreach ($described['sections'] as $section => $entries) {
+			foreach ($entries as $label => $names) {
+				$cli->writeLn(\sprintf('%s %s: %s', \ucfirst($section), $label, \implode(', ', $names)));
+			}
+		}
 	}
 
 	#[Override]
