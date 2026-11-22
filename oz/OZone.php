@@ -38,6 +38,7 @@ use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\Plugins\Plugins;
 use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Router\Events\RouterCreated;
+use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Router\RouteTable;
 use OZONE\Core\Runtime\Exceptions\RequestFinished;
@@ -632,9 +633,10 @@ final class OZone
 	 *
 	 * The name says what the table was compiled from, so a file never describes other routes -- opcache
 	 * may never check it again: the release (a deployment makes a new project directory), the providers,
-	 * and the application's and the scope's stateful settings, which the providers may read
-	 * (Settings::set() touches the directory it writes). Kept with the rest of what a build
-	 * compiles, under one directory per scope.
+	 * the application's and the scope's stateful settings, which the providers may read
+	 * (Settings::set() touches the directory it writes), and the version each provider says its routes
+	 * were built from ({@see RouteProviderInterface::routesVersion()}). Kept with the rest of what a
+	 * build compiles, under one directory per scope.
 	 *
 	 * @param bool                $api       true for the API router, false for the web one
 	 * @param array<string, bool> $providers the router's route providers
@@ -645,6 +647,15 @@ final class OZone
 			return null;
 		}
 
+		$versions = [];
+
+		foreach ($providers as $provider => $enabled) {
+			// What is not a provider is the router's to refuse, with the message it already has.
+			if ($enabled && \is_subclass_of($provider, RouteProviderInterface::class)) {
+				$versions[$provider] = $provider::routesVersion();
+			}
+		}
+
 		$app   = app();
 		$scope = scope();
 		$key   = \hash('xxh128', \serialize([
@@ -652,6 +663,7 @@ final class OZone
 			$providers,
 			@\filemtime(StateLayout::path($app, StateLayout::SETTINGS)),
 			@\filemtime(StateLayout::path($scope, StateLayout::SETTINGS)),
+			$versions,
 		]));
 
 		return InstanceLayout::releaseBuildPath(

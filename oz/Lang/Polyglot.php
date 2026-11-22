@@ -448,6 +448,15 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 		}, Event::RUN_FIRST);
 	}
 
+	/**
+	 * Null: the language routes are written in code.
+	 */
+	#[Override]
+	public static function routesVersion(): ?string
+	{
+		return null;
+	}
+
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{

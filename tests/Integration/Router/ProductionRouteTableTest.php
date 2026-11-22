@@ -43,6 +43,8 @@ final class ProductionRouteTableTest extends TestCase
 
 	private static string $log = '';
 
+	private static string $version = '';
+
 	#[Override]
 	public static function setUpBeforeClass(): void
 	{
@@ -50,7 +52,8 @@ final class ProductionRouteTableTest extends TestCase
 
 		$proj      = OZTestProject::create('route-table', fresh: true);
 		$ns        = $proj->getNamespace();
-		self::$log = $proj->getPath() . '/route_providers.log';
+		self::$log     = $proj->getPath() . '/route_providers.log';
+		self::$version = $proj->getPath() . '/routes_version.txt';
 
 		// No route here touches the database: SQLite only keeps the project off a MySQL default.
 		$proj->writeEnv([
@@ -60,7 +63,11 @@ final class ProductionRouteTableTest extends TestCase
 		]);
 
 		foreach (['RouteTableProviderA', 'RouteTableProviderB'] as $stub) {
-			$proj->writeFileFromStub($stub, "app/{$stub}.php", ['namespace' => $ns, 'log_file' => self::$log]);
+			$proj->writeFileFromStub($stub, "app/{$stub}.php", [
+				'namespace'    => $ns,
+				'log_file'     => self::$log,
+				'version_file' => self::$version,
+			]);
 			$proj->setSetting('oz.routes.api', "{$ns}\\{$stub}", true);
 		}
 
@@ -168,6 +175,25 @@ final class ProductionRouteTableTest extends TestCase
 		self::assertSame(200, $status);
 		self::assertSame('7', (string) ($data['data']['value'] ?? ''));
 		self::assertCount(\count($before) + 1, self::tables());
+	}
+
+	public function testANewRoutesVersionCompilesANewTable(): void
+	{
+		\file_put_contents(self::$version, 'v1');
+		self::get('/rt-a');
+		self::ensureTable();
+
+		$before = self::tables();
+
+		// Nothing else changes: not the release, the providers or a setting.
+		\file_put_contents(self::$version, 'v2');
+		self::resetLog();
+
+		[$status] = self::get('/rt-b');
+
+		self::assertSame(200, $status);
+		self::assertCount(\count($before) + 1, self::tables());
+		self::assertSame(['A', 'B'], self::registrations());
 	}
 
 	/**

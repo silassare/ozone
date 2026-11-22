@@ -20,7 +20,8 @@ use OZONE\Core\Router\Router;
 
 /**
  * A route provider that logs each time a router registers it, which a router routing through a
- * route table does only when a request needs one of its routes.
+ * route table does only when a request needs one of its routes, and whose routes version is a file
+ * a test writes.
  */
 final class RouteTableProviderA extends BaseService
 {
@@ -34,6 +35,16 @@ final class RouteTableProviderA extends BaseService
 
 			return $s->respond();
 		})->name('rt:a');
+	}
+
+	/**
+	 * What a file of the project holds, as routes built from data would answer their version.
+	 */
+	public static function routesVersion(): ?string
+	{
+		$version = @\file_get_contents('__PLH_VERSION_FILE__');
+
+		return false === $version ? null : $version;
 	}
 
 	public static function apiDoc(ApiDoc $doc): void {}

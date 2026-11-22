@@ -27,6 +27,12 @@ final class TableItemProvider implements RouteProviderInterface
 	public static int $registrations = 0;
 
 	#[Override]
+	public static function routesVersion(): ?string
+	{
+		return null;
+	}
+
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		++self::$registrations;

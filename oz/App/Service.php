@@ -69,6 +69,15 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 	#[Override]
 	public static function registerRoutes(Router $router): void {}
 
+	/**
+	 * Null: a service's routes are written in its code.
+	 */
+	#[Override]
+	public static function routesVersion(): ?string
+	{
+		return null;
+	}
+
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void {}
 

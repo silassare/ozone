@@ -44,6 +44,12 @@ final class RuntimeProbe implements RouteProviderInterface
 	private static int $served = 0;
 
 	#[Override]
+	public static function routesVersion(): ?string
+	{
+		return null;
+	}
+
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->group('/runtime-probe', static function () use ($router): void {

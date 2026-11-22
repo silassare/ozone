@@ -2,6 +2,15 @@
 
 ### Breaking changes
 
+- **A route provider says what version its routes are** (`RouteProviderInterface::routesVersion():
+  ?string`), and the production route table's key includes it. Null is routes written in code, and
+  `Service` answers it, so a provider extending `Service` changes nothing; a class implementing the
+  interface directly must add it. A provider whose routes come from data that changes without a
+  deploy or a setting -- files edited on the server, rows in a database -- answers a version of that
+  data, and a new one compiles a new table on the next request, where before the old table kept
+  serving the old routes until the next release. Asked on every request served from a table, so it
+  answers from something cheap to read.
+
 - **A plugin boots after the plugins it requires, and one whose required plugin is disabled is
   refused.** What a plugin requires is what its package requires through Composer, among the
   packages of the plugins `oz.plugins` lists (`PluginInterface::getRequiredPackages()`, read by

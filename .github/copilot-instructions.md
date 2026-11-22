@@ -480,8 +480,10 @@ path, name, guards and middlewares without a group block.
   explicitly is auto named from its methods and path (`route_{xxh3}`), never from registration order.
 - **Route table** (production, outside the console): `OZone::createRouter()` routes through a
   `Router\RouteTable` kept in the scope's cache dir, its file named by the release (project dir), the
-  providers and the mtimes of the application's and the scope's stateful settings dirs
-  (`Settings::set()` touches the one it writes). The first router of a
+  providers, the mtimes of the application's and the scope's stateful settings dirs
+  (`Settings::set()` touches the one it writes), and what each provider's `routesVersion()` answers:
+  null for routes written in code, a cheap version of the data for routes built from data (files
+  edited on the server, rows), so a change to that data compiles a new table. The first router of a
   release registers every provider and saves the table (`Router::compileTable()`); the next ones
   register at once only the providers that do more than map routes (no route, or a global parameter),
   then per request the provider of the matched route or of a route looked up by name
