@@ -1258,14 +1258,21 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   (read through `oz.proxies`) or the cookie of the secret link passes; anything else is **held** and
   routed only so its route's own authentication can show an administrator
   (`MaintenanceGate::admits()`, failing closed on any throwable, refusing a scoped authentication),
-  checked in `Context::authenticate()` before the guards. Whatever else stops a held request -- no
+  checked in `Context::authenticate()` before the guards; `RouteFound` is dispatched only after that
+  check for a held request (`Router::handle()` wraps the authenticator), so no project listener runs
+  on a request answered 503. Whatever else stops a held request -- no
   route (refused in `Router::handle()` before `RouteNotFound` can answer), a refused origin, an
   authentication error -- becomes the 503, and a refusal forgets the authentication so the session
   is not written. The `oz:cron` route is exempt (it has its key). A record that cannot be read holds
   everything and pauses the jobs (fail closed). With `--pause-jobs`, `CronRunner::tick()` returns
   false without checking in, `JobsManager::run()` and `runJob()` take nothing (jobs stay pending),
-  and request-time garbage collection is skipped; `forceRunJob()`, the async hand-off of a job
-  locked before the pause, is not held.
+  and request-time garbage collection is skipped. A forced or manual run is refused too
+  (`forceRunJob()`, `Cron::start()`) unless the caller says `$despite_maintenance` (CLI:
+  `oz jobs run --despite-maintenance`, `oz cron start --force`); a job a run handed off before the
+  pause (`oz jobs run --handoff`, `JobsManager::runHandedOff()`) is given back pending, untried.
+  `oz deploy run --maintenance [--retry-after=]` holds the instance from just before the migrations
+  to after go-live and restart, before the health check; it is refused when the live release's `oz`
+  cannot answer `maintenance status`, and a failure in between leaves maintenance on and says so.
 - **`oz users grant`** gives a role to an existing user (`Roles::assign()`, restoring a revoked one): the
   way to make the first super admin, never a web installer. `oz doctor check` warns while an installed
   project has none.

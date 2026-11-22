@@ -160,6 +160,18 @@ final class RoutePathParserTest extends TestCase
 		$parser->parse();
 	}
 
+	/**
+	 * A name ending in a newline: `$` alone matches before it, and the group named with it fails
+	 * to compile the first time the route is matched, rather than when it is declared.
+	 */
+	public function testParseThrowsOnANameEndingInANewline(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('Route parameter name contains invalid characters');
+		$parser = new RoutePathParser("/users/{id\n}", $this->router);
+		$parser->parse();
+	}
+
 	public function testParseThrowsOnUnclosedBrace(): void
 	{
 		$this->expectException(InvalidArgumentException::class);

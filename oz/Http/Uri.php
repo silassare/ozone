@@ -500,6 +500,10 @@ class Uri implements UriInterface
 				: ($host_port ?? ('https' === $scheme ? 443 : 80));
 		} elseif (null !== $host_port) {
 			$port = $host_port;
+		} elseif ($env->has('HTTP_HOST')) {
+			// A Host without a port names the scheme's default one, whatever port the server
+			// listens on behind a mapping; SERVER_PORT stands only where no Host was sent.
+			$port = 'https' === $scheme ? 443 : 80;
 		}
 
 		// Path

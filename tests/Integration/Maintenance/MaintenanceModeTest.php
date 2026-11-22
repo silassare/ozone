@@ -35,6 +35,15 @@ final class MaintenanceModeTest extends TestCase
 
 	private const array FOREIGN = ['Accept: application/json', 'Origin: http://elsewhere.example'];
 
+	private const string ADMIN_EMAIL = 'ada.admin@example.com';
+
+	private const string AGENT = 'User-Agent: OZoneTest/1.0 (maintenance)';
+
+	/**
+	 * Where the project's `RouteFound` listener writes the name of each route it is told of.
+	 */
+	private static string $found_log = '';
+
 	private static ?OZTestProject $proj = null;
 
 	/**
@@ -67,13 +76,21 @@ final class MaintenanceModeTest extends TestCase
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+
+		// An administrator, as `oz users grant` makes one.
+		$proj->writeFileFromStub('SeedUser', 'seed_user.php', ['email' => self::ADMIN_EMAIL]);
+		new Process([\PHP_BINARY, 'seed_user.php'], $proj->getPath())->mustRun();
+		$proj->oz('users', 'grant', '--user=' . self::ADMIN_EMAIL, '--role=admin')->mustRun();
 		$proj->oz('scopes', 'add', '--name=www', '--origin=http://localhost', '--api=false')->mustRun();
 		$proj->writeFileFromStub('MaintenanceTestRoutesProvider', 'app/MaintenanceTestRoutesProvider.php', [
 			'namespace' => $ns,
 		]);
 		$proj->setSetting('oz.routes', "{$ns}\\MaintenanceTestRoutesProvider", true);
+		self::$found_log = $proj->getPath() . '/route_found.log';
+
 		$proj->writeFileFromStub('MaintenanceTestBootHookReceiver', 'app/MaintenanceTestBootHookReceiver.php', [
 			'namespace' => $ns,
+			'found_log' => self::$found_log,
 		]);
 		$proj->setSetting('oz.boot', "{$ns}\\MaintenanceTestBootHookReceiver", true);
 
@@ -149,6 +166,27 @@ final class MaintenanceModeTest extends TestCase
 		self::assertSame(503, self::get('api', '/mt-nowhere')['status']);
 		// Nor is any other refusal: whatever stops a held request on its way, it is held.
 		self::assertSame(503, self::get('api', '/mt-ping', self::FOREIGN)['status']);
+	}
+
+	public function testNoProjectListenerRunsOnAHeldRequestAndOneRunsForAnAdministrator(): void
+	{
+		\file_put_contents(self::$found_log, '');
+
+		self::assertSame(200, self::get('api', '/mt-ping')['status']);
+		self::assertSame(['mt:ping'], self::foundRoutes());
+
+		$session = self::signIn();
+
+		self::proj()->oz('maintenance', 'on')->mustRun();
+		\file_put_contents(self::$found_log, '');
+
+		self::assertSame(503, self::get('api', '/mt-ping', ['Accept: application/json', self::AGENT])['status']);
+		self::assertSame([], self::foundRoutes(), 'a request answered 503 ran a project listener');
+
+		$admin = self::get('api', '/mt-ping', ['Accept: application/json', self::AGENT, 'Cookie: ' . $session]);
+
+		self::assertSame(200, $admin['status'], $admin['body']);
+		self::assertSame(['mt:ping'], self::foundRoutes());
 	}
 
 	public function testAScopeTheMaintenanceDoesNotNameIsServed(): void
@@ -277,6 +315,15 @@ final class MaintenanceModeTest extends TestCase
 		$jobs->mustRun();
 
 		self::assertStringContainsString('No job run: a maintenance pauses the jobs.', $jobs->getOutput());
+
+		// A task started by hand is the same work: refused, unless the operator insists.
+		$start = self::proj()->oz('cron', 'start', '--name=oz:gc');
+		$start->run();
+
+		self::assertNotSame(0, $start->getExitCode());
+		self::assertStringContainsString('jobs are paused by a maintenance. Add --force', $start->getOutput());
+
+		self::proj()->oz('cron', 'start', '--name=oz:gc', '--force')->mustRun();
 	}
 
 	public function testOffRestoresService(): void
@@ -343,6 +390,49 @@ final class MaintenanceModeTest extends TestCase
 		$json = \json_decode($body, true);
 
 		return ['status' => $status, 'headers' => $found, 'body' => $body, 'json' => \is_array($json) ? $json : []];
+	}
+
+	/**
+	 * The routes the project's `RouteFound` listener was told of since the log was emptied.
+	 *
+	 * @return list<string>
+	 */
+	private static function foundRoutes(): array
+	{
+		$lines = \file(self::$found_log, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES);
+
+		return false === $lines ? [] : $lines;
+	}
+
+	/**
+	 * Signs the administrator in on the API scope, and returns the session cookie to send back.
+	 */
+	private static function signIn(): string
+	{
+		$ctx = \stream_context_create(['http' => [
+			'method'          => 'POST',
+			'timeout'         => 10,
+			'ignore_errors'   => true,
+			'follow_location' => 0,
+			'header'          => "Accept: application/json\r\n" . self::AGENT . "\r\n"
+				. "Content-Type: application/x-www-form-urlencoded\r\n",
+			'content'         => \http_build_query([
+				'auth_user_type'             => 'user',
+				'auth_user_identifier_type'  => 'email',
+				'auth_user_identifier_value' => self::ADMIN_EMAIL,
+				'auth_user_password'         => 'a-strong-password',
+			]),
+		]]);
+
+		$body = (string) \file_get_contents('http://' . self::HOST . ':' . self::$ports['api'] . '/login', false, $ctx);
+
+		foreach (\http_get_last_response_headers() ?? [] as $line) {
+			if (\preg_match('~^Set-Cookie:\s*(OZONE_SID=[^;]+)~i', $line, $m)) {
+				return $m[1];
+			}
+		}
+
+		self::fail('No session after signing in: ' . $body);
 	}
 
 	/**

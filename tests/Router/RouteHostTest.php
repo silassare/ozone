@@ -100,6 +100,22 @@ final class RouteHostTest extends TestCase
 		self::assertSame('any.dashboard', self::found($router, 'GET', '/dashboard'));
 	}
 
+	public function testALiteralHostBeatsAHostWithAPartOnTheHostBothMatch(): void
+	{
+		$router = new Router();
+
+		// The host with a part was mapped first, and still loses where the literal one matches.
+		$router->get('/', static fn () => null)->name('tenant')->host('{tenant}.example.com');
+		$router->get('/', static fn () => null)->name('www')->host('www.example.com');
+		$router->get('/projects/:id', static fn () => null)->name('tenant.project')->host('{tenant}.example.com');
+		$router->get('/projects/:id', static fn () => null)->name('www.project')->host('www.example.com');
+
+		self::assertSame('www', self::found($router, 'GET', '/', 'www.example.com'));
+		self::assertSame('www.project', self::found($router, 'GET', '/projects/7', 'www.example.com'));
+		self::assertSame('tenant', self::found($router, 'GET', '/', 'acme.example.com'));
+		self::assertSame('tenant.project', self::found($router, 'GET', '/projects/7', 'acme.example.com'));
+	}
+
 	public function testAHigherPriorityStillComesBeforeAHost(): void
 	{
 		$router = new Router();

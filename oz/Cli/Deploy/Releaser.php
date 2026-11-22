@@ -30,6 +30,13 @@ use OZONE\Core\Exceptions\RuntimeException;
  *
  * Migrations are the one step a rollback cannot undo, which is why they run with a backup and why
  * `--skip-migrations` exists for a release that must not touch the schema.
+ *
+ * With `$maintenance`, the instance is under maintenance from just before the migrations until the
+ * new release is live and restarted, the jobs paused: the release serving meanwhile answers 503
+ * rather than run against a schema being changed under it. The maintenance file is in the shared
+ * `data/`, so it is turned on from the new release and held by the live one; the live release must
+ * therefore know maintenance, which {@see self::run()} checks before anything is created. A failure
+ * in between leaves maintenance on, and says so: what failed may be the migration itself.
  */
 final readonly class Releaser
 {
@@ -56,6 +63,13 @@ final readonly class Releaser
 	public const float MIGRATIONS_TIMEOUT = 0.0;
 
 	/**
+	 * The step that turns maintenance on, and the one that turns it off.
+	 */
+	public const string STEP_MAINTENANCE_ON = 'maintenance-on';
+
+	public const string STEP_MAINTENANCE_OFF = 'maintenance-off';
+
+	/**
 	 * @param string       $root       the deploy root, holding releases/, current, data/ and .ozone/
 	 * @param string       $repository the git repository to check out
 	 * @param string       $ref        the branch, tag or commit to deploy
@@ -65,6 +79,10 @@ final readonly class Releaser
 	 * @param null|string  $health_url a URL that must answer 2xx after the swap
 	 * @param list<string> $restart    systemd units to restart after the swap
 	 * @param string       $php        the PHP binary
+	 * @param string       $archive    a tar.gz archive to deploy instead of a repository
+	 * @param bool         $maintenance whether to hold the instance under maintenance from the
+	 *                                  migrations to the restart (`oz maintenance`)
+	 * @param null|int     $retry_after the `Retry-After` of that maintenance, in seconds
 	 */
 	public function __construct(
 		private string $root,
@@ -77,6 +95,8 @@ final readonly class Releaser
 		private array $restart = [],
 		private string $php = \PHP_BINARY,
 		private string $archive = '',
+		private bool $maintenance = false,
+		private ?int $retry_after = null,
 	) {}
 
 	/**
@@ -170,6 +190,25 @@ final readonly class Releaser
 			],
 		);
 
+		if ($this->maintenance) {
+			$maintenance_on = \sprintf(
+				'cd %s && %s %s maintenance on --pause-jobs',
+				\escapeshellarg($release),
+				$this->php,
+				\escapeshellarg($oz)
+			);
+
+			$steps[] = new ProvisionStep(
+				self::STEP_MAINTENANCE_ON,
+				'Hold every scope under maintenance and pause the jobs, until the new release is live.',
+				[
+					null === $this->retry_after
+						? $maintenance_on
+						: $maintenance_on . ' --retry-after=' . $this->retry_after,
+				],
+			);
+		}
+
 		if ($this->migrations) {
 			$steps[] = new ProvisionStep(
 				'migrations',
@@ -220,6 +259,22 @@ final readonly class Releaser
 					$this->restart
 				),
 				timeout: self::RESTART_TIMEOUT,
+			);
+		}
+
+		// Before the health check, which has to reach the release as anyone does.
+		if ($this->maintenance) {
+			$steps[] = new ProvisionStep(
+				self::STEP_MAINTENANCE_OFF,
+				'End the maintenance: the new release serves, and the jobs run again.',
+				[
+					\sprintf(
+						'cd %s && %s %s maintenance off',
+						\escapeshellarg($release),
+						$this->php,
+						\escapeshellarg($oz)
+					),
+				],
 			);
 		}
 
@@ -312,7 +367,12 @@ final readonly class Releaser
 
 		$previous = ReleaseLayout::currentRelease($this->root, $host);
 		$live     = false;
+		$held     = false;
 		$ran      = [];
+
+		if ($this->maintenance && null !== $previous) {
+			$this->assertLiveReleaseKnowsMaintenance($host, $previous);
+		}
 
 		foreach ($this->steps() as $step) {
 			null !== $on_step && $on_step($step, 'running');
@@ -334,14 +394,17 @@ final readonly class Releaser
 					}
 
 					throw new RuntimeException(\sprintf(
-						'Deploy step "%s" failed on: %s',
+						'Deploy step "%s" failed on: %s%s',
 						$step->name,
-						$command
+						$command,
+						$held ? \PHP_EOL . 'MAINTENANCE IS STILL ON: the database may be half migrated. Check'
+							. ' the live release, then run "oz maintenance off" in it.' : ''
 					), [
 						'_step'        => $step->name,
 						'_command'     => $command,
 						'_output'      => \substr($output, -2000),
 						'_rolled_back' => $live && null !== $previous ? $previous : false,
+						'_maintenance' => $held,
 					]);
 				}
 			}
@@ -352,10 +415,47 @@ final readonly class Releaser
 
 			if ('go-live' === $step->name) {
 				$live = true;
+			} elseif (self::STEP_MAINTENANCE_ON === $step->name) {
+				$held = true;
+			} elseif (self::STEP_MAINTENANCE_OFF === $step->name) {
+				$held = false;
 			}
 		}
 
 		return $ran;
+	}
+
+	/**
+	 * Refuses a maintenance the live release would not hold.
+	 *
+	 * The maintenance is turned on from the new release, but it is the live one that serves while
+	 * the migrations run: an OZone that predates maintenance mode would go on serving, and the
+	 * deploy would only look held. Asked of the live release itself, as `oz maintenance status`,
+	 * which such an OZone answers as an unknown command.
+	 *
+	 * @throws RuntimeException when the live release cannot answer it
+	 */
+	private function assertLiveReleaseKnowsMaintenance(HostInterface $host, string $live): void
+	{
+		$dir    = ReleaseLayout::releaseDir($this->root, $live);
+		$output = '';
+		$status = \sprintf(
+			'cd %s && %s %s maintenance status',
+			\escapeshellarg($dir),
+			$this->php,
+			\escapeshellarg($dir . DS . 'vendor' . DS . 'bin' . DS . 'oz')
+		);
+
+		if (0 !== $host->run($status, $output)) {
+			throw new RuntimeException(\sprintf(
+				'--maintenance refused: the live release "%s" cannot hold a maintenance (its OZone predates'
+					. ' maintenance mode, or "oz maintenance status" fails in it), so it would go on serving'
+					. ' while the migrations run. Nothing was changed. Deploy once without --maintenance to'
+					. ' put an OZone that knows it live. It answered: %s',
+				$live,
+				\trim(\substr($output, -500))
+			), ['_release' => $live, '_output' => \substr($output, -2000)]);
+		}
 	}
 
 	/**

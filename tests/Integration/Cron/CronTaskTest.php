@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
  *
  * Async flow (testAsyncCronTaskDispatchedAndProcessed):
  *   A second project uses a task with `inBackground()`.  `oz cron run` dispatches it to
- *   `cron:async` and spawns a subprocess via `oz jobs run --force`.  The subprocess
+ *   `cron:async` and spawns a subprocess via `oz jobs run --force --handoff`.  The subprocess
  *   bootstraps OZone and calls `CronTaskWorker::__construct()`, where `Cron::collect()`
  *   is invoked so the task registry is populated before `Cron::getTask()` is called: without it,
  *   the subprocess threw "Cron task not found".

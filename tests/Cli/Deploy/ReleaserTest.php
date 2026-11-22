@@ -139,6 +139,56 @@ final class ReleaserTest extends TestCase
 		self::assertContains('migrations', self::stepNames(new Releaser(self::ROOT, self::REPO)));
 	}
 
+	public function testMaintenanceHoldsFromBeforeTheMigrationsToAfterTheRestartAndBeforeTheHealthCheck(): void
+	{
+		$names = self::stepNames(new Releaser(
+			self::ROOT,
+			self::REPO,
+			health_url: 'https://example.com/',
+			restart: ['app-worker@1'],
+			maintenance: true,
+		));
+
+		$on  = \array_search(Releaser::STEP_MAINTENANCE_ON, $names, true);
+		$off = \array_search(Releaser::STEP_MAINTENANCE_OFF, $names, true);
+
+		self::assertIsInt($on);
+		self::assertIsInt($off);
+		// Right before the migrations: everything that does not touch the schema ran while the live
+		// release still served.
+		self::assertSame((int) \array_search('migrations', $names, true) - 1, $on);
+		self::assertSame((int) \array_search('orm', $names, true) + 1, $on);
+		// Off once the new release is live and its workers restarted, and before the health check,
+		// which reaches the release as anyone does.
+		self::assertGreaterThan((int) \array_search('go-live', $names, true), $off);
+		self::assertGreaterThan((int) \array_search('restart', $names, true), $off);
+		self::assertLessThan((int) \array_search('health', $names, true), $off);
+	}
+
+	public function testMaintenanceIsTurnedOnFromTheNewReleaseWithTheJobsPaused(): void
+	{
+		$releaser = new Releaser(self::ROOT, self::REPO, release: 'r9', maintenance: true, retry_after: 300);
+		$on       = self::commandsOf($releaser, Releaser::STEP_MAINTENANCE_ON);
+		$off      = self::commandsOf($releaser, Releaser::STEP_MAINTENANCE_OFF);
+
+		self::assertCount(1, $on);
+		self::assertStringStartsWith("cd '/srv/app/releases/r9' && ", $on[0]);
+		self::assertStringEndsWith(' maintenance on --pause-jobs --retry-after=300', $on[0]);
+		self::assertStringEndsWith(' maintenance off', $off[0]);
+		self::assertStringNotContainsString('--retry-after', self::commandsOf(
+			new Releaser(self::ROOT, self::REPO, maintenance: true),
+			Releaser::STEP_MAINTENANCE_ON
+		)[0]);
+	}
+
+	public function testNoMaintenanceStepWithoutTheOption(): void
+	{
+		$names = self::stepNames(new Releaser(self::ROOT, self::REPO));
+
+		self::assertNotContains(Releaser::STEP_MAINTENANCE_ON, $names);
+		self::assertNotContains(Releaser::STEP_MAINTENANCE_OFF, $names);
+	}
+
 	public function testNoRestartOrHealthStepWithoutOptions(): void
 	{
 		$names = self::stepNames(new Releaser(self::ROOT, self::REPO));

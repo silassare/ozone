@@ -20,6 +20,7 @@ use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Cron\CronRunner;
 use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\Maintenance\Maintenance;
 use Throwable;
 
 /**
@@ -63,8 +64,27 @@ final class CronCmd extends Command
 				->required()
 				->string();
 
-			$start->handler(static function (KliArgs $args): void {
-				Cron::start((string) $args->get('name'));
+			$start->option('force', 'f')
+				->description('Start it even while a maintenance pauses the jobs.')
+				->bool()
+				->def(false);
+
+			$start->handler(function (KliArgs $args): void {
+				$name  = (string) $args->get('name');
+				$force = (bool) $args->get('force');
+
+				if (!$force && Maintenance::jobsPaused()) {
+					$this->getCli()
+						->error(\sprintf(
+							'Cron task "%s" not started: jobs are paused by a maintenance. Add --force to'
+								. ' start it anyway.',
+							$name
+						));
+
+					return;
+				}
+
+				Cron::start($name, $force);
 			});
 		}
 	}

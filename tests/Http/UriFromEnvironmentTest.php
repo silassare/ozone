@@ -92,6 +92,45 @@ final class UriFromEnvironmentTest extends TestCase
 		self::assertSame('/', $uri->getPath());
 	}
 
+	/**
+	 * A Host without a port names the scheme's default one: the server behind a port mapping
+	 * listens elsewhere, and an address built with its port would send the client there.
+	 */
+	public function testAHostWithoutAPortIsOnTheSchemesDefaultWhateverTheServerListensOn(): void
+	{
+		$http = self::uri(['HTTP_HOST' => 'acme.example.com', 'SERVER_PORT' => 8080]);
+
+		self::assertSame('acme.example.com', $http->getHost());
+		self::assertNull($http->getPort());
+
+		$https = self::uri(['HTTP_HOST' => 'acme.example.com', 'HTTPS' => 'on', 'SERVER_PORT' => 8443]);
+
+		self::assertSame('https', $https->getScheme());
+		self::assertNull($https->getPort());
+
+		$given = self::uri(['HTTP_HOST' => 'acme.example.com:9090', 'SERVER_PORT' => 8080]);
+
+		self::assertSame(9090, $given->getPort());
+	}
+
+	public function testWithNoHostTheServerNameAndPortStand(): void
+	{
+		$uri = Uri::createFromEnvironment(
+			new HTTPEnvironment([
+				'REMOTE_ADDR'    => '10.0.0.1',
+				'SERVER_NAME'    => 'app.internal',
+				'SERVER_PORT'    => 8080,
+				'REQUEST_METHOD' => 'GET',
+				'REQUEST_URI'    => '/',
+				'SCRIPT_NAME'    => '/index.php',
+			]),
+			new TrustedProxies(['10.0.0.1' => true])
+		);
+
+		self::assertSame('app.internal', $uri->getHost());
+		self::assertSame(8080, $uri->getPort());
+	}
+
 	private static function uri(array $env): Uri
 	{
 		return Uri::createFromEnvironment(

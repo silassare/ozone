@@ -30,7 +30,7 @@ use OZONE\Core\Utils\JSONResult;
  * - {@link work()} - performs the actual job; any output should be accessible via
  *   {@link getResult()} afterwards so {@link JobsManager} can persist it on the job record.
  * - {@link isAsync()} - hint for the job runner; when true, the runner spawns a
- *   dedicated background subprocess for this job (via the `--job <ref> --force`
+ *   dedicated background subprocess for this job (via the `--job <ref> --force --handoff`
  *   CLI dispatch) so the queue worker process stays free to pick up the next job
  *   immediately. The lock is held by the parent process and transferred to the
  *   subprocess, which releases it in {@link JobsManager::finish()}.

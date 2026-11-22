@@ -473,8 +473,24 @@ final class Router
 			case RouteSearchStatus::FOUND:
 				$route  = $result->foundRoute();
 				$params = $result->foundRouteParams();
+				$found  = static function () use ($context, $route, $params): void {
+					new RouteFound($context, $route, $params)->dispatch();
+				};
 
-				new RouteFound($context, $route, $params)->dispatch();
+				if (null === $hold) {
+					$found();
+				} else {
+					// Held: whether the request is let through is known only once the route's own
+					// authentication has said who is asking, which the authenticator does and
+					// screens. The event follows it, so no listener runs on a request answered as
+					// maintenance, and still comes before the guards, as it promises.
+					$authenticate  = $authenticator;
+					$authenticator = static function (RouteInfo $ri) use ($authenticate, $found): void {
+						null === $authenticate || $authenticate($ri);
+
+						$found();
+					};
+				}
 
 				$ri = new RouteInfo($context, $route, $params, $authenticator);
 
@@ -1001,10 +1017,26 @@ final class Router
 		$bp = $b->getOptions()->getPriority(true);
 
 		if ($ap === $bp) {
-			return (null === $a->getHost()) <=> (null === $b->getHost());
+			return self::hostRank($a) <=> self::hostRank($b);
 		}
 
 		return ($ap > $bp) ? -1 : 1;
+	}
+
+	/**
+	 * Where a route stands among routes of one priority: a literal host first, as a static path
+	 * comes before a dynamic one, then a host with a part, then a route of every host.
+	 */
+	private static function hostRank(Route $route): int
+	{
+		$host = $route->getHost();
+
+		if (null === $host) {
+			return 2;
+		}
+
+		// A host takes no port, so `:` here is a part, as `{` and an optional `[` are.
+		return false === \strpbrk($host, '{[:') ? 0 : 1;
 	}
 
 	/**

@@ -295,11 +295,12 @@ final class JobsManager
 	 * Run a job.
 	 *
 	 * Returns false, the job left pending and unlocked, when another worker holds it or while a
-	 * maintenance pauses the jobs ({@see Maintenance::jobsPaused()}).
+	 * maintenance pauses the jobs ({@see Maintenance::jobsPaused()}), unless told to run it despite
+	 * the maintenance: an operator's explicit choice, never a runner's.
 	 */
-	public static function runJob(JobContractInterface $job_contract): bool
+	public static function runJob(JobContractInterface $job_contract, bool $despite_maintenance = false): bool
 	{
-		if (Maintenance::jobsPaused()) {
+		if (!$despite_maintenance && Maintenance::jobsPaused()) {
 			return false;
 		}
 
@@ -335,8 +336,8 @@ final class JobsManager
 				}
 
 				if ($run_async) {
-					// Keep the lock held. The subprocess receives the ref via
-					// --job and --force and owns the job until finish() releases the lock.
+					// Keep the lock held. The subprocess receives the ref via --job, --force and
+					// --handoff, and owns the job until finish() releases the lock.
 					self::workAsync($job_contract);
 				} else {
 					// Count the attempt and record when work actually begins.
@@ -442,6 +443,33 @@ final class JobsManager
 	}
 
 	/**
+	 * Runs a job a run handed off to a process of its own ({@see self::workAsync()}).
+	 *
+	 * While a maintenance pauses the jobs, gives the job back instead: pending and unlocked, its try
+	 * not counted, as a paused {@see self::runJob()} leaves a job it did not take. The run that
+	 * handed it off locked it and set it running before the pause, but its work has not begun, so
+	 * nothing is undone by waiting; running it would be work done while the jobs are paused, and
+	 * leaving it locked would hold it until it is reclaimed as stale, which spends a try on a job
+	 * that never failed.
+	 *
+	 * @return bool whether it ran
+	 */
+	public static function runHandedOff(JobContractInterface $job_contract): bool
+	{
+		if (Maintenance::jobsPaused()) {
+			$job_contract->setState(JobState::PENDING);
+			$job_contract->save();
+			$job_contract->unlock();
+
+			return false;
+		}
+
+		self::forceRunJob($job_contract, true);
+
+		return true;
+	}
+
+	/**
 	 * Continue execution of an async-dispatched job.
 	 *
 	 * Called by the CLI subprocess after receiving --job and --force. The job is assumed
@@ -449,12 +477,21 @@ final class JobsManager
 	 * bypasses the lock() check -- the subprocess is the designated handler and is
 	 * responsible for the final unlock via finish().
 	 *
-	 * Not held by a maintenance that pauses the jobs: the job was started before the pause, by a
-	 * process that locked it and set it running, and left waiting it would hold its lock until it
-	 * is reclaimed as stale.
+	 * Refused while a maintenance pauses the jobs, unless told to run it despite the maintenance:
+	 * whoever forces a job past its lock has not thereby chosen to run it during a pause. A job
+	 * handed off before the pause goes through {@see self::runHandedOff()}, which gives it back.
+	 *
+	 * @throws RuntimeException while the jobs are paused and $despite_maintenance is false
 	 */
-	public static function forceRunJob(JobContractInterface $job_contract): void
+	public static function forceRunJob(JobContractInterface $job_contract, bool $despite_maintenance = false): void
 	{
+		if (!$despite_maintenance && Maintenance::jobsPaused()) {
+			throw new RuntimeException(\sprintf(
+				'Job "%s" not run: jobs are paused by a maintenance ("oz maintenance off" ends it).',
+				$job_contract->getRef()
+			));
+		}
+
 		// Count the attempt and record when work actually begins.
 		$job_contract->incrementTryCount();
 		$job_contract->setStartedAt((float) \microtime(true));
@@ -492,14 +529,14 @@ final class JobsManager
 	 * Hand off a locked job to a background subprocess.
 	 *
 	 * The lock is kept held. The subprocess receives the job ref via --job
-	 * and calls forceRunJob(), which owns the job from that point and releases
+	 * and calls runHandedOff(), which owns the job from that point and releases
 	 * the lock via finish(). If Process::start() throws, the exception propagates
 	 * to runJob()'s catch block, which calls finish() -> unlock() exactly once.
 	 */
 	private static function workAsync(
 		JobContractInterface $job_contract,
 	): void {
-		// Keep the lock held -- the subprocess takes over via forceRunJob().
+		// Keep the lock held -- the subprocess takes over via runHandedOff().
 		//
 		// Use the ozone package bin/oz script (resolved from OZ_OZONE_DIR) rather
 		// than OZ_PROJECT_DIR.'bin/oz', because freshly scaffolded projects do not
@@ -513,6 +550,7 @@ final class JobsManager
 			'--store=' . $job_contract->getStore()->getName(),
 			'--job=' . $job_contract->getRef(),
 			'--force',
+			'--handoff',
 		];
 
 		// Two measures are required to truly detach the subprocess on Linux:

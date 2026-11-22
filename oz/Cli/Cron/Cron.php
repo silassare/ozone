@@ -21,6 +21,7 @@ use OZONE\Core\Cli\Cron\Tasks\CommandTask;
 use OZONE\Core\Cli\Cron\Workers\CronTaskWorker;
 use OZONE\Core\Db\OZJobsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Maintenance\Maintenance;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
@@ -199,9 +200,21 @@ final class Cron
 
 	/**
 	 * Start a cron task.
+	 *
+	 * Refused while a maintenance pauses the jobs, unless told to run it despite the maintenance:
+	 * a task run by hand is the same work the paused ticks hold back.
+	 *
+	 * @throws RuntimeException when the task is unknown, or the jobs are paused
 	 */
-	public static function start(string $name): void
+	public static function start(string $name, bool $despite_maintenance = false): void
 	{
+		if (!$despite_maintenance && Maintenance::jobsPaused()) {
+			throw new RuntimeException(\sprintf(
+				'Cron task "%s" not started: jobs are paused by a maintenance ("oz maintenance off" ends it).',
+				$name
+			));
+		}
+
 		self::collect();
 
 		$task = self::getTask($name);

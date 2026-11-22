@@ -132,7 +132,15 @@ final class DeployCmd extends Command
 			($url = (string) $args->get('health-url')) === '' ? null : $url,
 			self::parseList((string) $args->get('restart')),
 			archive: $source((string) $args->get('archive')),
+			maintenance: (bool) $args->get('maintenance'),
+			retry_after: null === ($retry = $args->get('retry-after')) ? null : (int) $retry,
 		);
+
+		if (null !== $args->get('retry-after') && !$args->get('maintenance')) {
+			$cli->error('--retry-after is the Retry-After of the maintenance: it needs --maintenance.');
+
+			return;
+		}
 
 		if (('' === (string) $args->get('repository')) === ('' === (string) $args->get('archive'))) {
 			$cli->error('Give the code to deploy: --repository (with --ref), or --archive.');
@@ -377,6 +385,14 @@ final class DeployCmd extends Command
 			->description('Print the steps and run nothing.')
 			->bool()
 			->def(false);
+		$run->option('maintenance')
+			->description('Hold the project under maintenance, jobs paused, from the migrations to the restart.')
+			->bool()
+			->def(false);
+		$run->option('retry-after')
+			->description('With --maintenance: the seconds a held client is told to wait (Retry-After).')
+			->number(1)
+			->integer();
 		self::withHostOptions($run);
 		$run->handler($this->run(...));
 

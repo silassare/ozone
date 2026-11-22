@@ -362,6 +362,22 @@
   `oz doctor check` warns while a maintenance is on (since when, what it holds, whether the jobs
   wait) and fails on a record it cannot read. `Http\IpRange` is the address and range matching
   `TrustedProxies` used privately, now shared.
+  A held request dispatches `RouteFound` only once its route's authentication has let it through,
+  so no project listener runs on a request answered 503; it still comes before the guards. Forced
+  and manual runs wait for a pause too: `JobsManager::forceRunJob()` throws and `Cron::start()`
+  throws while the jobs are paused, unless given `$despite_maintenance` (`oz jobs run --job=
+  --despite-maintenance`, `oz cron start --force`), and `runJob()` takes the same argument. A job
+  handed off to a process of its own before the pause is given back, pending, unlocked and untried
+  (`JobsManager::runHandedOff()`, which the hand-off reaches through `oz jobs run --handoff`):
+  its work had not begun, and left locked it would be reclaimed as stale and charged a failed try.
+
+- **`oz deploy run --maintenance [--retry-after=N]`** holds the project under maintenance, jobs
+  paused, from just before the migrations (`maintenance-on`, run from the new release; the file is
+  in the shared `data/`, so the live release is held) to after go-live and the restart
+  (`maintenance-off`), before the health check, which reaches the release as anyone does. It is
+  refused, before anything is created, when the live release's `oz` cannot answer
+  `maintenance status` (an OZone that predates maintenance would go on serving), and a step that
+  fails in between leaves maintenance on, the failure saying so: what failed may be the migration.
 
 - **Routing by host**: `host()` restricts a route, or a group with its routes, to the requests made
   to a host, inherited down the group tree with the innermost declaration winning. The host is a
@@ -369,8 +385,9 @@
   read with `RouteInfo::param()` like path ones; a host param with no declared pattern matches one
   label (`[^.]+`), and a host param may not take the name of a path param of the same route. Hosts
   compare case-insensitively. A route that declares no host matches any host, as before, and among
-  routes of one priority a route declaring a host is tried first, so a route of every host does not
-  shadow the same path on one host. `Router::find()` takes the request host, the compiled route
+  routes of one priority a literal host is tried first, then a host with a part, then a route of
+  every host, as a static path comes before a dynamic one: `www.example.com` is not shadowed by
+  `{tenant}.example.com`, nor the same path on one host by a route of every host. `Router::find()` takes the request host, the compiled route
   table carries each route's host pattern (its format is bumped, so a table saved before is
   ignored), and `Context::buildRouteUri()` (and so `route_uri()`) answers a URI on the route's host,
   with the request's scheme and port, when it is not the host being served; a host param not given
@@ -677,6 +694,15 @@
 
 ### Fixed
 
+- **A URI read from a request named the server's port where the client used the default one.** A
+  `Host` header without a port took `SERVER_PORT`, so behind a port mapping with no proxy (a
+  container publishing 80 on 8080) every absolute URI built from the request -- a link to another
+  host, a redirect -- named the port the server listens on. A `Host` without a port is the scheme's
+  default now; `SERVER_PORT` stands only where no `Host` was sent.
+- **A route param name could end in a newline.** `Route::ROUTE_PARAM_REG` was anchored with `$`,
+  which matches before a final newline, so `{id\n}` was accepted and the route's pattern failed to
+  compile the first time it was matched. It is anchored with `D` now and the name is refused when
+  the route is parsed.
 - **A param of an optional part a request leaves out read as an empty string.** On
   `/docs[/:lang]/page/:id`, a request on `/docs/page/7` gave `lang` the value `''`, so
   `RouteInfo::param('lang', 'en')` answered `''` and not its default; the same happened to a host

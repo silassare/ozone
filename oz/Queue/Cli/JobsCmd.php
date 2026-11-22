@@ -78,6 +78,15 @@ final class JobsCmd extends Command
 				->description('Run the job even if it is locked (also used for async hand-off).')
 				->bool();
 
+			$jobs_run->option('despite-maintenance')
+				->description('Run the job given with --job even while a maintenance pauses the jobs.')
+				->bool();
+
+			// Internal: what a run passes to the process it hands an asynchronous job to.
+			$jobs_run->option('handoff')
+				->description('The job was handed off by a run that locked it (internal).')
+				->bool();
+
 			$jobs_run->handler($this->run(...));
 
 			$jobs_finish = $this->action('finish', 'Finish jobs.');
@@ -336,27 +345,39 @@ final class JobsCmd extends Command
 
 			$job = JobsManager::getStore((string) $store)->getOrFail($job_ref);
 
-			// A locked job under --force is the hand-off of a run that started it before the pause
-			// (JobsManager::forceRunJob()), and goes on; any other waits for the end of the maintenance.
-			if (Maintenance::jobsPaused() && !($force && $job->isLocked())) {
+			if ($args->get('handoff')) {
+				if (!JobsManager::runHandedOff($job)) {
+					$this->getCli()
+						->info(\sprintf('Job "%s" given back, pending: a maintenance pauses the jobs.', $job_ref));
+				}
+
+				return;
+			}
+
+			$despite = (bool) $args->get('despite-maintenance');
+
+			if (!$despite && Maintenance::jobsPaused()) {
 				$this->getCli()
-					->info(\sprintf('Job "%s" left pending: a maintenance pauses the jobs.', $job_ref));
+					->error(\sprintf(
+						'Job "%s" not run: jobs are paused by a maintenance. Add --despite-maintenance to'
+							. ' run it anyway.',
+						$job_ref
+					));
 
 				return;
 			}
 
 			if ($force) {
 				if ($job->isLocked()) {
-					// Job is already locked (async hand-off or forced takeover):
-					// skip lock acquisition and run directly.
-					JobsManager::forceRunJob($job);
+					// Job is already locked (forced takeover): skip lock acquisition and run directly.
+					JobsManager::forceRunJob($job, $despite);
 				} else {
 					// Not locked yet: acquire lock normally then run.
-					JobsManager::runJob($job);
+					JobsManager::runJob($job, $despite);
 				}
 			} else {
 				// Normal single-job mode: fail if locked.
-				if (!JobsManager::runJob($job)) {
+				if (!JobsManager::runJob($job, $despite)) {
 					throw new KliInputException(
 						\sprintf('Job "%s" is locked. Use --force to run it anyway.', $job_ref)
 					);

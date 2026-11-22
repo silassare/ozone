@@ -336,6 +336,94 @@ final class DeployRunTest extends TestCase
 		);
 	}
 
+	public function testMaintenanceHoldsTheDeployAndEndsWithIt(): void
+	{
+		$proc = self::deploy(['--release=m1', '--maintenance', '--retry-after=60']);
+		$proc->mustRun();
+
+		$output = (string) \preg_replace('~\s+~', ' ', $proc->getOutput());
+
+		self::assertStringContainsString('maintenance on --pause-jobs --retry-after=60', $output);
+		self::assertStringContainsString('maintenance-on: ok', $output);
+		self::assertStringContainsString('maintenance-off: ok', $output);
+		self::assertSame('m1', ReleaseLayout::currentRelease(self::$root));
+		self::assertFileDoesNotExist(self::maintenanceFile());
+	}
+
+	public function testAFailureWhileHeldLeavesMaintenanceOnAndSaysSo(): void
+	{
+		$live = (string) ReleaseLayout::currentRelease(self::$root);
+
+		// No such unit: the restart fails after the swap, while the maintenance holds.
+		$proc = self::deploy(['--release=m2', '--maintenance', '--restart=oz-no-such-unit.service']);
+		$proc->run();
+
+		$output = (string) \preg_replace('~\s+~', ' ', $proc->getOutput() . $proc->getErrorOutput());
+
+		try {
+			self::assertNotSame(0, $proc->getExitCode());
+			self::assertStringContainsString('maintenance-on: ok', $output);
+			self::assertStringContainsString('MAINTENANCE IS STILL ON', $output);
+			self::assertFileExists(self::maintenanceFile());
+			self::assertSame($live, ReleaseLayout::currentRelease(self::$root), 'rolled back, still held');
+		} finally {
+			self::ozIn(ReleaseLayout::currentLink(self::$root), ['maintenance', 'off'])->mustRun();
+		}
+
+		self::assertFileDoesNotExist(self::maintenanceFile());
+	}
+
+	public function testALiveReleaseThatCannotHoldAMaintenanceRefusesIt(): void
+	{
+		$live    = (string) ReleaseLayout::currentRelease(self::$root);
+		$current = ReleaseLayout::currentLink(self::$root);
+		$old     = ReleaseLayout::releaseDir(self::$root, 'old-oz');
+
+		// A release whose `oz` predates maintenance mode, and answers it as an unknown command.
+		\mkdir($old . '/vendor/bin', 0o775, true);
+		\file_put_contents(
+			$old . '/vendor/bin/oz',
+			"<?php\necho '  unknown command: ' . (\$argv[1] ?? '') . \"\\n\";\nexit(1);\n"
+		);
+		\unlink($current);
+		\symlink($old, $current);
+
+		try {
+			$proc = self::deploy(['--release=m3', '--maintenance']);
+			$proc->run();
+
+			$output = (string) \preg_replace('~\s+~', ' ', $proc->getOutput() . $proc->getErrorOutput());
+
+			self::assertNotSame(0, $proc->getExitCode());
+			self::assertStringContainsString('--maintenance refused: the live release "old-oz"', $output);
+			self::assertStringContainsString('unknown command: maintenance', $output);
+			self::assertDirectoryDoesNotExist(ReleaseLayout::releaseDir(self::$root, 'm3'), 'nothing is created');
+			self::assertFileDoesNotExist(self::maintenanceFile());
+		} finally {
+			\unlink($current);
+			\symlink(ReleaseLayout::releaseDir(self::$root, $live), $current);
+			self::rmdir($old);
+		}
+	}
+
+	public function testRetryAfterNeedsMaintenance(): void
+	{
+		$proc = self::deploy(['--release=m4', '--retry-after=60']);
+		$proc->run();
+
+		self::assertNotSame(0, $proc->getExitCode());
+		self::assertStringContainsString('it needs --maintenance', $proc->getOutput());
+		self::assertDirectoryDoesNotExist(ReleaseLayout::releaseDir(self::$root, 'm4'));
+	}
+
+	/**
+	 * The maintenance file of the deploy root, shared by its releases.
+	 */
+	private static function maintenanceFile(): string
+	{
+		return self::$root . '/data/root/state/maintenance.json';
+	}
+
 	/**
 	 * @param list<string> $args
 	 */
