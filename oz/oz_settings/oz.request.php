@@ -12,6 +12,8 @@
 declare(strict_types=1);
 
 use OZONE\Core\App\Settings;
+use OZONE\Core\Web\DefaultRobotsTxtProvider;
+use OZONE\Core\Web\Interfaces\RobotsTxtProviderInterface;
 
 return [
 	/**
@@ -129,6 +131,15 @@ return [
 	 * @default []
 	 */
 	'OZ_REDIRECT_ALLOWED_HOSTS'    => [],
+
+	/**
+	 * What `/robots.txt` answers: a class implementing {@see RobotsTxtProviderInterface}, given the
+	 * request so it can answer per scope and per host. Override per scope
+	 * (`scopes/{name}/settings/oz.request.php`).
+	 *
+	 * The default keeps every crawler out of everything (`User-agent: *`, `Disallow: /`).
+	 */
+	'OZ_ROBOTS_TXT_PROVIDER'       => DefaultRobotsTxtProvider::class,
 
 	/**
 	 * How long, in seconds, a CSRF token is accepted after it was issued.

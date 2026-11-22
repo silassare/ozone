@@ -129,10 +129,8 @@ final class ScopesCmd extends Command
 				'type'    => 'file',
 				'content' => $scope_index,
 			],
-			'robots.txt'  => [
-				'type' => 'file',
-				'copy' => $tpl_folder . 'gen/robots.txt',
-			],
+			// No robots.txt: `/robots.txt` is a route, and a file here would only be a copy that can
+			// fall out of step with what the route answers.
 			'favicon.ico' => [
 				'type' => 'file',
 				'copy' => $tpl_folder . 'gen/favicon.ico',

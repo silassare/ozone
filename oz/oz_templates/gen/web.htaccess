@@ -28,9 +28,12 @@ Options -Indexes -Multiviews +FollowSymlinks
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+	# /robots.txt is OZone's route, even where a file of that name was left here.
+	#
+	RewriteRule ^robots\.txt$         index.php [L]
+
 	RewriteCond %{REQUEST_FILENAME} !-d
 	RewriteCond %{REQUEST_FILENAME} !-f
-	RewriteCond %{REQUEST_URI}      !^/robots\.txt
 	RewriteCond %{REQUEST_URI}      !^/favicon\.ico
 	RewriteRule (.*)                index.php [L]
 </IfModule>

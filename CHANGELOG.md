@@ -2,6 +2,26 @@
 
 ### Breaking changes
 
+- **`/robots.txt` is a route, answered in every scope by a provider, and no longer a file.** The
+  `oz:robots` route (`Web\RobotsTxt`, `GET /robots.txt`, `text/plain; charset=utf-8`) answers what
+  the class named in `OZ_ROBOTS_TXT_PROVIDER` (`oz.request`) returns: a
+  `Web\Interfaces\RobotsTxtProviderInterface`, given the request's `Context` so it can answer per
+  scope and per host, named by a project, a plugin or a scope's own `oz.request.php`. The default,
+  `DefaultRobotsTxtProvider`, answers the rules the file held (`User-agent: *`, `Disallow: /`)
+  without its comments. `oz scopes add` (and so `oz project create`) no longer writes
+  `public/{scope}/robots.txt`, and every server configuration OZone generates or ships -- the
+  scope `.htaccess` files, the nginx vhost of `oz deploy init --target=bare`, the Docker sample's
+  nginx, the samples in `conf/` and `oz project serve`'s router -- sends `/robots.txt` to
+  `index.php` even where a file of that name exists, so no leftover file shadows a provider.
+  Nothing changes for an existing scope until its server configuration does: its own `.htaccess`
+  and vhost still answer from the file it was given, which says what it always said.
+  `oz doctor check` warns about such a file (saying whether its rules are the default's or its
+  own) and about an `.htaccess` that still exempts the path, and removes neither: without the file,
+  a server still exempting `/robots.txt` answers 404, which a crawler reads as everything allowed.
+  The route is held by a maintenance like any other, so a crawler is answered 503 with the
+  maintenance's `Retry-After` and waits. A project that mapped `/robots.txt` itself names a provider
+  instead of keeping a second route on the path.
+
 - **The auto name of a route not named explicitly comes from its definition alone**: its methods,
   its host and its path, derived when the name is read, so a `host()` chained after the route is
   mapped is part of it. A route that declares no host keeps the name it had; a route that declares

@@ -27,8 +27,9 @@ Options -Indexes -Multiviews +FollowSymlinks
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+	# Everything but the entry point and the favicon is OZone's: /robots.txt included, which is a
+	# route even where a file of that name was left here.
 	RewriteCond %{REQUEST_URI}  !^/index\.php
-	RewriteCond %{REQUEST_URI}  !^/robots\.txt
 	RewriteCond %{REQUEST_URI}  !^/favicon\.ico
 	RewriteRule (.*)			index.php [L]
 </IfModule>

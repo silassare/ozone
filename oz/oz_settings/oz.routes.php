@@ -16,6 +16,7 @@ use OZONE\Core\Cli\Cron\CronEndpoint;
 use OZONE\Core\FS\Views\GetFilesView;
 use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\REST\Views\ApiDocView;
+use OZONE\Core\Web\RobotsTxt;
 use OZONE\Core\Web\Views\RedirectView;
 
 return [
@@ -25,4 +26,5 @@ return [
 	AuthLinkView::class  => true,
 	Polyglot::class      => true,
 	CronEndpoint::class  => true,
+	RobotsTxt::class     => true,
 ];

@@ -36,6 +36,7 @@ use OZONE\Core\Messaging\Messenger;
 use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
+use OZONE\Core\Web\DefaultRobotsTxtProvider;
 use ReflectionFunction;
 use Throwable;
 
@@ -259,7 +260,8 @@ final class DoctorCmd extends Command
 			$this->buildChecks(),
 			$this->cronChecks(),
 			$this->messagingChecks(),
-			$this->translationChecks()
+			$this->translationChecks(),
+			$this->robotsTxtChecks()
 		);
 	}
 
@@ -370,6 +372,84 @@ final class DoctorCmd extends Command
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * Whether `/robots.txt` reaches its route in every scope.
+	 *
+	 * A scope added before it was a route holds a `robots.txt` in its document root, and a `.htaccess`
+	 * of the same age answering `/robots.txt` from that file: what the route answers, a provider
+	 * included, is then never read. Nothing is removed for the project: under a web server that still
+	 * answers from the file, removing it answers 404, which a crawler reads as everything allowed. So
+	 * these are warnings, the file saying what it always said until the server sends the path on.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	private function robotsTxtChecks(): array
+	{
+		$rows    = [];
+		$default = self::robotsTxtRules(DefaultRobotsTxtProvider::CONTENT);
+		$route   = 'Make the web server send /robots.txt to OZone (the .htaccess "oz scopes add" writes,'
+			. ' or nginx: location = /robots.txt { rewrite ^ /index.php last; }), then delete the file:'
+			. ' a server that answers it from a file answers 404 without it, which a crawler reads as'
+			. ' everything allowed.';
+
+		foreach (ProjectBuilder::scopes() as $scope) {
+			$root     = OZ_PROJECT_DIR . 'public' . DS . $scope . DS;
+			$file     = $root . 'robots.txt';
+			$htaccess = \is_file($root . '.htaccess') ? (string) \file_get_contents($root . '.htaccess') : '';
+			$details  = [];
+			$fixes    = [];
+
+			if (\is_file($file)) {
+				if (self::robotsTxtRules((string) \file_get_contents($file)) === $default) {
+					$details[] = $file . ' has the rules the route answers by default';
+					$fixes[]   = $route;
+				} else {
+					$details[] = $file . ' has rules of its own, which the route does not answer';
+					$fixes[]   = 'Answer them from a provider named in OZ_ROBOTS_TXT_PROVIDER (oz.request). ' . $route;
+				}
+			}
+
+			// The condition every .htaccess written before carried, keeping the path from the route.
+			if (\str_contains($htaccess, '!^/robots\.txt')) {
+				$details[] = $root . '.htaccess answers /robots.txt from a file';
+				$fixes[]   = 'Remove its "!^/robots\.txt" condition; a web scope also needs'
+					. ' "RewriteRule ^robots\.txt$ index.php [L]" before its file conditions.';
+			}
+
+			if ([] !== $details) {
+				$rows[] = self::row(
+					'robots.txt: ' . $scope,
+					self::WARN,
+					\implode('; ', $details),
+					\implode(' ', \array_unique($fixes))
+				);
+			}
+		}
+
+		return [] === $rows ? [self::row('robots.txt', self::OK, 'answered by its route', '')] : $rows;
+	}
+
+	/**
+	 * The rules of a `robots.txt`: its lines without comments and blank lines, so two files that
+	 * differ only in those say the same thing.
+	 *
+	 * @return list<string>
+	 */
+	private static function robotsTxtRules(string $text): array
+	{
+		$rules = [];
+
+		foreach (\preg_split('~\R~', $text) ?: [] as $line) {
+			$line = \trim(\explode('#', $line, 2)[0]);
+
+			if ('' !== $line) {
+				$rules[] = $line;
+			}
+		}
+
+		return $rules;
 	}
 
 	/**

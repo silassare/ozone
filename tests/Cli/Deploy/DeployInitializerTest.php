@@ -113,6 +113,32 @@ final class DeployInitializerTest extends TestCase
 		self::assertCount(\count($scopes), $pools);
 	}
 
+	public function testEveryNginxFileSendsRobotsTxtToTheEntryPoint(): void
+	{
+		$checked = 0;
+
+		foreach ([DeployInitializer::TARGET_BARE, DeployInitializer::TARGET_DOCKER] as $target) {
+			foreach (new DeployInitializer($target)->plan()->files() as $file) {
+				if (!\str_contains($file->path, 'nginx')) {
+					continue;
+				}
+
+				++$checked;
+
+				// `/robots.txt` is a route: a file of that name left in the document root, or none at
+				// all, must not be what a crawler is answered.
+				self::assertStringContainsString(
+					"location = /robots.txt {\n\t\trewrite ^ /index.php last;\n\t}",
+					$file->content,
+					$file->path
+				);
+			}
+		}
+
+		// a vhost per scope of the bare target, and the docker sample's server
+		self::assertGreaterThanOrEqual(2, $checked);
+	}
+
 	public function testBarePlanCarriesTheCronTimerAndTheWorkerTemplateUnit(): void
 	{
 		$paths = \array_map(

@@ -273,6 +273,27 @@ final class MaintenanceModeTest extends TestCase
 		self::assertSame(503, self::get('api', '/mt-ping')['status']);
 	}
 
+	/**
+	 * A crawler answered 503 with a `Retry-After` on `/robots.txt` stops crawling the host until
+	 * then, which is what a maintenance wants of it; and the route runs the project's provider, which
+	 * may read what the maintenance is changing.
+	 */
+	public function testRobotsTxtIsHeldSoCrawlersWait(): void
+	{
+		foreach (['api', 'www'] as $scope) {
+			self::assertSame(200, self::get($scope, '/robots.txt', [])['status']);
+		}
+
+		self::proj()->oz('maintenance', 'on', '--retry-after=300')->mustRun();
+
+		foreach (['api', 'www'] as $scope) {
+			$robots = self::get($scope, '/robots.txt', ['User-Agent: Googlebot/2.1']);
+
+			self::assertSame(503, $robots['status'], $scope);
+			self::assertSame('300', $robots['headers']['retry-after'] ?? null, $scope);
+		}
+	}
+
 	public function testStatusAndDoctorSayWhatIsOn(): void
 	{
 		self::proj()->oz('maintenance', 'on', '--scopes=www', '--pause-jobs', '--allow=10.0.0.0/8')->mustRun();

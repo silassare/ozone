@@ -988,6 +988,15 @@ group loads (the last source, so they win). An
 `api` scope loads `oz.routes.api`, others `oz.routes.web`. `oz project create` makes an `api` scope;
 `oz scopes add` adds more.
 
+**`/robots.txt` is a route of every scope** (`Web\RobotsTxt`, `oz:robots`), never a file: its text
+comes from the `RobotsTxtProviderInterface` that `OZ_ROBOTS_TXT_PROVIDER` (`oz.request`, a scope may
+name its own) names, given the request so it answers per scope and host; the default keeps every
+crawler out. Every server configuration OZone generates (`.htaccess`, nginx, `oz/server.php`) sends the
+path to `index.php` **even where a file of that name exists**, so no leftover file shadows a provider.
+An older scope's `public/{name}/robots.txt` and `.htaccess` exemption are reported by `oz doctor check`
+and never removed for the project: without the file, a server still exempting the path answers 404,
+which a crawler reads as everything allowed.
+
 ---
 
 ## 14. Migrations
@@ -1263,10 +1272,12 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   on a request answered 503. Whatever else stops a held request -- no
   route (refused in `Router::handle()` before `RouteNotFound` can answer), a refused origin, an
   authentication error -- becomes the 503, and a refusal forgets the authentication so the session
-  is not written. The `oz:cron` route is exempt (it has its key). A record that cannot be read holds
-  everything and pauses the jobs (fail closed). With `--pause-jobs`, `CronRunner::tick()` returns
-  false without checking in, `JobsManager::run()` and `runJob()` take nothing (jobs stay pending),
-  and request-time garbage collection is skipped. A forced or manual run is refused too
+  is not written. The `oz:cron` route is exempt (it has its key); `/robots.txt` is not, since a
+  crawler answered 503 with `Retry-After` there stops crawling the host until then. A record that
+  cannot be read holds everything and pauses the jobs (fail closed). With `--pause-jobs`,
+  `CronRunner::tick()` returns false without checking in, `JobsManager::run()` and `runJob()` take
+  nothing (jobs stay pending), and request-time garbage collection is skipped. A forced or manual
+  run is refused too
   (`forceRunJob()`, `Cron::start()`) unless the caller says `$despite_maintenance` (CLI:
   `oz jobs run --despite-maintenance`, `oz cron start --force`); a job a run handed off before the
   pause (`oz jobs run --handoff`, `JobsManager::runHandedOff()`) is given back pending, untried.

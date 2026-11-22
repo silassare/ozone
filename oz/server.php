@@ -47,8 +47,11 @@ $cli_server_router = (new class {
 				break;
 			}
 
+			// /robots.txt is OZone's route, even where a file of that name was left in the document root
+			$routed = '/robots.txt' === $url['path'];
+
 			// let the server handle static file if not blacklisted
-			if (!$blacklisted && \file_exists($file)) {
+			if (!$blacklisted && !$routed && \file_exists($file)) {
 				return false;
 			}
 		}

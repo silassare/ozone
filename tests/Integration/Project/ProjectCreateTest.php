@@ -219,9 +219,10 @@ final class ProjectCreateTest extends TestCase
 		self::assertStringContainsString("'api'", $content);
 	}
 
-	public function testApiScopeRobotsTxtExists(): void
+	public function testApiScopeHasNoRobotsTxtFile(): void
 	{
-		self::assertFileExists(self::path('public/api/robots.txt'));
+		// `/robots.txt` is a route: a file here would be served instead of it.
+		self::assertFileDoesNotExist(self::path('public/api/robots.txt'));
 	}
 
 	public function testApiScopeFaviconExists(): void

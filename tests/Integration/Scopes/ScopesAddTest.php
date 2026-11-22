@@ -109,10 +109,12 @@ final class ScopesAddTest extends TestCase
 		self::assertStringContainsString("'myapi'", $content);
 	}
 
-	public function testMyapiRobotsAndFaviconExist(): void
+	public function testMyapiFaviconExistsAndNoRobotsFile(): void
 	{
-		self::assertFileExists(self::path('public/myapi/robots.txt'));
 		self::assertFileExists(self::path('public/myapi/favicon.ico'));
+		// `/robots.txt` is a route: a file here would be served instead of it.
+		self::assertFileDoesNotExist(self::path('public/myapi/robots.txt'));
+		self::assertFileDoesNotExist(self::path('public/web/robots.txt'));
 	}
 
 	public function testMyapiRequestSettingsContainsOrigin(): void

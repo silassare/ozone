@@ -39,12 +39,10 @@ server {
 		return 403;
 	}
 
-	# serve the robots.txt only if it exists
+	# /robots.txt is OZone's route, even where a file of that name was left in the document root.
 	#
 	location = /robots.txt {
-		try_files $uri =404;
-		access_log off;
-		log_not_found off;
+		rewrite ^ /index.php last;
 	}
 
 	# serve the favicon only if it exists
