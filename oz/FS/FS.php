@@ -176,6 +176,10 @@ class FS
 	/**
 	 * Delete file by id.
 	 *
+	 * The row first and the bytes after, because the row's deletion is what may be refused: a
+	 * listener of the file's deletion (a plugin whose pages still show it) throws, and what it
+	 * protects is then still whole. The other order left a row whose bytes were gone.
+	 *
 	 * @param string $id the file id
 	 */
 	public static function deleteFileByID(string $id): void
@@ -184,10 +188,9 @@ class FS
 			$f = self::getFileByID($id);
 
 			if ($f) {
-				$storage = self::getStorage($f->storage);
-				$storage->delete($f);
-
 				$f->selfDelete();
+
+				self::getStorage($f->storage)->delete($f);
 			}
 		} catch (Throwable $t) {
 			throw new RuntimeException(\sprintf('Unable to delete file with id: %s', $id), null, $t);
