@@ -58,15 +58,15 @@ final class OZTestProject
 	/** Seconds {@see startServer()} waits for `oz project serve` to write `server.json`. */
 	public const float SERVER_JSON_WAIT = 15.0;
 
+	/** Seconds {@see startServer()} then waits for the port to accept a connection. */
+	public const float SERVER_PORT_WAIT = 10.0;
+
 	/**
 	 * How a settings group's file written by {@see self::setSetting()} starts: what tells it from
 	 * the project's own file of the group.
 	 */
 	private const string SETTINGS_LOADER_MARK
 		= "<?php\n\n// A settings group a test set keys of (OZTestProject::setSetting()).";
-
-	/** Seconds {@see startServer()} then waits for the port to accept a connection. */
-	public const float SERVER_PORT_WAIT = 10.0;
 
 	/** The directory of the suite's stubs ({@see writeFileFromStub()}). */
 	private static ?string $stubs_dir = null;
@@ -560,6 +560,11 @@ final class OZTestProject
 	/**
 	 * Starts `oz project serve` for the given scope and waits until it accepts connections.
 	 *
+	 * On a port the system hands out ({@see self::freePort()}), and never the first free one of the
+	 * list `oz project serve` falls back on: two tests starting a server at the same moment, in two
+	 * processes, both found 8080 free, one of them bound it, and the other's readiness check then
+	 * answered for the first one's server -- a test reading another project's pages.
+	 *
 	 * @param string $scope   the scope name (default 'api')
 	 * @param string $host    the host to bind to (default '127.0.0.1')
 	 * @param int    $workers how many requests it answers at once (`PHP_CLI_SERVER_WORKERS`): one by
@@ -571,17 +576,25 @@ final class OZTestProject
 	 */
 	public function startServer(string $scope = 'api', string $host = '127.0.0.1', int $workers = 1): array
 	{
-		$server = $this->oz('project', 'serve', "--scope={$scope}", "--host={$host}");
+		$port   = self::freePort($host);
+		$server = $this->oz('project', 'serve', "--scope={$scope}", "--host={$host}", "--port={$port}");
 
 		if ($workers > 1) {
 			// Passed explicitly: a child process only inherits what is in $_SERVER or $_ENV.
 			$server->setEnv(['PHP_CLI_SERVER_WORKERS' => (string) $workers]);
 		}
 
+		// oz project serve writes server.json before binding the port. One left by an earlier server
+		// of this scope names that server's port, and the wait below would take it for this one's:
+		// it goes before this server starts, so what appears is this server's.
+		$server_json = $this->dir . "/.ozone/cache/{$scope}/server.json";
+
+		if (\is_file($server_json)) {
+			\unlink($server_json);
+		}
+
 		$server->start();
 
-		// oz project serve writes server.json before binding the port.
-		$server_json = $this->dir . "/.ozone/cache/{$scope}/server.json";
 		$wait        = self::SERVER_JSON_WAIT * self::waitScale();
 		$deadline    = \microtime(true) + $wait;
 
@@ -600,11 +613,15 @@ final class OZTestProject
 			));
 		}
 
-		$info = \json_decode(\file_get_contents($server_json), true);
-		$port = (int) ($info['port'] ?? 0);
+		$info   = \json_decode(\file_get_contents($server_json), true);
+		$served = (int) ($info['port'] ?? 0);
 
-		if (0 === $port) {
-			throw self::serverGone($server, $scope, 'wrote a server.json without a valid port');
+		if ($served !== $port) {
+			throw self::serverGone($server, $scope, \sprintf(
+				'wrote a server.json naming port %d, where it was asked to serve on %d',
+				$served,
+				$port
+			));
 		}
 
 		// Poll until the port is actually accepting connections.
@@ -645,43 +662,6 @@ final class OZTestProject
 		}
 
 		return [$server, $host, $port];
-	}
-
-	/**
-	 * What {@see startServer()}'s two waits are multiplied by: `OZ_TEST_SERVER_WAIT_SCALE`, 1 by
-	 * default.
-	 *
-	 * Both are generous on an idle machine and have been reached on a loaded one: a suite that
-	 * starts containers of its own competes with them for the disk, and one that was loading a virus
-	 * scanner's signature database behind the run reached them twice. A machine that needs longer
-	 * says so here instead of in a patch to this file, and a value of zero or less is read as 1.
-	 */
-	private static function waitScale(): float
-	{
-		$scale = (float) (\getenv('OZ_TEST_SERVER_WAIT_SCALE') ?: '1');
-
-		return $scale > 0 ? $scale : 1.0;
-	}
-
-	/**
-	 * The failure of a server that did not come up, with whatever its process printed.
-	 *
-	 * `oz project serve` says why it is not serving -- a port already taken, a project that does not
-	 * boot -- and reading its output only once it is stopped is what makes the reason part of the
-	 * failure: a wait of its own length used to be the whole report, whatever had happened.
-	 */
-	private static function serverGone(Process $server, string $scope, string $what): RuntimeException
-	{
-		$server->stop(0);
-
-		$printed = \trim($server->getOutput() . \PHP_EOL . $server->getErrorOutput());
-
-		return new RuntimeException(\sprintf(
-			'oz project serve (scope=%s) %s.%s',
-			$scope,
-			$what,
-			'' === $printed ? ' It printed nothing.' : \PHP_EOL . $printed
-		));
 	}
 
 	/**
@@ -792,6 +772,64 @@ final class OZTestProject
 				$pdo->exec("DROP TABLE IF EXISTS {$quoted} CASCADE");
 			}
 		}
+	}
+
+	/**
+	 * A port free now, as the system hands one out: bound on port 0, read, and let go.
+	 *
+	 * The system gives each such bind a port no other bind holds, so two processes asking at once
+	 * get two ports, where scanning a list for the first free one gives both the same.
+	 */
+	private static function freePort(string $host): int
+	{
+		$socket = @\stream_socket_server("tcp://{$host}:0", $errno, $errstr);
+
+		if (false === $socket) {
+			throw new RuntimeException(\sprintf('No port to serve on at %s: %s', $host, $errstr));
+		}
+
+		$name = (string) \stream_socket_get_name($socket, false);
+
+		\fclose($socket);
+
+		return (int) \substr($name, (int) \strrpos($name, ':') + 1);
+	}
+
+	/**
+	 * What {@see startServer()}'s two waits are multiplied by: `OZ_TEST_SERVER_WAIT_SCALE`, 1 by
+	 * default.
+	 *
+	 * Both are generous on an idle machine and have been reached on a loaded one: a suite that
+	 * starts containers of its own competes with them for the disk, and one that was loading a virus
+	 * scanner's signature database behind the run reached them twice. A machine that needs longer
+	 * says so here instead of in a patch to this file, and a value of zero or less is read as 1.
+	 */
+	private static function waitScale(): float
+	{
+		$scale = (float) (\getenv('OZ_TEST_SERVER_WAIT_SCALE') ?: '1');
+
+		return $scale > 0 ? $scale : 1.0;
+	}
+
+	/**
+	 * The failure of a server that did not come up, with whatever its process printed.
+	 *
+	 * `oz project serve` says why it is not serving -- a port already taken, a project that does not
+	 * boot -- and reading its output only once it is stopped is what makes the reason part of the
+	 * failure: a wait of its own length used to be the whole report, whatever had happened.
+	 */
+	private static function serverGone(Process $server, string $scope, string $what): RuntimeException
+	{
+		$server->stop(0);
+
+		$printed = \trim($server->getOutput() . \PHP_EOL . $server->getErrorOutput());
+
+		return new RuntimeException(\sprintf(
+			'oz project serve (scope=%s) %s.%s',
+			$scope,
+			$what,
+			'' === $printed ? ' It printed nothing.' : \PHP_EOL . $printed
+		));
 	}
 
 	/**

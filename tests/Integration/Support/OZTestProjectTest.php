@@ -127,6 +127,35 @@ final class OZTestProjectTest extends TestCase
 		}
 	}
 
+	/**
+	 * A test's server listens on a port the system handed out, never the first free one of the list
+	 * `oz project serve` falls back on: two processes starting a server at the same moment both
+	 * found 8080 free, and one test then read the other's pages.
+	 */
+	public function testAServerIsStartedOnAPortTheSystemHandsOut(): void
+	{
+		$proj = OZTestProject::create('harness-port', fresh: true);
+
+		try {
+			$proj->writeEnv([
+				'OZ_DB_RDBMS' => 'sqlite',
+				'OZ_DB_HOST'  => $proj->getPath() . '/harness_port.sqlite',
+			]);
+
+			[$server, $host, $port] = $proj->startServer();
+
+			self::assertNotContains($port, [8080, 8888, 9000, 2227], 'serve\'s own fallback list');
+			self::assertTrue($server->isRunning());
+
+			$socket = @\fsockopen($host, $port, $errno, $errstr, 1.0);
+
+			self::assertIsResource($socket, $errstr);
+			\fclose($socket);
+		} finally {
+			$proj->destroy();
+		}
+	}
+
 	public function testAServeThatExitedIsReportedWithWhatItPrinted(): void
 	{
 		$proj = OZTestProject::create('harness-server', fresh: true);
