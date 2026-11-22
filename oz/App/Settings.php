@@ -21,6 +21,7 @@ use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\PathSources;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\OZone;
+use OZONE\Core\Plugins\CorePlugin;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -191,7 +192,7 @@ final class Settings
 
 		if (null === $sources) {
 			$sources = new PathSources();
-			$sources->add(OZ_OZONE_DIR . 'oz_settings');
+			$sources->add(CorePlugin::settingsSource());
 		}
 
 		return $sources;

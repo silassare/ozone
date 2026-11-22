@@ -951,6 +951,14 @@ source settings in `boot()` with `Settings::addSource($this->getScope()->getSett
 the stateful settings directory is registered by `AbstractScope`. A plugin's state is under
 `data/{kind}/plugins/{name}/`, and its public files inside the application's pool
 (`data/root/static/plugins/{name}/`) so one symlink exposes them. `Plugins::ozone()` is the core plugin.
+A plugin's **requirements are its package's Composer `require`**, among the packages of the plugins
+`oz.plugins` lists: `Plugins::bootOrder()` boots them first, and refuses by name a required plugin
+left disabled and a cycle. Never add a second list of what a plugin requires: Composer's is the one.
+A plugin **names what it ships** -- `getSettingsSource()` and a schema file (`getSchemaFile()`, the
+shape of `oz_schema.php`) -- and `AbstractPlugin::boot()` adds them, so `oz plugins describe` reads
+them without booting it; prefer naming them to adding them from code.
+**Seeders** (`oz.seeders`, `oz db seed [--demo]`) write what is missing and never update a row: use
+`Seeders::insertMissing()`, keyed by a stable value, so a re-run on every deploy keeps every edit.
 
 A **scope** is an entry point (`api`, `www`, ...): `scopes/{name}/` (settings and templates overrides,
 denied to the web), `public/{name}/` (`index.php`, the `static` symlink) and `data/{kind}/{name}/`.

@@ -32,6 +32,8 @@ use OZONE\Core\Hooks\Events\DbSchemaReadyHook;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
+use OZONE\Core\Plugins\AbstractPlugin;
+use OZONE\Core\Plugins\CorePlugin;
 use OZONE\Core\Plugins\Plugins;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use Throwable;
@@ -270,9 +272,7 @@ final class Db
 	 */
 	public static function loadDevSchemaInto(RDBMSInterface $db): void
 	{
-		/** @var callable(NamespaceBuilder):void $factory */
-		$factory = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php';
-		$factory($db->ns(self::getOZoneDbNamespace()));
+		AbstractPlugin::schemaOf(CorePlugin::schemaFile())($db->ns(self::getOZoneDbNamespace()));
 
 		new DbSchemaCollectHook($db)->dispatch();
 

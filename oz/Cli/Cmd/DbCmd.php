@@ -39,6 +39,7 @@ use OZONE\Core\FS\FS;
 use OZONE\Core\Lang\EntityTexts;
 use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\Migrations\Migrations;
+use OZONE\Core\Seeders\Seeders;
 use OZONE\Core\Utils\Random;
 use PHPUtils\FS\PathUtils;
 use Throwable;
@@ -88,6 +89,15 @@ final class DbCmd extends Command
 		self::withJsonSupport($build);
 
 		$build->handler($this->build(...));
+
+		// action: seed
+		$seed = $this->action('seed', 'Write the reference data the seeders of oz.seeders declare.');
+		$seed->option('demo', 'd')
+			->description('Also write the demo data, which a production deploy never asks for.')
+			->bool()
+			->def(false);
+		self::withJsonSupport($seed);
+		$seed->handler($this->seed(...));
 
 		// action: ts bundle
 		$ts_bundle = $this->action('ts-bundle', 'To generate entities classes for TypeScript.');
@@ -249,6 +259,32 @@ final class DbCmd extends Command
 				'texts'         => $texts,
 			]);
 		}
+	}
+
+	/**
+	 * Runs the seeders: what is missing is written, and a row that is there is left as it is.
+	 */
+	private function seed(KliArgs $args): void
+	{
+		Utils::assertDatabaseAccess();
+
+		$report = Seeders::run((bool) $args->get('demo'));
+		$cli    = $this->getCli();
+
+		if ($args->get('json')) {
+			$cli->writeJson(['seeders' => $report]);
+		}
+
+		foreach ($report as $one) {
+			$cli->writeLn(\sprintf(
+				'%s%s: %d row(s) written',
+				$one['seeder'],
+				$one['demo'] ? ' (demo)' : '',
+				$one['written']
+			));
+		}
+
+		$cli->success(\sprintf('%d seeder(s) run.', \count($report)));
 	}
 
 	/**

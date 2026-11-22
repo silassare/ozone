@@ -14,10 +14,13 @@ declare(strict_types=1);
 namespace OZONE\Core\Plugins;
 
 use Override;
+use Gobl\DBAL\Builders\NamespaceBuilder;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FS;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\DbReadyHook;
+use OZONE\Core\Hooks\Events\DbSchemaCollectHook;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 use OZONE\Core\Utils\ComposerJSON;
@@ -97,6 +100,26 @@ abstract class AbstractPlugin implements PluginInterface
 	}
 
 	#[Override]
+	public function getRequiredPackages(): array
+	{
+		$require = $this->composer_json->get('require', []);
+
+		return \is_array($require) ? \array_map('strval', \array_keys($require)) : [];
+	}
+
+	#[Override]
+	public function getSettingsSource(): ?string
+	{
+		return null;
+	}
+
+	#[Override]
+	public function getSchemaFile(): ?string
+	{
+		return null;
+	}
+
+	#[Override]
 	final public function getNamespace(): string
 	{
 		return $this->namespace;
@@ -130,7 +153,45 @@ abstract class AbstractPlugin implements PluginInterface
 					$hook->db->ns($this->getDbNamespace())->enableORM(Db::dir($this->getScope())->getRoot());
 				});
 			}
+
+			$this->addSources();
 		}
+	}
+
+	/**
+	 * Adds what the plugin ships: its settings source, and its tables to every schema collected.
+	 */
+	protected function addSources(): void
+	{
+		$settings = $this->getSettingsSource();
+
+		if (null !== $settings) {
+			Settings::addSource($settings);
+		}
+
+		$schema = $this->getSchemaFile();
+
+		if (null !== $schema) {
+			DbSchemaCollectHook::listen(function (DbSchemaCollectHook $hook) use ($schema): void {
+				self::schemaOf($schema)($hook->db->ns($this->getDbNamespace()));
+			});
+		}
+	}
+
+	/**
+	 * What a schema file declares: the function that adds its tables to a namespace.
+	 *
+	 * @return callable(NamespaceBuilder):void
+	 */
+	public static function schemaOf(string $file): callable
+	{
+		$factory = require $file;
+
+		if (!\is_callable($factory)) {
+			throw new RuntimeException(\sprintf('Schema file "%s" does not return a function.', $file));
+		}
+
+		return $factory;
 	}
 
 	/**

@@ -178,6 +178,23 @@ final class SettingsSchema
 	}
 
 	/**
+	 * The groups a settings directory declares, each with the keys of its values: what adding that
+	 * directory as a source adds, read from its files and not from a source being added.
+	 *
+	 * @return array<string, list<string>>
+	 */
+	public static function keysIn(string $source): array
+	{
+		$out = [];
+
+		foreach (self::groupsIn($source) as $group => $file) {
+			$out[$group] = \array_map('strval', \array_keys(self::runFile($file)));
+		}
+
+		return $out;
+	}
+
+	/**
 	 * The settings groups of a source directory, by group name.
 	 *
 	 * The name is the path under the directory without `.php`, which is how a group is resolved

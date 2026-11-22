@@ -2,6 +2,23 @@
 
 ### Breaking changes
 
+- **A plugin boots after the plugins it requires, and one whose required plugin is disabled is
+  refused.** What a plugin requires is what its package requires through Composer, among the
+  packages of the plugins `oz.plugins` lists (`PluginInterface::getRequiredPackages()`, read by
+  `AbstractPlugin` from the `composer.json` it already reads; a class implementing the interface
+  directly must add it). Composer enforces the versions at install; what it cannot know is what is
+  enabled and in what order to boot, so `Plugins::boot()` boots in `Plugins::bootOrder()`: each
+  plugin after its requirements, the list's own order otherwise, and a refusal naming the plugin and
+  what it requires when that is disabled, or naming the cycle when plugins require each other. A
+  disabled entry whose class is not installed is skipped, as before.
+- **A plugin names what it ships, and its boot adds it.** `PluginInterface::getSettingsSource()` is
+  the directory of the settings it ships and `getSchemaFile()` the file declaring its tables, which
+  returns `function (NamespaceBuilder $ns): void` like OZone's own `oz_schema.php`; both default to
+  null in `AbstractPlugin`, whose boot adds the first as a settings source and runs the second for
+  the plugin's namespace whenever a database collects its schema. A plugin that called
+  `Settings::addSource()` from its `boot()` keeps working, and can name the directory instead.
+  `CorePlugin` names OZone's own (`CorePlugin::settingsSource()`, `schemaFile()`), which `Settings`
+  and `Db` now read, and adds neither again.
 - **The QR code service encodes and no longer decodes.**
   `Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface` is now `QRCodeEncoderInterface`
   without its `decode()` method, and `BuiltinQRCodeEncoderDecoder` is `BuiltinQRCodeEncoder`. The
@@ -300,6 +317,19 @@
 
 ### Added
 
+- **Seeders, and `oz db seed`.** A seeder (`Seeders\Interfaces\SeederInterface`) writes the rows that
+  are missing and answers how many; listed in `oz.seeders` (class => enabled), so a plugin ships its
+  own in its settings and a disabled one seeds nothing. **Reference** seeders run on every
+  `oz db seed`, **demo** ones (`isDemo()`) only on `oz db seed --demo`, which a production deploy
+  never runs. Each runs in a transaction of its own. The rule a seeder follows is one helper,
+  `Seeders::insertMissing($table, $key, $rows)`: a row whose key no row has yet is inserted through
+  the table's entity, so its CRUD rules run, and a row that exists is never updated, so a re-run
+  leaves an administrator's edit as it found it. `--json` reports what each seeder wrote.
+- **`oz plugins`**: `list` shows the plugins `oz.plugins` lists, enabled ones in the order they boot,
+  with what each requires; `describe --plugin=<class or package>` says what enabling one adds -- its
+  identity, the plugins it requires, every settings group it ships with its keys (routes, commands,
+  cron jobs, CRUD rules, texts) and its tables, run into a database of its own in memory -- read
+  without booting it (`Plugins::describe()`, `SettingsSchema::keysIn()`). Both take `--json`.
 - **A form field built from a foreign column says which relation it holds the key of.** Every field
   of a form bundle carries `relation`: `{name, entity, host, candidates}` for a column that is the
   key of a relation on its own table -- the relation, its target's and the form's table as morph
@@ -549,6 +579,13 @@
 
 ### Fixed
 
+- **Two tests starting a server at the same moment no longer share it.** `OZTestProject::startServer()`
+  let `oz project serve` take the first free port of 8080, 8888, 9000 and 2227, which it writes down
+  before it binds: two processes both found 8080 free, one bound it, and the other's readiness check
+  answered for that server, so a test read another project's pages (four parallel runs of six, in a
+  plugin's integration suite). It now passes a port the system hands out (a bind on port 0, read and
+  let go), and refuses a server that says it serves anywhere else. `oz project serve` keeps its list
+  for a developer.
 - **A test that sets a key of a group no longer rewrites the project's own settings with this
   process's environment.** `OZTestProject::setSetting()` ran the group's file in the test process
   and wrote back what it returned, so a generated `oz.db.php`, which reads `env('OZ_DB_RDBMS',

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Lang;
 
-use Gobl\DBAL\Builders\NamespaceBuilder;
 use Gobl\DBAL\Db;
 use Gobl\DBAL\DbConfig;
 use Gobl\DBAL\Drivers\SQLite\SQLite;
@@ -23,6 +22,8 @@ use OZONE\Core\App\Db as OZDb;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Lang\EntityTexts;
+use OZONE\Core\Plugins\AbstractPlugin;
+use OZONE\Core\Plugins\CorePlugin;
 use OZONE\Core\Lang\I18nMessage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -131,9 +132,7 @@ final class EntityTextsTest extends TestCase
 	{
 		$db = self::memoryDb();
 
-		/** @var callable(NamespaceBuilder):void $factory */
-		$factory = include OZ_OZONE_DIR . 'oz_default' . \DIRECTORY_SEPARATOR . 'oz_schema.php';
-		$factory($db->ns(OZDb::getOZoneDbNamespace()));
+		AbstractPlugin::schemaOf(CorePlugin::schemaFile())($db->ns(OZDb::getOZoneDbNamespace()));
 
 		$tables = $db->getTables(OZDb::getOZoneDbNamespace());
 

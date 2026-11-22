@@ -58,6 +58,35 @@ interface PluginInterface
 	public function getVersion(): string;
 
 	/**
+	 * The packages the plugin's own package requires through Composer, as its `require` names them.
+	 *
+	 * Those that are the packages of other listed plugins are the plugins it requires: they boot
+	 * first, and one left disabled is refused. The version of each is Composer's to enforce.
+	 *
+	 * @return list<string>
+	 */
+	public function getRequiredPackages(): array;
+
+	/**
+	 * The directory of the settings the plugin ships, which its boot adds as a settings source; null
+	 * for a plugin shipping none.
+	 *
+	 * Named rather than added from code so it can be read without booting the plugin: it is where its
+	 * routes, commands, cron jobs, CRUD rules, seeders and texts are declared. Not the scope's
+	 * settings directory, which holds the project's overrides of the plugin.
+	 */
+	public function getSettingsSource(): ?string;
+
+	/**
+	 * The file declaring the plugin's tables, or null for a plugin with none.
+	 *
+	 * It returns `function (NamespaceBuilder $ns): void`, the shape of OZone's own schema file, and
+	 * the plugin's boot runs it for the plugin's namespace when a database collects its schema. A
+	 * file and not a hook registered in code, so the tables can be listed without booting the plugin.
+	 */
+	public function getSchemaFile(): ?string;
+
+	/**
 	 * Returns the plugin namespace.
 	 */
 	public function getNamespace(): string;

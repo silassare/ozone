@@ -13,7 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Plugins;
 
+use Gobl\DBAL\Db as GoblDb;
+use Gobl\DBAL\DbConfig;
+use Gobl\DBAL\Drivers\SQLite\SQLite;
+use Gobl\DBAL\Table;
 use OZONE\Core\App\Settings;
+use OZONE\Core\App\SettingsSchema;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 
@@ -70,15 +75,119 @@ class Plugins
 	}
 
 	/**
-	 * Boot plugins.
+	 * Boots the enabled plugins, each after the plugins it requires ({@see self::bootOrder()}).
 	 */
 	public static function boot(): void
 	{
-		$plugins = Settings::load('oz.plugins');
-
-		foreach ($plugins as $plugin => $enabled) {
-			$enabled && self::getPlugin($plugin)->boot();
+		foreach (self::bootOrder(Settings::load('oz.plugins')) as $plugin) {
+			$plugin->boot();
 		}
+	}
+
+	/**
+	 * The enabled plugins of a list, in the order they boot: each after the plugins it requires.
+	 *
+	 * What a plugin requires is read from its package's Composer `require`: of the packages named
+	 * there, those that are the packages of plugins in this list. Composer has already enforced
+	 * their versions at install; what it cannot know is what is enabled, so a plugin whose required
+	 * plugin is listed but disabled is refused here, by name, and so is a cycle, which Composer
+	 * allows. Plugins with no requirement between them keep the order of the list.
+	 *
+	 * A disabled entry whose class is not installed is skipped, as it always was: it names nothing a
+	 * plugin can require.
+	 *
+	 * @param array<class-string<PluginInterface>, bool> $listed the project's `oz.plugins`
+	 *
+	 * @return list<PluginInterface>
+	 */
+	public static function bootOrder(array $listed): array
+	{
+		/** @var array<string, class-string<PluginInterface>> $by_package */
+		$by_package = [];
+
+		foreach ($listed as $class => $enabled) {
+			if (!$enabled && !\class_exists($class)) {
+				continue;
+			}
+
+			$package = self::getPlugin($class)->getPackageName();
+
+			if ('' !== $package) {
+				$by_package[$package] = $class;
+			}
+		}
+
+		$order = [];
+		$done  = [];
+
+		foreach ($listed as $class => $enabled) {
+			if ($enabled) {
+				self::visit($class, $listed, $by_package, $order, $done, []);
+			}
+		}
+
+		return $order;
+	}
+
+	/**
+	 * What enabling a plugin adds, read without booting it: who it is, the plugins it requires, the
+	 * settings it ships (each group, with its keys: routes, commands, cron jobs, CRUD rules, texts)
+	 * and its tables.
+	 *
+	 * The tables are its schema file's, run into a database of its own in memory, after OZone's and
+	 * those of the plugins it requires (in boot order), since a table of it may reference theirs.
+	 *
+	 * @param array<class-string<PluginInterface>, bool> $listed the project's `oz.plugins`
+	 *
+	 * @return array{
+	 *     class: class-string<PluginInterface>,
+	 *     name: string,
+	 *     package: string,
+	 *     version: string,
+	 *     description: string,
+	 *     author: string,
+	 *     enabled: bool,
+	 *     requires: list<array{plugin: class-string<PluginInterface>, package: string, enabled: bool}>,
+	 *     settings: array<string, list<string>>,
+	 *     tables: list<string>,
+	 * }
+	 */
+	public static function describe(PluginInterface $plugin, array $listed): array
+	{
+		$by_package = [];
+
+		foreach ($listed as $class => $enabled) {
+			if (!$enabled && !\class_exists($class)) {
+				continue;
+			}
+
+			$by_package[self::getPlugin($class)->getPackageName()] = $class;
+		}
+
+		$requires = [];
+
+		foreach ($plugin->getRequiredPackages() as $package) {
+			$required = $by_package[$package] ?? null;
+
+			if (null !== $required && $required !== $plugin::class) {
+				$requires[] = ['plugin' => $required, 'package' => $package, 'enabled' => $listed[$required]];
+			}
+		}
+
+		$source = $plugin->getSettingsSource();
+
+		return [
+			'class'       => $plugin::class,
+			'name'        => $plugin->getName(),
+			'package'     => $plugin->getPackageName(),
+			'version'     => $plugin->getVersion(),
+			'description' => $plugin->getDescription(),
+			'author'      => $plugin->getAuthor(),
+			'enabled'     => $listed[$plugin::class] ?? false,
+			'requires'    => $requires,
+			'settings'    => null === $source || !\is_dir($source) ? [] : SettingsSchema::keysIn($source),
+			'tables'      => self::tablesOf($plugin, \array_column($requires, 'plugin')),
+		];
 	}
 
 	/**
@@ -141,5 +250,107 @@ class Plugins
 	public static function ozone(): PluginInterface
 	{
 		return self::getPlugin(CorePlugin::class);
+	}
+
+	/**
+	 * The tables a plugin's schema file declares, run into a database of its own in memory after
+	 * OZone's and those of the given plugins.
+	 *
+	 * @param list<class-string<PluginInterface>> $required
+	 *
+	 * @return list<string>
+	 */
+	private static function tablesOf(PluginInterface $plugin, array $required): array
+	{
+		$file = $plugin->getSchemaFile();
+
+		if (null === $file) {
+			return [];
+		}
+
+		$db = GoblDb::newInstanceOf(SQLite::NAME, new DbConfig([
+			'db_host'    => ':memory:',
+			'db_port'    => '',
+			'db_name'    => '',
+			'db_user'    => '',
+			'db_pass'    => '',
+			'db_charset' => 'utf8',
+			'db_collate' => 'utf8',
+		]));
+
+		// OZone's first and the plugin's last, each once: describing OZone itself loads its own.
+		foreach (\array_unique([self::ozone()::class, ...$required, $plugin::class]) as $class) {
+			$one    = self::getPlugin($class);
+			$schema = $one->getSchemaFile();
+
+			if (null !== $schema) {
+				AbstractPlugin::schemaOf($schema)($db->ns($one->getDbNamespace()));
+			}
+		}
+
+		return \array_values(\array_map(
+			static fn (Table $table): string => $table->getName(),
+			$db->getTables($plugin->getDbNamespace())
+		));
+	}
+
+	/**
+	 * Places a plugin in the boot order after the plugins it requires.
+	 *
+	 * `$path` holds the plugins being placed, from the first one asked for: what is in progress,
+	 * registered on entry, so a plugin met again on its own path is a cycle and not a plugin to
+	 * place twice. `$done` is what is placed, and only says so once it is.
+	 *
+	 * @param array<class-string<PluginInterface>, bool>   $listed
+	 * @param array<string, class-string<PluginInterface>> $by_package
+	 * @param list<PluginInterface>                        $order
+	 * @param array<class-string<PluginInterface>, true>   $done
+	 * @param list<class-string<PluginInterface>>          $path
+	 */
+	private static function visit(
+		string $class,
+		array $listed,
+		array $by_package,
+		array &$order,
+		array &$done,
+		array $path
+	): void {
+		if (isset($done[$class])) {
+			return;
+		}
+
+		$at = \array_search($class, $path, true);
+
+		if (false !== $at) {
+			throw new RuntimeException(\sprintf(
+				'Plugins require each other: %s.',
+				\implode(' -> ', [...\array_slice($path, (int) $at), $class])
+			));
+		}
+
+		$path[] = $class;
+		$plugin = self::getPlugin($class);
+
+		foreach ($plugin->getRequiredPackages() as $package) {
+			$required = $by_package[$package] ?? null;
+
+			if (null === $required || $required === $class) {
+				continue;
+			}
+
+			if (!$listed[$required]) {
+				throw new RuntimeException(\sprintf(
+					'Plugin "%s" requires plugin "%s" (%s), which is disabled.',
+					$class,
+					$required,
+					$package
+				));
+			}
+
+			self::visit($required, $listed, $by_package, $order, $done, $path);
+		}
+
+		$done[$class] = true;
+		$order[]      = $plugin;
 	}
 }
