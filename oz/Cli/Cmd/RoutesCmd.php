@@ -52,7 +52,7 @@ final class RoutesCmd extends Command
 		$table->addRows(\array_map(static fn (array $route): array => [
 			'name'    => $route['name'],
 			'methods' => \implode(', ', $route['methods']),
-			'path'    => $route['path'],
+			'path'    => ($route['host'] ?? '') . $route['path'],
 			'form'    => $route['form'] ? ($route['resumable'] ? 'resumable' : 'yes') : '',
 		], $routes));
 

@@ -259,10 +259,38 @@ final class Router
 
 	/**
 	 * Builds route path.
+	 *
+	 * The path only: a route declaring a host may be on another one, which
+	 * {@see buildRouteHost()} says.
 	 */
 	public function buildRoutePath(Context $context, string $route_name, array $params = []): string
 	{
 		return $this->requireRoute($route_name)->buildPath($context, $params);
+	}
+
+	/**
+	 * Builds the host a URI of a route must name when it is not the host being served: null when
+	 * the route declares no host, or its host is the request's own, so the URI keeps the request's.
+	 *
+	 * A host parameter not given takes its value from the host being served when the route matches
+	 * that host: a link from a tenant's page to another page of the same tenant names no tenant.
+	 */
+	public function buildRouteHost(Context $context, string $route_name, array $params = []): ?string
+	{
+		$route = $this->requireRoute($route_name);
+
+		if (null === $route->getHost()) {
+			return null;
+		}
+
+		$served = $context->getRequest()->getUri()->getHost();
+		$host   = $route->buildHost($context, $params + ($route->matchHost($served) ?? []));
+
+		if (null === $host || 0 === \strcasecmp($host, $served)) {
+			return null;
+		}
+
+		return $host;
 	}
 
 	/**
@@ -318,20 +346,24 @@ final class Router
 	}
 
 	/**
-	 * Finds the routes that match the given path.
+	 * Finds the routes that match the given path, on the given host.
 	 *
 	 * With a route table, the matching route is found in the table and only its provider registered:
 	 * the result then holds that route alone. `$all` registers every provider instead.
 	 *
-	 * @param string $method The request method
-	 * @param string $path   The request path
-	 * @param bool   $all    True to stop searching when a route match
+	 * A route declaring a host matches only a request to that host, so none when no host is given;
+	 * a route declaring none matches any host.
+	 *
+	 * @param string      $method The request method
+	 * @param string      $path   The request path
+	 * @param bool        $all    True to stop searching when a route match
+	 * @param null|string $host   The request host, without its port
 	 */
-	public function find(string $method, string $path, bool $all = false): RouteSearchResult
+	public function find(string $method, string $path, bool $all = false, ?string $host = null): RouteSearchResult
 	{
 		if (null !== $this->table) {
 			if (!$all) {
-				$result = $this->findInTable($this->table, $method, $path);
+				$result = $this->findInTable($this->table, $method, $path, $host);
 
 				if (null !== $result) {
 					return $result;
@@ -354,7 +386,7 @@ final class Router
 			foreach ($this->static_routes as $route) {
 				$params = [];
 
-				if ($route->is($path, $params)) {
+				if ($route->is($path, $params, $host)) {
 					$item             = ['route' => $route, 'params' => $params];
 					$static_matches[] = $item;
 
@@ -372,7 +404,7 @@ final class Router
 				foreach ($this->dynamic_routes as $route) {
 					$params = [];
 
-					if ($route->is($path, $params)) {
+					if ($route->is($path, $params, $host)) {
 						$item              = ['route' => $route, 'params' => $params];
 						$dynamic_matches[] = $item;
 
@@ -423,7 +455,7 @@ final class Router
 	{
 		$request = $context->getRequest();
 		$uri     = $request->getUri();
-		$result  = $this->find($request->getMethod(), $uri->getPath());
+		$result  = $this->find($request->getMethod(), $uri->getPath(), host: $uri->getHost());
 
 		switch ($result->status()) {
 			case RouteSearchStatus::NOT_FOUND:
@@ -529,7 +561,12 @@ final class Router
 			$source  = $route->getSource();
 			$ordinal = $route->getOrdinal();
 
-			$static[$route->getPath()][] = [\array_fill_keys($route->getMethods(), 1), $source, $ordinal];
+			$static[$route->getPath()][] = [
+				\array_fill_keys($route->getMethods(), 1),
+				$source,
+				$ordinal,
+				$route->getHostRegExp(),
+			];
 			$names[$route->getName()] ??= [$source, $ordinal];
 		}
 
@@ -542,6 +579,7 @@ final class Router
 				\array_fill_keys($route->getMethods(), 1),
 				$source,
 				$ordinal,
+				$route->getHostRegExp(),
 			];
 			$names[$route->getName()] ??= [$source, $ordinal];
 		}
@@ -856,15 +894,19 @@ final class Router
 	 * Finds, in the route table, the route matching a request: null when the table turns out not to
 	 * describe the routes the code maps, and is dropped.
 	 */
-	private function findInTable(RouteTable $table, string $method, string $path): ?RouteSearchResult
-	{
+	private function findInTable(
+		RouteTable $table,
+		string $method,
+		string $path,
+		?string $host
+	): ?RouteSearchResult {
 		$method = \strtoupper($method);
 
 		if (!isset($this->allowed_methods[$method])) {
 			return new RouteSearchResult(RouteSearchStatus::NOT_FOUND, null, [], [], [], []);
 		}
 
-		[$status, $at] = $table->match($method, $path);
+		[$status, $at] = $table->match($method, $path, $host);
 
 		if (null === $at) {
 			return new RouteSearchResult($status, null, [], [], [], []);
@@ -875,7 +917,7 @@ final class Router
 		$route  = $this->routeAt($source, $ordinal);
 		$params = [];
 
-		if (null === $route || !$route->is($path, $params) || !$route->accept($method)) {
+		if (null === $route || !$route->is($path, $params, $host) || !$route->accept($method)) {
 			$this->dropTable();
 
 			return null;
@@ -938,7 +980,10 @@ final class Router
 	/**
 	 * Comparator for sorting routes by priority.
 	 *
-	 * The routes with higher priority values will be sorted before those with lower values.
+	 * The routes with higher priority values will be sorted before those with lower values. Of two
+	 * routes of the same priority, one declaring a host comes first: a catch-all route of every host
+	 * would otherwise shadow the same path on one host. Equal routes keep the order they were mapped
+	 * in.
 	 */
 	private function routePriorityComparator(Route $a, Route $b): int
 	{
@@ -946,7 +991,7 @@ final class Router
 		$bp = $b->getOptions()->getPriority(true);
 
 		if ($ap === $bp) {
-			return 0;
+			return (null === $a->getHost()) <=> (null === $b->getHost());
 		}
 
 		return ($ap > $bp) ? -1 : 1;

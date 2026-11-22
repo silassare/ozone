@@ -18,8 +18,9 @@ use Throwable;
 
 /**
  * What a router needs to route a request without registering every route provider: for each
- * route, its methods, its path or pattern, where it stands in priority order, and the provider that
- * maps it (with its position among that provider's routes).
+ * route, its methods, its path or pattern, the pattern of its host when it declares one, where it
+ * stands in priority order, and the provider that maps it (with its position among that provider's
+ * routes).
  *
  * Compiled from a router that registered every provider ({@see Router::compileTable()}), it lets a
  * router of the same code and settings register only the provider of the route a request matched
@@ -33,16 +34,17 @@ final class RouteTable
 {
 	/**
 	 * The layout of {@see toArray()}: a file of another layout is ignored. 2: the regular expressions
-	 * of dynamic routes run in Unicode mode, `$` at the very end ({@see Route::getRegExp()}).
+	 * of dynamic routes run in Unicode mode, `$` at the very end ({@see Route::getRegExp()}). 3: each
+	 * route carries the pattern of its host, null when it matches any ({@see Route::getHostRegExp()}).
 	 */
-	public const int FORMAT = 2;
+	public const int FORMAT = 3;
 
 	/**
 	 * @param array{
 	 *     format: int,
 	 *     eager: list<string>,
-	 *     static: array<string, list<array{0: array<string, int>, 1: string, 2: int}>>,
-	 *     dynamic: list<array{0: string, 1: array<string, int>, 2: string, 3: int}>,
+	 *     static: array<string, list<array{0: array<string, int>, 1: string, 2: int, 3: null|string}>>,
+	 *     dynamic: list<array{0: string, 1: array<string, int>, 2: string, 3: int, 4: null|string}>,
 	 *     names: array<string, array{0: string, 1: int}>
 	 * } $data
 	 * @param null|string $file the file the table was loaded from
@@ -125,16 +127,21 @@ final class RouteTable
 	 * priority order: the status and, when found, the route's source, its position there, and
 	 * whether it is dynamic.
 	 *
-	 * @param string $method the request method, upper case
-	 * @param string $path   the request path
+	 * @param string      $method the request method, upper case
+	 * @param string      $path   the request path
+	 * @param null|string $host   the request host: a route declaring a host matches none when null
 	 *
 	 * @return array{0: RouteSearchStatus, 1: null|array{0: string, 1: int, 2: bool}}
 	 */
-	public function match(string $method, string $path): array
+	public function match(string $method, string $path, ?string $host = null): array
 	{
 		$matched = false;
 
-		foreach ($this->data['static'][$path] ?? [] as [$methods, $source, $ordinal]) {
+		foreach ($this->data['static'][$path] ?? [] as [$methods, $source, $ordinal, $host_regexp]) {
+			if (!self::hostMatches($host_regexp, $host)) {
+				continue;
+			}
+
 			$matched = true;
 
 			if (isset($methods[$method])) {
@@ -142,8 +149,8 @@ final class RouteTable
 			}
 		}
 
-		foreach ($this->data['dynamic'] as [$regexp, $methods, $source, $ordinal]) {
-			if (1 === \preg_match($regexp, $path)) {
+		foreach ($this->data['dynamic'] as [$regexp, $methods, $source, $ordinal, $host_regexp]) {
+			if (1 === \preg_match($regexp, $path) && self::hostMatches($host_regexp, $host)) {
 				$matched = true;
 
 				if (isset($methods[$method])) {
@@ -171,5 +178,14 @@ final class RouteTable
 	public function toArray(): array
 	{
 		return $this->data;
+	}
+
+	/**
+	 * Whether a request host matches the host pattern of a route: any does when the route declares
+	 * none, and none is matched when the request names no host.
+	 */
+	private static function hostMatches(?string $regexp, ?string $host): bool
+	{
+		return null === $regexp || (null !== $host && 1 === \preg_match($regexp, $host));
 	}
 }

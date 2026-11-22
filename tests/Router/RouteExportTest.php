@@ -53,6 +53,7 @@ final class RouteExportTest extends TestCase
 				'name'          => 'events.book',
 				'methods'       => ['POST'],
 				'path'          => '/events/book',
+				'host'          => null,
 				'params'        => [],
 				'form'          => true,
 				'resumable'     => true,
@@ -63,6 +64,7 @@ final class RouteExportTest extends TestCase
 				'name'          => 'events.create',
 				'methods'       => ['POST'],
 				'path'          => '/events',
+				'host'          => null,
 				'params'        => [],
 				'form'          => true,
 				'resumable'     => false,
@@ -73,6 +75,7 @@ final class RouteExportTest extends TestCase
 				'name'          => 'events.list',
 				'methods'       => ['GET'],
 				'path'          => '/events',
+				'host'          => null,
 				'params'        => [],
 				'form'          => false,
 				'resumable'     => false,
@@ -83,6 +86,7 @@ final class RouteExportTest extends TestCase
 				'name'          => 'events.ticket',
 				'methods'       => ['GET'],
 				'path'          => '/events/:id/tickets/:ticket',
+				'host'          => null,
 				'params'        => [
 					['name' => 'id', 'pattern' => '[0-9]+', 'required' => true, 'global' => false],
 					['name' => 'ticket', 'pattern' => '[^/]+', 'required' => true, 'global' => false],
@@ -110,6 +114,26 @@ final class RouteExportTest extends TestCase
 			['name' => 'state', 'pattern' => '[^/]+', 'required' => false, 'global' => false],
 			['name' => 'page', 'pattern' => '[0-9]+', 'required' => false, 'global' => false],
 		], RouteExport::of($router)[0]['params']);
+	}
+
+	public function testTellsTheHostAndItsParamsAfterThePathOnes(): void
+	{
+		$router = new Router();
+
+		$router->group('/', static function (Router $router): void {
+			$router->get('/projects/:id', static fn () => null)->name('project');
+		})
+			->host('{tenant}.{zone}.example.com')
+			->param('zone', '[a-z]+');
+
+		$route = RouteExport::of($router)[0];
+
+		self::assertSame('{tenant}.{zone}.example.com', $route['host']);
+		self::assertSame([
+			['name' => 'id', 'pattern' => '[^/]+', 'required' => true, 'global' => false],
+			['name' => 'tenant', 'pattern' => '[^.]+', 'required' => true, 'global' => false],
+			['name' => 'zone', 'pattern' => '[a-z]+', 'required' => true, 'global' => false],
+		], $route['params']);
 	}
 
 	public function testLeavesOutAutoNamedAndInternalRoutes(): void

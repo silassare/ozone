@@ -459,14 +459,21 @@ Routes are registered by `RouteProviderInterface::registerRoutes(Router $router)
 `oz.routes` (both routers), `oz.routes.api` or `oz.routes.web`. Route options (`name()`,
 `withAuthentication()`, the guard shortcuts of `Router\Traits\RouteGuardShortcutsTrait`,
 `middleware()`, `guard()`, `interceptor()`, `form()`, `withCSRF()` / `withoutCSRF()`, `resumable()`,
-`param()`, `priority()`, `rateLimit()`) chain on the route or on a `group()`. `Router::map()` takes an
-optional `$parent` (`RouteSharedOptions`): any route can then act as the parent of another, sharing
-path, name, guards and middlewares without a group block.
+`param()`, `priority()`, `rateLimit()`, `host()`) chain on the route or on a `group()`.
+`Router::map()` takes an optional `$parent` (`RouteSharedOptions`): any route can then act as the
+parent of another, sharing path, name, guards and middlewares without a group block.
 
 - Params: `/users/:id` captures `[^/]+` unless constrained with `param()`; read with `$ri->param('id')`.
   A param pattern (and a global param's) is a portable pattern body (`PortablePattern`), and a route's
   regex runs as one (`Route::getRegExp()`, flags `uD`): clients check values with it.
   Named routes build URIs: `$context->buildRouteUri('route:name', ['id' => 42])`.
+- **Hosts**: `host('{tenant}.example.com')` (innermost wins) restricts a route to a request host
+  (`$uri->getHost()`, matched case-insensitively); its params join the route's (default `[^.]+`, one
+  label; a path param's name is refused). No host declared matches any host, and a route declaring
+  none never beats, at equal priority, one declaring a host (`Router::routePriorityComparator()`).
+  `buildRoutePath()` stays a path: the host decision is `Router::buildRouteHost()`, which
+  `Context::buildRouteUri()` and `redirectRoute()` apply. A sub-request (`callRoute()`) stays on
+  the host being served.
 - Not found -> `RouteNotFound` -> `NotFoundException`; wrong method -> `RouteMethodNotAllowed` ->
   `MethodNotAllowedException`, except an OPTIONS preflight, which passes.
 - **Interceptors** (`RouteInterceptorInterface`) run after guards and middlewares; the first, by
@@ -478,10 +485,11 @@ path, name, guards and middlewares without a group block.
 - `Route::key()` is a route's stable identity across requests; per-route state (route-bound form
   sessions, the `Form::resumable()` cache, per-route rate limits) is keyed by it. A route not named
   explicitly is auto named from its methods and path (`route_{xxh3}`), never from registration order.
-- **Route table** (production, outside the console): `OZone::createRouter()` routes through a
-  `Router\RouteTable` kept in the scope's cache dir, its file named by the release (project dir), the
-  providers, the mtimes of the application's and the scope's stateful settings dirs
-  (`Settings::set()` touches the one it writes), and what each provider's `routesVersion()` answers:
+- **Route table** (production, outside the console; each route with its host pattern):
+  `OZone::createRouter()` routes through a `Router\RouteTable` kept in the scope's cache dir, its
+  file named by the release (project dir), the providers, the mtimes of the application's and the
+  scope's stateful settings dirs (`Settings::set()` touches the one it writes), and what each
+  provider's `routesVersion()` answers:
   null for routes written in code, a cheap version of the data for routes built from data (files
   edited on the server, rows), so a change to that data compiles a new table. The first router of a
   release registers every provider and saves the table (`Router::compileTable()`); the next ones

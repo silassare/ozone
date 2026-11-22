@@ -26,10 +26,15 @@ final class RoutePathParser
 
 	/**
 	 * RoutePathParser constructor.
+	 *
+	 * @param string $default_param_pattern what a parameter matches when no pattern is declared for
+	 *                                      it: a path segment, or a host label
+	 *                                      ({@see Route::DEFAULT_HOST_PARAM_PATTERN})
 	 */
 	public function __construct(
 		private readonly string $route_path,
-		private readonly Router $router
+		private readonly Router $router,
+		private readonly string $default_param_pattern = Route::DEFAULT_PARAM_PATTERN
 	) {
 		$this->len = \strlen($route_path);
 	}
@@ -104,7 +109,7 @@ final class RoutePathParser
 					));
 				}
 
-				$sub_parser = new self($optional, $this->router);
+				$sub_parser = new self($optional, $this->router, $this->default_param_pattern);
 				$path .= $sub_parser->buildPath($context, $params, $original_route_path);
 			} else {
 				$path .= $c;
@@ -167,7 +172,7 @@ final class RoutePathParser
 					));
 				}
 
-				$param_pattern = $declared_params[$name] ?? Route::DEFAULT_PARAM_PATTERN;
+				$param_pattern = $declared_params[$name] ?? $this->default_param_pattern;
 
 				// use (?P<name> insteadof (?<name> for backward compatibility
 				$pattern .= "(?P<{$name}>{$param_pattern})";
@@ -184,7 +189,7 @@ final class RoutePathParser
 					));
 				}
 
-				$sub_parser   = new self($optional, $this->router);
+				$sub_parser   = new self($optional, $this->router, $this->default_param_pattern);
 				$optional_reg = $sub_parser->parse($declared_params, $params_found, $original_route_path);
 				$pattern .= '(?:' . $optional_reg . ')?';
 			} else {

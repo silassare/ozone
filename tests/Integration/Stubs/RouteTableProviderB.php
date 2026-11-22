@@ -20,7 +20,8 @@ use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
 /**
- * Logs each registration, like RouteTableProviderA, and links to one of its routes by name.
+ * Logs each registration, like RouteTableProviderA, and links to one of its routes by name. Maps one
+ * path on every host and on the hosts of a template, to be told apart by the request host.
  */
 final class RouteTableProviderB extends BaseService
 {
@@ -41,6 +42,28 @@ final class RouteTableProviderB extends BaseService
 
 			return $s->respond();
 		})->name('rt:b.link');
+
+		$router->get('/rt-host', static function (RouteInfo $ri) {
+			$s = new self($ri);
+			$s->json()->setDone()->setData(['host' => 'any']);
+
+			return $s->respond();
+		})->name('rt:host.any');
+
+		$router->group('/', static function (Router $router): void {
+			$router->get('/rt-host', static function (RouteInfo $ri) {
+				$s = new self($ri);
+				$s->json()->setDone()->setData([
+					'tenant' => $ri->param('tenant'),
+					'link'   => (string) $ri->getContext()->buildRouteUri('rt:host.tenant', ['tenant' => 'other']),
+					'same'   => (string) $ri->getContext()->buildRouteUri('rt:host.tenant'),
+				]);
+
+				return $s->respond();
+			})->name('rt:host.tenant');
+		})
+			->host('{tenant}.rt.test')
+			->param('tenant', '[a-z0-9-]+');
 
 		// A setting as this request sees it, read nowhere earlier in the request.
 		$router->get('/rt-b/setting', static function (RouteInfo $ri) {

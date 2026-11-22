@@ -471,14 +471,18 @@ final class Context
 	}
 
 	/**
-	 * Builds URI with a given path and query data.
+	 * Builds the URI of a named route with given parameters and query data.
+	 *
+	 * On the host being served, unless the route declares another one: the URI then names that host,
+	 * with the scheme and port of the request ({@see Router::buildRouteHost()}).
 	 */
 	public function buildRouteUri(string $name, array $params = [], array $query = []): Uri
 	{
-		$path = $this->getRouter()
-			->buildRoutePath($this, $name, $params);
+		$router = $this->getRouter();
+		$uri    = $this->buildUri($router->buildRoutePath($this, $name, $params), $query);
+		$host   = $router->buildRouteHost($this, $name, $params);
 
-		return $this->buildUri($path, $query);
+		return null === $host ? $uri : $uri->withHost($host);
 	}
 
 	/**

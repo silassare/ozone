@@ -326,6 +326,22 @@
 
 ### Added
 
+- **Routing by host**: `host()` restricts a route, or a group with its routes, to the requests made
+  to a host, inherited down the group tree with the innermost declaration winning. The host is a
+  template in the syntax of a path (`{tenant}.example.com`), its params declared with `param()` and
+  read with `RouteInfo::param()` like path ones; a host param with no declared pattern matches one
+  label (`[^.]+`), and a host param may not take the name of a path param of the same route. Hosts
+  compare case-insensitively. A route that declares no host matches any host, as before, and among
+  routes of one priority a route declaring a host is tried first, so a route of every host does not
+  shadow the same path on one host. `Router::find()` takes the request host, the compiled route
+  table carries each route's host pattern (its format is bumped, so a table saved before is
+  ignored), and `Context::buildRouteUri()` (and so `route_uri()`) answers a URI on the route's host,
+  with the request's scheme and port, when it is not the host being served; a host param not given
+  is taken from the host being served when the route matches it, and a value that would build a
+  host the route does not match, or move the URI's authority, is refused. `redirectRoute()` sends
+  the client to the route's host, which `OZ_REDIRECT_ALLOWED_HOSTS` must then allow, and
+  `oz routes export` lists each route's `host` and its params.
+
 - **A role guard compares by a strategy**: `withRoles(RoleStrategy $strategy, ?RoleInterface
   $at_least, RoleInterface ...$roles)` -- any of the roles, all of them, or at least the weight of
   the lightest (`RoleStrategy::GTE`, "an editor or above") -- and a user whose role weighs at least

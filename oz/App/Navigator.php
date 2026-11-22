@@ -157,6 +157,9 @@ final class Navigator
 	 * Redirects to a route: the client is sent to it, or, for an internal route or when
 	 * `$inform_user` is false, it is served through a sub-request.
 	 *
+	 * A route on a host other than the one being served is sent to through {@see redirect()}, so that
+	 * host must be one `OZ_REDIRECT_ALLOWED_HOSTS` allows; a sub-request stays on the host served.
+	 *
 	 * @param string   $route_name  the route name
 	 * @param array    $params      the route parameters
 	 * @param array    $query       the query parameters
@@ -172,14 +175,20 @@ final class Navigator
 	): never {
 		$this->track($route_name, ['params' => $params, 'query' => $query, 'inform_user' => $inform_user]);
 
-		$path = $this->context->getRouter()->buildRoutePath($this->context, $route_name, $params);
+		$router = $this->context->getRouter();
+		$path   = $router->buildRoutePath($this->context, $route_name, $params);
 
 		$this->root()->history[$route_name] = ['path' => $path, 'params' => $params];
 
 		if ($inform_user && !OZone::isInternalPath($path)) {
-			$uri = Uri::createFromEnvironment($this->env)
+			$uri  = Uri::createFromEnvironment($this->env)
 				->withPath($path, true)
 				->withQueryArray($query);
+			$host = $router->buildRouteHost($this->context, $route_name, $params);
+
+			if (null !== $host) {
+				$uri = $uri->withHost($host);
+			}
 
 			$this->redirect((string) $uri, $status);
 		}

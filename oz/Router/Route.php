@@ -15,6 +15,7 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\Http\Uri;
 use PHPUtils\PortablePattern;
 
 /**
@@ -22,9 +23,15 @@ use PHPUtils\PortablePattern;
  */
 final class Route
 {
-	public const string DEFAULT_PARAM_PATTERN = '[^/]+';
-	public const string REG_DELIMITER         = '~';
-	public const string ROUTE_PARAM_REG       = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
+	public const string DEFAULT_PARAM_PATTERN      = '[^/]+';
+	public const string REG_DELIMITER              = '~';
+	public const string ROUTE_PARAM_REG            = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
+
+	/**
+	 * What a parameter of a host template matches when no pattern is declared for it: one label of
+	 * the host name, never the dot that ends it.
+	 */
+	public const string DEFAULT_HOST_PARAM_PATTERN = '[^.]+';
 
 	/**
 	 * @var callable
@@ -40,6 +47,18 @@ final class Route
 	 * @var array<string, bool>
 	 */
 	private array $params_found = [];
+
+	/**
+	 * The regular expression a request host must match: null when the route declares no host.
+	 */
+	private ?string $host_regexp = null;
+
+	/**
+	 * Whether each parameter of the host is required, by name: false for one in an optional part.
+	 *
+	 * @var array<string, bool>
+	 */
+	private array $host_params_found = [];
 
 	/**
 	 * Route constructor.
@@ -91,6 +110,104 @@ final class Route
 		}
 
 		return new RoutePathParser($path, $this->router)->buildPath($context, $params);
+	}
+
+	/**
+	 * Builds the host of this route with given parameters values: null when the route declares no
+	 * host.
+	 *
+	 * @throws InvalidArgumentException when a required parameter has no value, or the values build a
+	 *                                  host this route does not match (a value outside its declared
+	 *                                  pattern, or one that would change the URI's authority)
+	 */
+	public function buildHost(Context $context, array $params = []): ?string
+	{
+		$template = $this->options->getHost();
+
+		if (null === $template) {
+			return null;
+		}
+
+		$host = new RoutePathParser($template, $this->router, self::DEFAULT_HOST_PARAM_PATTERN)
+			->buildPath($context, $params);
+
+		if (null === $this->matchHost($host) || !self::isHostName($host)) {
+			throw new InvalidArgumentException(\sprintf(
+				'The host "%s" built for the route "%s" is not one it matches: %s',
+				$host,
+				$this->getName(),
+				$template
+			));
+		}
+
+		return $host;
+	}
+
+	/**
+	 * Returns the host template this route matches, as declared on it or on a parent: null when the
+	 * route matches any host.
+	 */
+	public function getHost(): ?string
+	{
+		return $this->options->getHost();
+	}
+
+	/**
+	 * Returns the regular expression a request host must match, run case-insensitively, like
+	 * {@see getRegExp()} otherwise: null when the route declares no host.
+	 */
+	public function getHostRegExp(): ?string
+	{
+		$this->ensureParsed();
+
+		return $this->host_regexp;
+	}
+
+	/**
+	 * Returns the parameters found after parsing the route host if any.
+	 *
+	 * @return list<string>
+	 */
+	public function getHostParams(): array
+	{
+		$this->ensureParsed();
+
+		return \array_keys($this->host_params_found);
+	}
+
+	/**
+	 * Checks if a parameter of the host is required: false for one in an optional part or not in
+	 * the host.
+	 */
+	public function isHostParamRequired(string $name): bool
+	{
+		$this->ensureParsed();
+
+		return $this->host_params_found[$name] ?? false;
+	}
+
+	/**
+	 * Matches a request host: the parameters it gives, by name, an empty list when the route declares
+	 * no host and so matches any; null when the route declares a host this one is not, or no host is
+	 * given.
+	 *
+	 * @return null|array<string, string>
+	 */
+	public function matchHost(?string $host): ?array
+	{
+		$this->ensureParsed();
+
+		if (null === $this->host_regexp) {
+			return [];
+		}
+
+		$matches = [];
+
+		if (null === $host || 1 !== \preg_match($this->host_regexp, $host, $matches)) {
+			return null;
+		}
+
+		return \array_filter($matches, \is_string(...), \ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -244,24 +361,34 @@ final class Route
 	}
 
 	/**
-	 * Checks if a given path matches this route.
+	 * Checks if a given path, on a given host, matches this route: the parameters of the host join
+	 * those of the path.
+	 *
+	 * A route declaring a host matches no request whose host is not given.
 	 */
-	public function is(string $path, ?array &$params = []): bool
+	public function is(string $path, ?array &$params = [], ?string $host = null): bool
 	{
 		$this->ensureParsed();
 
-		if (!$this->isDynamic()) {
-			return $path === $this->options->getPath();
-		}
-
 		$matches = [];
-		$passed  = 1 === \preg_match($this->getRegExp(), $path, $matches);
 
-		if ($passed) {
-			$params = $matches;
+		if ($this->isDynamic()) {
+			if (1 !== \preg_match($this->getRegExp(), $path, $matches)) {
+				return false;
+			}
+		} elseif ($path !== $this->options->getPath()) {
+			return false;
 		}
 
-		return $passed;
+		$host_params = $this->matchHost($host);
+
+		if (null === $host_params) {
+			return false;
+		}
+
+		$params = $matches + $host_params;
+
+		return true;
 	}
 
 	/**
@@ -293,7 +420,56 @@ final class Route
 				$this->parser_result = $path;
 			}
 
+			$this->parseHost();
+
 			$this->parsed = true;
+		}
+	}
+
+	/**
+	 * Parses the host template, once the path is: a host parameter may not take the name of a path
+	 * one, since both are read from the same list of parameters.
+	 */
+	private function parseHost(): void
+	{
+		$this->host_regexp       = null;
+		$this->host_params_found = [];
+
+		$host = $this->options->getHost();
+
+		if (null === $host) {
+			return;
+		}
+
+		$found  = [];
+		$parser = new RoutePathParser($host, $this->router, self::DEFAULT_HOST_PARAM_PATTERN);
+		$result = $parser->parse($this->getDeclaredParams(), $found);
+
+		foreach (\array_keys($found) as $name) {
+			if (\array_key_exists($name, $this->params_found)) {
+				throw new InvalidArgumentException(\sprintf(
+					'Route parameter name "%s" is taken by both the host "%s" and the path "%s".',
+					$name,
+					$host,
+					$this->options->getPath()
+				));
+			}
+		}
+
+		$this->host_regexp       = self::REG_DELIMITER . '^' . $result . '$' . self::REG_DELIMITER . 'uDi';
+		$this->host_params_found = \array_map(\boolval(...), $found);
+	}
+
+	/**
+	 * Checks that a built host is a host name and nothing more: a value carrying `/`, `@`, `:`, `?`
+	 * or `#` would move the URI's authority to another host.
+	 */
+	private static function isHostName(string $host): bool
+	{
+		try {
+			return Uri::createFromString('http://' . $host)->getHost() === \strtolower($host);
+		} catch (InvalidArgumentException) {
+			return false;
 		}
 	}
 }

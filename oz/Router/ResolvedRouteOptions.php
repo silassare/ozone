@@ -34,8 +34,8 @@ use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
  * configuration.
  *
  * Inheritance: lists (auth methods, guards, middlewares, forms) are the parents' entries
- * followed by the route's own; params and interceptors are merged by name; CSRF, resume and
- * form declaration settings come from the innermost level that sets them.
+ * followed by the route's own; params and interceptors are merged by name; CSRF, resume,
+ * form declaration and host settings come from the innermost level that sets them.
  */
 final readonly class ResolvedRouteOptions
 {
@@ -44,7 +44,8 @@ final readonly class ResolvedRouteOptions
 	 *
 	 * `$guard_entries` holds guards or guard factories, `$form_declarations` is outermost first,
 	 * `$csrf_scope` is the scope of an explicit CSRF check, `$csrf_disabled` tells whether the
-	 * default check is off, and `$resume_config` holds the `resumable()` scope and TTL.
+	 * default check is off, `$resume_config` holds the `resumable()` scope and TTL, and `$host` is the
+	 * host template a request must name (null: any host).
 	 *
 	 * @param list<class-string<AuthenticationMethodInterface>>                    $authentication_methods
 	 * @param list<array{type: string, ...}>                                       $guard_descriptors
@@ -66,6 +67,7 @@ final readonly class ResolvedRouteOptions
 		public ?RequestScope $csrf_scope,
 		public bool $csrf_disabled,
 		public ?array $resume_config,
+		public ?string $host = null,
 	) {}
 
 	/**

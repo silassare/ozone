@@ -18,7 +18,7 @@ use OZONE\Core\OZone;
 /**
  * Class RouteExport.
  *
- * What a client needs to call a router's routes by name: their methods, path and parameters, whether
+ * What a client needs to call a router's routes by name: their methods, path, host and parameters, whether
  * they declare a form (discovered at runtime, since a form may depend on the request) and a
  * resumable one, and their guards. A client builds requests from it, and a build checks the route
  * names a definition uses and types them.
@@ -29,12 +29,15 @@ use OZONE\Core\OZone;
  * Each parameter has its pattern (a portable pattern body, {@see Route::assertParamPattern()}),
  * whether the path needs it (`required` is false in an optional part, `[/:state]`), and whether the
  * router fills it from the context in the URLs it builds (`global`, a parameter of
- * {@see Router::addGlobalParam()}), which a client fills from its own context the same way.
+ * {@see Router::addGlobalParam()}), which a client fills from its own context the same way. The
+ * parameters of the host template (`host`, null when the route matches any host) follow those of
+ * the path.
  *
  * @psalm-type ExportedRoute = array{
  *     name: string,
  *     methods: list<string>,
  *     path: string,
+ *     host: null|string,
  *     params: list<array{name: string, pattern: string, required: bool, global: bool}>,
  *     form: bool,
  *     resumable: bool,
@@ -77,10 +80,20 @@ final class RouteExport
 				];
 			}
 
+			foreach ($route->getHostParams() as $name) {
+				$params[] = [
+					'name'     => $name,
+					'pattern'  => $declared[$name] ?? Route::DEFAULT_HOST_PARAM_PATTERN,
+					'required' => $route->isHostParamRequired($name),
+					'global'   => isset($globals[$name]),
+				];
+			}
+
 			$out[] = [
 				'name'          => $route->getName(),
 				'methods'       => \array_values($route->getMethods()),
 				'path'          => $route->getPath(),
+				'host'          => $route->getHost(),
 				'params'        => $params,
 				'form'          => null !== $resolved->formDeclaration(),
 				'resumable'     => $resolved->hasResumeSupport(),

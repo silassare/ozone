@@ -144,6 +144,31 @@ final class ProductionRouteTableTest extends TestCase
 		self::assertSame(['B', 'A'], self::registrations());
 	}
 
+	public function testTheTableRoutesByTheRequestHost(): void
+	{
+		self::ensureTable();
+		self::resetLog();
+
+		[$status, $data] = self::get('/rt-host', 'acme.rt.test');
+
+		self::assertSame(200, $status);
+		self::assertSame('acme', $data['data']['tenant'] ?? null);
+		self::assertSame('http://other.rt.test:' . self::$port . '/rt-host', $data['data']['link'] ?? null);
+		self::assertSame('http://acme.rt.test:' . self::$port . '/rt-host', $data['data']['same'] ?? null);
+		self::assertSame(['B'], self::registrations());
+
+		// The same path on a host the template does not match: the route of every host.
+		[$status, $data] = self::get('/rt-host', 'acme.rt.example');
+
+		self::assertSame(200, $status);
+		self::assertSame('any', $data['data']['host'] ?? null);
+
+		[$status, $data] = self::get('/rt-host');
+
+		self::assertSame(200, $status);
+		self::assertSame('any', $data['data']['host'] ?? null);
+	}
+
 	public function testAStatefulSettingChangeCompilesANewTable(): void
 	{
 		self::ensureTable();
@@ -212,16 +237,22 @@ final class ProductionRouteTableTest extends TestCase
 	}
 
 	/**
-	 * Makes a GET request to the test server.
+	 * Makes a GET request to the test server, naming another host in its `Host` header if given.
 	 *
 	 * @return array{0: int, 1: array} the status code and the decoded JSON body
 	 */
-	private static function get(string $path): array
+	private static function get(string $path, ?string $host = null): array
 	{
+		$header = "Accept: application/json\r\n";
+
+		if (null !== $host) {
+			$header .= 'Host: ' . $host . ':' . self::$port . "\r\n";
+		}
+
 		$ctx = \stream_context_create(['http' => [
 			'timeout'       => 10,
 			'ignore_errors' => true,
-			'header'        => "Accept: application/json\r\n",
+			'header'        => $header,
 		]]);
 
 		$body = \file_get_contents('http://' . self::$host . ':' . self::$port . $path, false, $ctx);

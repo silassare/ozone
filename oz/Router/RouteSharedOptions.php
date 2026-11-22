@@ -61,6 +61,11 @@ class RouteSharedOptions
 	protected int $route_resume_ttl = 3600;
 
 	/**
+	 * The host template this level declares, null when it declares none: see {@see self::host()}.
+	 */
+	protected ?string $host = null;
+
+	/**
 	 * @var array<string,string>
 	 */
 	protected array $route_params = [];
@@ -529,6 +534,45 @@ class RouteSharedOptions
 	}
 
 	/**
+	 * Restricts this route (or group, with its routes) to the requests made to a host.
+	 *
+	 * The host is a template in the syntax of a path: `{tenant}.example.com` captures a parameter
+	 * read like a path one (`RouteInfo::param('tenant')`) and constrained with {@see self::param()};
+	 * a parameter with no declared pattern matches one host label
+	 * ({@see Route::DEFAULT_HOST_PARAM_PATTERN}), and may not take the name of a path parameter of
+	 * the same route. Hosts compare case-insensitively, and a template names no scheme, port or
+	 * path. Inherited from parent; innermost definition wins. A route with no host declared on it
+	 * or on a parent matches any host; among routes of the same priority, one declaring a host is
+	 * tried before one that does not.
+	 *
+	 * @return $this
+	 */
+	public function host(string $host): static
+	{
+		if ('' === $host || \str_contains($host, '/') || 1 === \preg_match('~:\d+\z~', $host)) {
+			throw new InvalidArgumentException(\sprintf(
+				'A route host should be a host name, without scheme, port or path: "%s".',
+				$host
+			));
+		}
+
+		$this->host = $host;
+
+		self::changed();
+
+		return $this;
+	}
+
+	/**
+	 * Gets the host template defined for this route or its parent: null when none is, and the
+	 * route matches any host.
+	 */
+	public function getHost(): ?string
+	{
+		return $this->resolved()->host;
+	}
+
+	/**
 	 * Add parameter.
 	 *
 	 * @return $this
@@ -854,6 +898,7 @@ class RouteSharedOptions
 			resume_config: null !== $this->route_resume_scope
 				? [$this->route_resume_scope, $this->route_resume_ttl]
 				: $parent?->resume_config,
+			host: $this->host ?? $parent?->host,
 		);
 	}
 
