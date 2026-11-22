@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Cmd;
 
+use Closure;
 use Kli\KliArgs;
 use Kli\KliStyle;
 use Kli\Table\Interfaces\KliTableCellFormatterInterface;
@@ -26,12 +27,14 @@ use OZONE\Core\Cli\Cron\CronRunner;
 use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\Utils\ErrorUtils;
+use OZONE\Core\Hooks\Events\DoctorCheckHook;
 use OZONE\Core\Lang\Message\PluralRules;
 use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\Messaging\Messenger;
 use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
+use ReflectionFunction;
 use Throwable;
 
 /**
@@ -51,7 +54,7 @@ final class DoctorCmd extends Command
 	 */
 	public function check(KliArgs $args): void
 	{
-		$checks = \array_merge($this->environmentChecks(), $this->projectChecks());
+		$checks = \array_merge($this->environmentChecks(), $this->projectChecks(), self::pluginChecks());
 		$failed = \array_filter($checks, static fn (array $c): bool => self::FAIL === $c['status']);
 
 		$cli = $this->getCli();
@@ -81,6 +84,53 @@ final class DoctorCmd extends Command
 			->bool()
 			->def(false);
 		$check->handler($this->check(...));
+	}
+
+	/**
+	 * What the plugins check, through {@see DoctorCheckHook}.
+	 *
+	 * Each listener run on its own: one that throws is a failed check naming it, and the others
+	 * still report, since a report one broken plugin could empty is a report nobody can trust.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	private static function pluginChecks(): array
+	{
+		$hook = new DoctorCheckHook();
+
+		$hook->dispatch(static function (callable $listener, DoctorCheckHook $hook): void {
+			try {
+				$listener($hook);
+			} catch (Throwable $t) {
+				$hook->add(
+					self::nameOf($listener),
+					self::FAIL,
+					self::rootCause($t),
+					'Fix the check, or the plugin that adds it.'
+				);
+			}
+		});
+
+		return $hook->getRows();
+	}
+
+	/**
+	 * What a listener is called in a report: its class and method where it has them.
+	 */
+	private static function nameOf(callable $listener): string
+	{
+		if (\is_array($listener)) {
+			return (\is_object($listener[0]) ? $listener[0]::class : $listener[0]) . '::' . $listener[1];
+		}
+
+		if ($listener instanceof Closure) {
+			$function = new ReflectionFunction($listener);
+			$class    = $function->getClosureScopeClass()?->getName();
+
+			return null === $class ? $function->getName() : $class . '::' . $function->getName();
+		}
+
+		return \is_string($listener) ? $listener : 'a doctor check';
 	}
 
 	/**

@@ -326,6 +326,12 @@
 
 ### Added
 
+- **A plugin adds its own checks to `oz doctor check`**: the doctor dispatches `DoctorCheckHook`
+  after its own project checks, and a listener adds rows of the same shape (`add($name, $status,
+  $detail, $fix)`, status `ok`, `warn` or `fail`), reported and counted with OZone's, a failure
+  failing the run. Each listener runs on its own: one that throws is a failed check named after it
+  (`Class::method`), and the others still report.
+
 - **Resources kept with their history** (`Revisions\Revisions`, table `oz_revisions`). A resource
   lives under a namespace its owner names and a key; every write is a row, never updated or deleted,
   and the current content is the latest one. The content is text, as written -- a format telling

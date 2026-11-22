@@ -960,6 +960,8 @@ A plugin **names what it ships** -- `getSettingsSource()` and a schema file (`ge
 shape of `oz_schema.php`) -- and `AbstractPlugin::boot()` adds them, so `oz plugins describe` reads
 them without booting it; prefer naming them to adding them from code. A plugin that defines a kind
 of file other plugins ship says what the described one ships by listening to `PluginDescribeHook`.
+What only a plugin can check goes into `oz doctor check` through `DoctorCheckHook`, never a command
+of its own that a deploy would have to know to run.
 **Seeders** (`oz.seeders`, `oz db seed [--demo]`) write what is missing and never update a row: use
 `Seeders::insertMissing()`, keyed by a stable value, so a re-run on every deploy keeps every edit.
 **Resources edited in production with history** go through `Revisions::of($namespace)`: append-only
