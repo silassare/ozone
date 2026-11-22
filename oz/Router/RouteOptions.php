@@ -38,6 +38,12 @@ final class RouteOptions extends RouteSharedOptions
 	private bool $t_name_is_explicit = false;
 
 	/**
+	 * The route's methods, sorted and joined, which its auto name is derived from: null until the
+	 * router gives them ({@see autoName()}).
+	 */
+	private ?string $auto_name_methods = null;
+
+	/**
 	 * RouteOptions constructor.
 	 *
 	 * The router names the route ({@see autoName()}) until {@see name()} does.
@@ -50,17 +56,26 @@ final class RouteOptions extends RouteSharedOptions
 	}
 
 	/**
-	 * Names the route, unless {@see name()} did: the name is not explicit.
+	 * Names the route from its methods, host and path, unless {@see name()} does: the name is not
+	 * explicit.
+	 *
+	 * The name is derived when it is read, never here: `host()` and the group options are chained
+	 * after the route is mapped. It does not depend on the order routes are mapped in, since a
+	 * router with a route table maps them in the order requests need them, and the name is part of
+	 * the route's identity ({@see Route::key()}), which form sessions and rate limits are keyed by.
+	 * Two routes of the same methods, host and path get one name, and the router refuses them.
+	 *
+	 * @param string[] $methods
 	 *
 	 * @return $this
 	 *
 	 * @internal called by {@see Router::map()} only
 	 */
-	public function autoName(string $name): static
+	public function autoName(array $methods): static
 	{
-		if (!$this->t_name_is_explicit) {
-			parent::name($name);
-		}
+		\sort($methods);
+
+		$this->auto_name_methods = \implode(',', $methods);
 
 		return $this;
 	}
@@ -149,6 +164,25 @@ final class RouteOptions extends RouteSharedOptions
 		foreach ($this->refiners as $refiner) {
 			$refiner($router, $route);
 		}
+	}
+
+	/**
+	 * The explicit name, else the auto name: `route_` and a hash of the sorted methods, the full host
+	 * template when there is one, and the full path. A route declaring no host hashes what it always
+	 * did (methods and path), so its name is unchanged.
+	 */
+	#[Override]
+	protected function localName(): string
+	{
+		if ($this->t_name_is_explicit || null === $this->auto_name_methods) {
+			return parent::localName();
+		}
+
+		$host = $this->getHost();
+		$path = $this->getPath();
+		$what = null === $host ? $path : '//' . $host . $path;
+
+		return 'route_' . \hash('xxh3', $this->auto_name_methods . ' ' . $what);
 	}
 
 	/**

@@ -2,6 +2,15 @@
 
 ### Breaking changes
 
+- **The auto name of a route not named explicitly comes from its definition alone**: its methods,
+  its host and its path, derived when the name is read, so a `host()` chained after the route is
+  mapped is part of it. A route that declares no host keeps the name it had; a route that declares
+  one gets a new name; and the `_2`, `_3` suffix that kept two identical definitions apart, in the
+  order they were mapped, is gone: two routes not named explicitly with the same methods, host and
+  path are refused, with an error naming the definition and the providers that mapped both, since a
+  request could only ever reach the first. State keyed by `Route::key()` (form sessions, route rate
+  limits) of a route whose name changed starts over.
+
 - **A route provider says what version its routes are** (`RouteProviderInterface::routesVersion():
   ?string`), and the production route table's key includes it. Null is routes written in code, and
   `Service` answers it, so a provider extending `Service` changes nothing; a class implementing the
@@ -339,8 +348,13 @@
   with the request's scheme and port, when it is not the host being served; a host param not given
   is taken from the host being served when the route matches it, and a value that would build a
   host the route does not match, or move the URI's authority, is refused. `redirectRoute()` sends
-  the client to the route's host, which `OZ_REDIRECT_ALLOWED_HOSTS` must then allow, and
-  `oz routes export` lists each route's `host` and its params.
+  the client to the route's host with no entry in `OZ_REDIRECT_ALLOWED_HOSTS`, since the host is
+  built from the route's own template, declared in code; a `redirect()` to a URL keeps the check.
+  `oz routes export` lists each route's `host` and its params, and the API doc gives the route's
+  operations a `servers` entry on the host template, one server variable per host param: its
+  default is the value of the host serving the document when the route matches it, else the
+  param's name as a placeholder, and its description gives the param's pattern, which a server
+  variable cannot declare.
 
 - **A role guard compares by a strategy**: `withRoles(RoleStrategy $strategy, ?RoleInterface
   $at_least, RoleInterface ...$roles)` -- any of the roles, all of them, or at least the weight of
@@ -635,6 +649,11 @@
 
 ### Fixed
 
+- **A param of an optional part a request leaves out read as an empty string.** On
+  `/docs[/:lang]/page/:id`, a request on `/docs/page/7` gave `lang` the value `''`, so
+  `RouteInfo::param('lang', 'en')` answered `''` and not its default; the same happened to a host
+  template's optional part, where a link built from it named a host with a leading dot. A part
+  left out gives no param now, wherever it stands, as it already did at the end of a path.
 - **A file's deletion refused by a listener left the row without its bytes.** `FS::deleteFileByID()`
   deleted the stored bytes, then the row; a listener of the row's deletion
   (`TableCRUD::events('oz_files')->onBeforeEntityDeletion()`) that refused it -- a plugin whose pages

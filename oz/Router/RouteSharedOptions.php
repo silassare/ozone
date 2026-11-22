@@ -518,6 +518,8 @@ class RouteSharedOptions
 
 		$this->priority = $priority;
 
+		self::changed();
+
 		return $this;
 	}
 
@@ -617,11 +619,11 @@ class RouteSharedOptions
 	 */
 	public function getName(bool $full = true): string
 	{
-		$name = $this->name;
+		$name = $this->localName();
 		if ($full && $this->parent) {
 			$parent_name = $this->parent->getName();
 			if (!empty($parent_name)) {
-				$name = $parent_name . '.' . $this->name;
+				$name = $parent_name . '.' . $name;
 			}
 		}
 
@@ -812,6 +814,14 @@ class RouteSharedOptions
 	public function resolveResumeConfig(): ?array
 	{
 		return $this->resolved()->resume_config;
+	}
+
+	/**
+	 * The name this level gives itself, before its parents' names prefix it.
+	 */
+	protected function localName(): string
+	{
+		return $this->name;
 	}
 
 	/**

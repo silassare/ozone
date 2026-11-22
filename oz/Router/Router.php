@@ -110,13 +110,6 @@ final class Router
 	private array $sources = [];
 
 	/**
-	 * How many routes were given each auto name, to tell identical definitions apart.
-	 *
-	 * @var array<string, int>
-	 */
-	private array $auto_names = [];
-
-	/**
 	 * The table routing requests while not every provider is registered.
 	 */
 	private ?RouteTable $table = null;
@@ -657,7 +650,7 @@ final class Router
 
 		$this->sources[$this->source][] = $route;
 
-		$options->autoName($this->autoName($methods_filtered, $options));
+		$options->autoName($methods_filtered);
 
 		if ($route->isDynamic()) {
 			$this->dynamic_routes[] = $route;
@@ -781,8 +774,9 @@ final class Router
 
 	/**
 	 * Refuses two routes of one name: a lookup by name, a built URI and the route table would reach
-	 * one of them only, whichever was mapped first. Auto names are unique by construction, so this
-	 * catches an explicit name given twice, or given as another route's auto name.
+	 * one of them only, whichever was mapped first. This catches an explicit name given twice, or
+	 * given as another route's auto name, and two routes not named explicitly with the same methods,
+	 * host and path, which share an auto name and only one of which a request could ever reach.
 	 *
 	 * Run where every route is read (the listings, the table's compilation) and when every provider
 	 * is registered at once; never per request once a table routes them.
@@ -795,6 +789,20 @@ final class Router
 			foreach ($routes as $route) {
 				$name  = $route->getName();
 				$first = $seen[$name] ?? null;
+
+				$unnamed = null !== $first
+					&& !$first->getOptions()->isNameExplicit()
+					&& !$route->getOptions()->isNameExplicit();
+
+				if ($unnamed) {
+					throw new RuntimeException(\sprintf(
+						'Two routes not named explicitly have the same methods, host and path, %s:'
+						. ' one mapped by %s, the other by %s. Name them apart, or map the route once.',
+						self::describeDefinition($route),
+						$first->getSource() ?: 'no route provider',
+						$route->getSource() ?: 'no route provider'
+					));
+				}
 
 				if (null !== $first) {
 					throw new RuntimeException(\sprintf(
@@ -810,6 +818,18 @@ final class Router
 				$seen[$name] = $route;
 			}
 		}
+	}
+
+	/**
+	 * A route's methods, host and path, as a message names its definition: `GET a.example.com/x`.
+	 */
+	private static function describeDefinition(Route $route): string
+	{
+		$methods = $route->getMethods();
+
+		\sort($methods);
+
+		return '"' . \implode(',', $methods) . ' ' . ($route->getHost() ?? '') . $route->getPath() . '"';
 	}
 
 	/**
@@ -941,25 +961,6 @@ final class Router
 
 		$table?->discard();
 		$this->registerAll();
-	}
-
-	/**
-	 * The name of a route not named explicitly.
-	 *
-	 * Derived from its methods and path, not from the order routes are mapped in: a router with a
-	 * route table maps them in the order requests need them, and the name is part of the route's
-	 * identity ({@see Route::key()}), which form sessions and rate limits are keyed by.
-	 *
-	 * @param string[] $methods
-	 */
-	private function autoName(array $methods, RouteOptions $options): string
-	{
-		\sort($methods);
-
-		$name  = 'route_' . \hash('xxh3', \implode(',', $methods) . ' ' . $options->getPath());
-		$count = $this->auto_names[$name] = ($this->auto_names[$name] ?? 0) + 1;
-
-		return 1 === $count ? $name : $name . '_' . $count;
 	}
 
 	/**

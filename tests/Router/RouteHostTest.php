@@ -169,6 +169,40 @@ final class RouteHostTest extends TestCase
 		);
 	}
 
+	public function testAnOptionalPartOfAHostIsLeftOutWhenItsParamIsNotGiven(): void
+	{
+		$router = new Router();
+
+		$router->get('/regional', static fn () => null)
+			->name('regional')
+			->host('[{region}.]api.{domain}')
+			->param('domain', '[a-z0-9.-]+');
+
+		// The host served matched no region: a link from it names none, and stays on it.
+		$context = self::context('api.example.com', $router);
+		$route   = TestUtils::route($router, 'regional');
+
+		self::assertSame('api.example.com', $route->buildHost($context, ['domain' => 'example.com']));
+		self::assertNull($router->buildRouteHost($context, 'regional'));
+		self::assertSame('http://api.example.com/regional', (string) $context->buildRouteUri('regional'));
+
+		self::assertSame('eu.api.example.com', $router->buildRouteHost($context, 'regional', ['region' => 'eu']));
+		self::assertSame(
+			'http://eu.api.example.com/regional',
+			(string) $context->buildRouteUri('regional', ['region' => 'eu'])
+		);
+
+		// A request reads the region it names, and none when it names none.
+		self::assertSame(
+			['region' => 'eu', 'domain' => 'example.com'],
+			$router->find('GET', '/regional', host: 'eu.api.example.com')->foundRouteParams()
+		);
+		self::assertSame(
+			['domain' => 'example.com'],
+			$router->find('GET', '/regional', host: 'api.example.com')->foundRouteParams()
+		);
+	}
+
 	public function testAHostParamMayNotTakeTheNameOfAPathParam(): void
 	{
 		$router = new Router();

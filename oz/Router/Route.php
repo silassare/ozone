@@ -191,6 +191,10 @@ final class Route
 	 * no host and so matches any; null when the route declares a host this one is not, or no host is
 	 * given.
 	 *
+	 * A parameter of an optional part the host leaves out is not in the list: PCRE reports such a
+	 * group as an empty string when a later one matched, and a value given as '' fills the optional
+	 * part when a host is built from these ({@see Router::buildRouteHost()}).
+	 *
 	 * @return null|array<string, string>
 	 */
 	public function matchHost(?string $host): ?array
@@ -203,11 +207,19 @@ final class Route
 
 		$matches = [];
 
-		if (null === $host || 1 !== \preg_match($this->host_regexp, $host, $matches)) {
+		if (null === $host || 1 !== \preg_match($this->host_regexp, $host, $matches, \PREG_UNMATCHED_AS_NULL)) {
 			return null;
 		}
 
-		return \array_filter($matches, \is_string(...), \ARRAY_FILTER_USE_KEY);
+		$params = [];
+
+		foreach ($matches as $name => $value) {
+			if (\is_string($name) && null !== $value) {
+				$params[$name] = $value;
+			}
+		}
+
+		return $params;
 	}
 
 	/**
@@ -373,9 +385,14 @@ final class Route
 		$matches = [];
 
 		if ($this->isDynamic()) {
-			if (1 !== \preg_match($this->getRegExp(), $path, $matches)) {
+			// A group left out answers null, then nothing: a param of an optional part the path
+			// leaves out is absent wherever the part stands, and not an empty string before a
+			// part that matched.
+			if (1 !== \preg_match($this->getRegExp(), $path, $matches, \PREG_UNMATCHED_AS_NULL)) {
 				return false;
 			}
+
+			$matches = \array_filter($matches, static fn (?string $value): bool => null !== $value);
 		} elseif ($path !== $this->options->getPath()) {
 			return false;
 		}

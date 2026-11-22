@@ -301,6 +301,19 @@ final class RouteSharedOptionsTest extends TestCase
 		self::assertSame([$mdl], $second->middlewares);
 		self::assertSame([$mdl], $options->getMiddlewares());
 	}
+
+	public function testAPriorityChangeBumpsTheRevisionLikeAnyOtherOption(): void
+	{
+		$router  = new Router();
+		$options = $router->get('/prioritized', static fn () => null);
+		$first   = $options->resolved();
+
+		$options->priority(3);
+
+		// Nothing resolved reads the priority today: the rebuild is what shows the revision moved.
+		self::assertNotSame($first, $options->resolved());
+		self::assertSame(3, $options->getPriority(true));
+	}
 }
 
 /**

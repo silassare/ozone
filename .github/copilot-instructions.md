@@ -473,7 +473,8 @@ parent of another, sharing path, name, guards and middlewares without a group bl
   none never beats, at equal priority, one declaring a host (`Router::routePriorityComparator()`).
   `buildRoutePath()` stays a path: the host decision is `Router::buildRouteHost()`, which
   `Context::buildRouteUri()` and `redirectRoute()` apply. A sub-request (`callRoute()`) stays on
-  the host being served.
+  the host being served. The API doc gives such a route an operation-level `servers` entry
+  (`OperationBuilder::documentHost()`).
 - Not found -> `RouteNotFound` -> `NotFoundException`; wrong method -> `RouteMethodNotAllowed` ->
   `MethodNotAllowedException`, except an OPTIONS preflight, which passes.
 - **Interceptors** (`RouteInterceptorInterface`) run after guards and middlewares; the first, by
@@ -484,7 +485,9 @@ parent of another, sharing path, name, guards and middlewares without a group bl
   `OZ_FORM_DISCOVERY_HEADER_ALLOWED`). Those checks are on `Request`, not `Context`.
 - `Route::key()` is a route's stable identity across requests; per-route state (route-bound form
   sessions, the `Form::resumable()` cache, per-route rate limits) is keyed by it. A route not named
-  explicitly is auto named from its methods and path (`route_{xxh3}`), never from registration order.
+  explicitly is auto named from its methods, host and path (`route_{xxh3}`,
+  `RouteOptions::localName()`), derived when read and never from registration order; two such
+  routes of one definition are refused.
 - **Route table** (production, outside the console; each route with its host pattern):
   `OZone::createRouter()` routes through a `Router\RouteTable` kept in the scope's cache dir, its
   file named by the release (project dir), the providers, the mtimes of the application's and the
@@ -782,7 +785,8 @@ a project for which it must not be replaces the section.
   (`GET /logout`) needs `_csrf`.
 - **Redirect targets**: every redirection is checked against `OZ_REDIRECT_ALLOWED_HOSTS`
   (`RedirectPolicy`, read by `Navigator::redirect()`), which allows the current host and the hosts it
-  lists, or any host with `'*'`. A route asking a client for a destination validates the field too,
+  lists, or any host with `'*'`. The one exception is `redirectRoute()` to a route declaring a host:
+  that host is built from the route's own template, declared in code, so it needs no entry. A route asking a client for a destination validates the field too,
   with `TypeUrl::allowAbsolutePath()->allowedHosts(RedirectPolicy::fromContext($ctx)->hosts())`, so
   the field and the redirection cannot disagree; never build that host list by hand.
 - **Client IP: always `Context::getUserIP()`.** Forwarding headers are ignored unless the TCP peer is

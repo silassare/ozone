@@ -153,15 +153,31 @@ final class RouteTableTest extends TestCase
 		self::assertFalse($get->getOptions()->isNameExplicit());
 	}
 
-	public function testIdenticalDefinitionsGetDistinctAutoNames(): void
+	public function testAnAutoNameIsDerivedFromTheDefinitionOnceItIsComplete(): void
 	{
-		$router  = new Router();
 		$handler = static fn () => null;
+		$first   = new Router();
+		$second  = new Router();
 
-		$a = $router->get('/twice', $handler);
-		$b = $router->get('/twice', $handler);
+		// Another route mapped first in one router only: the position no longer counts.
+		$second->get('/other', $handler);
 
-		self::assertSame($a->getName() . '_2', $b->getName());
+		$a = $first->get('/page', $handler);
+		$b = $second->get('/page', $handler);
+
+		// A route declaring no host keeps the name it always had: its methods and path.
+		self::assertSame('route_' . \hash('xxh3', 'GET /page'), $a->getName());
+		self::assertSame($a->getName(), $b->getName());
+		self::assertSame(
+			TestUtils::route($first, $a->getName())->key(),
+			TestUtils::route($second, $b->getName())->key()
+		);
+
+		// host() is chained after the route is mapped, and the name follows it.
+		$b->host('{tenant}.example.com');
+
+		self::assertSame('route_' . \hash('xxh3', 'GET //{tenant}.example.com/page'), $b->getName());
+		self::assertNotSame($a->getName(), $b->getName());
 	}
 
 	public function testASavedTableLoads(): void

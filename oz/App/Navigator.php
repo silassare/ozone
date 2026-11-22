@@ -22,6 +22,7 @@ use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
+use OZONE\Core\Router\Route;
 use OZONE\Core\Web\Views\RedirectView;
 
 /**
@@ -120,45 +121,16 @@ final class Navigator
 	 */
 	public function redirect(string|Uri $to, ?int $status = null): never
 	{
-		$uri = $to instanceof Uri ? $to : Uri::createFromString($to);
-
-		if ('' === $uri->getHost()) {
-			$uri = $this->context->getRequest()->getUri()
-				->withPath($uri->getPath())
-				->withFragment($uri->getFragment())
-				->withQuery($uri->getQuery());
-		}
-
-		$uri_str = (string) $uri;
-
-		$this->track($uri_str, ['status' => $status]);
-
-		if (!Uri::isStrictUrl($uri_str)) {
-			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $uri_str));
-		}
-
-		if (!RedirectPolicy::fromContext($this->context)->allows($uri)) {
-			throw new RuntimeException('OZ_REDIRECT_HOST_NOT_ALLOWED', [
-				'to'   => $uri_str,
-				'host' => $uri->getHost(),
-			]);
-		}
-
-		new RedirectHook($this->context, $uri)->dispatch();
-
-		if ($this->context->isApiContext()) {
-			$this->context->respond($this->context->getResponse()->withRedirect($uri_str, $status));
-		}
-
-		$this->redirectRoute(RedirectView::REDIRECT_ROUTE, ['url' => $uri_str, 'status' => $status]);
+		$this->redirectTo($to, $status, null);
 	}
 
 	/**
 	 * Redirects to a route: the client is sent to it, or, for an internal route or when
 	 * `$inform_user` is false, it is served through a sub-request.
 	 *
-	 * A route on a host other than the one being served is sent to through {@see redirect()}, so that
-	 * host must be one `OZ_REDIRECT_ALLOWED_HOSTS` allows; a sub-request stays on the host served.
+	 * A route on a host other than the one being served is sent to on that host, which needs no
+	 * entry in `OZ_REDIRECT_ALLOWED_HOSTS`: it is built from the route's own host template, declared
+	 * in code ({@see self::namesRouteHost()}). A sub-request stays on the host served.
 	 *
 	 * @param string   $route_name  the route name
 	 * @param array    $params      the route parameters
@@ -190,7 +162,7 @@ final class Navigator
 				$uri = $uri->withHost($host);
 			}
 
-			$this->redirect((string) $uri, $status);
+			$this->redirectTo((string) $uri, $status, $router->requireRoute($route_name));
 		}
 
 		$this->callPath($path, $params, $query);
@@ -217,6 +189,61 @@ final class Navigator
 		$root->routes_run[] = ['name' => $name, 'path' => $path];
 
 		return $root->routes_run;
+	}
+
+	/**
+	 * Redirects the client to a URL, as {@see redirect()} does: a URL built for a route that declares
+	 * a host may name that host whatever `OZ_REDIRECT_ALLOWED_HOSTS` says.
+	 *
+	 * @param null|Route $route the route the URL was built for, null for a URL from anywhere else
+	 *
+	 * @throws RuntimeException when the destination names a host this server may not send a client to
+	 */
+	private function redirectTo(string|Uri $to, ?int $status, ?Route $route): never
+	{
+		$uri = $to instanceof Uri ? $to : Uri::createFromString($to);
+
+		if ('' === $uri->getHost()) {
+			$uri = $this->context->getRequest()->getUri()
+				->withPath($uri->getPath())
+				->withFragment($uri->getFragment())
+				->withQuery($uri->getQuery());
+		}
+
+		$uri_str = (string) $uri;
+
+		$this->track($uri_str, ['status' => $status]);
+
+		if (!Uri::isStrictUrl($uri_str)) {
+			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $uri_str));
+		}
+
+		if (!self::namesRouteHost($uri, $route) && !RedirectPolicy::fromContext($this->context)->allows($uri)) {
+			throw new RuntimeException('OZ_REDIRECT_HOST_NOT_ALLOWED', [
+				'to'   => $uri_str,
+				'host' => $uri->getHost(),
+			]);
+		}
+
+		new RedirectHook($this->context, $uri)->dispatch();
+
+		if ($this->context->isApiContext()) {
+			$this->context->respond($this->context->getResponse()->withRedirect($uri_str, $status));
+		}
+
+		$this->redirectRoute(RedirectView::REDIRECT_ROUTE, ['url' => $uri_str, 'status' => $status]);
+	}
+
+	/**
+	 * Whether a redirection target names the host of the route it was built for.
+	 *
+	 * That host is filled into the route's host template, which the project declared in code, and
+	 * {@see Route::buildHost()} refuses a value the template does not match: it is allowed by
+	 * construction, as wide as the template and its params' patterns, and never chosen by a request.
+	 */
+	private static function namesRouteHost(Uri $uri, ?Route $route): bool
+	{
+		return null !== $route && null !== $route->getHost() && null !== $route->matchHost($uri->getHost());
 	}
 
 	/**

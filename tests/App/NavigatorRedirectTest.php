@@ -19,11 +19,16 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Navigator;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Hooks\Events\RedirectHook;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\RedirectPolicy;
+use OZONE\Core\Http\Uri;
+use OZONE\Core\Router\Router;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
+use RuntimeException as PhpRuntimeException;
 
 /**
  * Class NavigatorRedirectTest.
@@ -116,8 +121,86 @@ final class NavigatorRedirectTest extends TestCase
 		$context->redirect('https://');
 	}
 
+	/**
+	 * A route on another host is reached on that host under the strict default: its host is built
+	 * from a template the project declared in code, never taken from a request.
+	 */
+	public function testARedirectToARouteOnAnotherHostNeedsNoAllowedHost(): void
+	{
+		$context = self::tenantContext();
+
+		self::assertSame(
+			'http://globex.example.com/tenant-home',
+			self::target(static fn () => $context->redirectRoute('redirect.tenant.home', ['tenant' => 'globex']))
+		);
+	}
+
+	/**
+	 * The same host given as a URL is a URL like any other: the setting decides.
+	 */
+	public function testARedirectToAUrlOnAHostARouteMatchesStillNeedsTheSetting(): void
+	{
+		$context = self::tenantContext();
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageIsOrContains('OZ_REDIRECT_HOST_NOT_ALLOWED');
+
+		// Read past the checks, so a redirection let through fails here rather than ending the process.
+		self::target(static fn () => $context->redirect('http://initech.example.com/tenant-home'));
+	}
+
 	private static function context(): Context
 	{
 		return new Context(HTTPEnvironment::mock([]), null, Context::root());
+	}
+
+	/**
+	 * A request to one tenant's host, routed by a router mapping a page of every tenant.
+	 */
+	private static function tenantContext(): Context
+	{
+		$router = new Router();
+
+		$router->get('/tenant-home', static fn () => null)
+			->name('redirect.tenant.home')
+			->host('{tenant}.example.com')
+			->param('tenant', '[a-z0-9-]+');
+
+		$context = new Context(HTTPEnvironment::mock(['HTTP_HOST' => 'acme.example.com']), null, Context::root());
+
+		// What OZone::getApiRouter() would answer.
+		new ReflectionProperty(Context::class, 't_router')->setValue($context, $router);
+
+		return $context;
+	}
+
+	/**
+	 * Where a redirection sends the client, read when it is dispatched: past every check.
+	 *
+	 * @param callable():void $redirect
+	 */
+	private static function target(callable $redirect): string
+	{
+		$reached = new PhpRuntimeException('redirection dispatched');
+		$to      = null;
+		$detach  = RedirectHook::listen(static function (RedirectHook $hook) use (&$to, $reached): void {
+			$to = $hook->to;
+
+			throw $reached;
+		});
+
+		try {
+			$redirect();
+		} catch (PhpRuntimeException $e) {
+			if ($e !== $reached) {
+				throw $e;
+			}
+		} finally {
+			$detach();
+		}
+
+		self::assertInstanceOf(Uri::class, $to, 'the redirection was not dispatched');
+
+		return (string) $to;
 	}
 }

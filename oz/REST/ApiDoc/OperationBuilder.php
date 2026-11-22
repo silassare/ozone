@@ -21,12 +21,14 @@ use OpenApi\Annotations\Response;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\ResolvedRouteOptions;
 use OZONE\Core\Router\Route;
+use OZONE\Core\Router\RoutePathParser;
 
 /**
  * Class OperationBuilder.
  *
  * The paths and operations of the document. Operations built from a route carry its
- * security (`x-oz-security`), its form (`requestBody`, `x-oz-form`) and its path parameters.
+ * security (`x-oz-security`), its form (`requestBody`, `x-oz-form`), its path parameters, and the
+ * host it answers on when it declares one (`servers`).
  */
 final class OperationBuilder
 {
@@ -154,6 +156,7 @@ final class OperationBuilder
 		$resolved = $route->getOptions()->resolved();
 
 		$this->documentSecurity($op, $resolved);
+		$this->documentHost($op, $route);
 
 		// Attach form documentation when not already overridden by the caller.
 		if (SchemaBuilder::isUndefined($op->requestBody)) {
@@ -210,6 +213,63 @@ final class OperationBuilder
 		} elseif (\is_array($op->x)) {
 			$op->x = \array_merge($op->x, $extension);
 		}
+	}
+
+	/**
+	 * Adds the operation's own `servers` entry for a route that declares a host: the URL of the
+	 * document's request (scheme, port and base path) on the route's host template, each host
+	 * parameter a server variable of the same `{name}`.
+	 *
+	 * A server variable has no pattern, so each one's description gives the parameter's. Its required
+	 * `default` is the value of the host serving the document when the route matches that host, so
+	 * trying an operation stays where the reader is; otherwise it is the parameter's name, a
+	 * placeholder to replace, which the description says. No `enum` is given: a pattern does not
+	 * enumerate its values. An optional part of the template is shown present.
+	 */
+	private function documentHost(Operation $op, Route $route): void
+	{
+		$template = $route->getHost();
+
+		if (null === $template) {
+			return;
+		}
+
+		$context      = context();
+		$served       = $route->matchHost($context->getRequest()->getUri()->getHost()) ?? [];
+		$declared     = $route->getDeclaredParams();
+		$placeholders = [];
+		$variables    = [];
+
+		foreach ($route->getHostParams() as $name) {
+			$value               = $served[$name] ?? '';
+			$placeholders[$name] = '{' . $name . '}';
+			$variables[]         = new OA\ServerVariable([
+				'serverVariable' => $name,
+				'default'        => '' === $value ? $name : $value,
+				'description'    => \sprintf(
+					'The host parameter `%s`, matching the pattern `%s`. %s',
+					$name,
+					$declared[$name] ?? Route::DEFAULT_HOST_PARAM_PATTERN,
+					'' === $value
+						? 'The default is a placeholder to replace: this document is not served on a host of the route.'
+						: 'The default is the value of the host serving this document.'
+				),
+			]);
+		}
+
+		$host = new RoutePathParser($template, $context->getRouter(), Route::DEFAULT_HOST_PARAM_PATTERN)
+			->buildPath($context, $placeholders);
+
+		$server = [
+			'url'         => $context->buildUri('/')->withHost($host)->getBaseUrl(),
+			'description' => \sprintf('The host the route answers on: `%s`.', $template),
+		];
+
+		if (!empty($variables)) {
+			$server['variables'] = $variables;
+		}
+
+		$op->servers = [new OA\Server($server)];
 	}
 
 	/**
