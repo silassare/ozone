@@ -94,7 +94,7 @@ final class ConcurrentRequestsTest extends TestCase
 		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
 
-		self::seedCountry($config, 'BJ');
+		self::seedCountry($proj, $config, 'BJ');
 
 		[$server, $host, $port] = $proj->startServer('api', '127.0.0.1', self::WORKERS);
 
@@ -243,33 +243,32 @@ final class ConcurrentRequestsTest extends TestCase
 
 	/**
 	 * Adds an allowed country: a user needs one (`user_cc2`) and no command creates countries.
+	 *
+	 * Into this project's table, named by its prefix as Gobl joins them: the database is shared by
+	 * every project of the run, and several of them hold a `BJ` of their own.
 	 */
-	private static function seedCountry(DbTestConfig $config, string $cc2): void
+	private static function seedCountry(OZTestProject $proj, DbTestConfig $config, string $cc2): void
 	{
 		if ($config->isSQLite()) {
-			$pdo  = new PDO('sqlite:' . $config->host);
-			$find = "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%oz_countries'";
+			$pdo = new PDO('sqlite:' . $config->host);
 		} elseif ($config->isMySQL()) {
-			$pdo  = new PDO(
+			$pdo = new PDO(
 				\sprintf('mysql:host=%s;port=%d;dbname=%s', $config->host, $config->port, $config->name),
 				$config->user,
 				$config->pass
 			);
-			$find = "SHOW TABLES LIKE '%oz_countries'";
 		} else {
-			$pdo  = new PDO(
+			$pdo = new PDO(
 				\sprintf('pgsql:host=%s;port=%d;dbname=%s', $config->host, $config->port, $config->name),
 				$config->user,
 				$config->pass
 			);
-			$find = "SELECT tablename FROM pg_tables WHERE tablename LIKE '%oz_countries'";
 		}
 
 		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-		$table = $pdo->query($find)->fetchColumn();
-
-		self::assertIsString($table);
+		$prefix = $proj->tablePrefix();
+		$table  = null === $prefix || '' === $prefix ? 'oz_countries' : $prefix . '_oz_countries';
 
 		$quote = $config->isMySQL() ? '`' : '"';
 		$now   = (string) \time();
