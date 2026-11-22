@@ -517,6 +517,59 @@ return static function (NamespaceBuilder $ns): void {
 		});
 	});
 
+	$ns->table('oz_revisions', static function (TableBuilder $tb): void {
+		$tb->getTable()->setPrivate();
+
+		$tb->plural('oz_revisions')
+			->singular('oz_revision')
+			->columnPrefix('revision')
+			->meta('api.doc.description', 'A revision of a resource: what it was, who wrote it, and when.');
+
+		// columns
+		$tb->id();
+
+		$tb->string('namespace')->min(1)->max(60)
+			->setMetaKey('field.label', 'Namespace')
+			->setMetaKey('api.doc.description', 'The set of resources this revision belongs to, named by its owner.');
+
+		$tb->string('key')->min(1)->max(255)
+			->setMetaKey('field.label', 'Key')
+			->setMetaKey('api.doc.description', 'The resource this is a revision of, within its namespace.');
+
+		$tb->int('number')->unsigned()->min(1)
+			->setMetaKey('field.label', 'Number')
+			->setMetaKey('api.doc.description', 'The revision number of the resource: 1, 2, 3...');
+
+		// Null is a revision too: "nothing is stored for this key", which is how a reset is kept in
+		// the history rather than erasing it. Big, since a revised resource may be a whole page.
+		$tb->map('content')->big()->nullable()
+			->setMetaKey('field.label', 'Content')
+			->setMetaKey('api.doc.description', 'The content as written, or null when this revision removed it.');
+
+		$tb->string('digest')->max(64)->nullable()
+			->setMetaKey('field.label', 'Digest')
+			->setMetaKey('api.doc.description', 'The SHA-256 of the content in canonical JSON, or null with it.');
+
+		$tb->map('meta')->default([])
+			->setMetaKey('field.label', 'Meta')
+			->setMetaKey('api.doc.description', 'What the owner of the namespace records about this revision.');
+
+		$tb->string('note')->max(255)->truncate()->nullable()
+			->setMetaKey('field.label', 'Note')
+			->setMetaKey('api.doc.description', 'What the author said about the change.');
+
+		// who wrote it, if anyone: none for a command or a seeder
+		$tb->morph('author', TypeUtils::morphAnyId(), null, true);
+
+		$tb->timestamps();
+
+		// constraints
+		$tb->collectIndex(static function (TableBuilder $tb): void {
+			// Two writers based on one revision both ask for the next number: the database keeps one.
+			$tb->unique('namespace', 'key', 'number');
+		});
+	});
+
 	$ns->table('oz_auths', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 

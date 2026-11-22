@@ -17,6 +17,7 @@ use OZONE\Core\Cli\Cmd\DeployCmd;
 use OZONE\Core\Cli\Cmd\DoctorCmd;
 use OZONE\Core\Cli\Cmd\LangCmd;
 use OZONE\Core\Cli\Cmd\PluginsCmd;
+use OZONE\Core\Cli\Cmd\RevisionsCmd;
 use OZONE\Core\Cli\Cmd\ProjectCmd;
 use OZONE\Core\Cli\Cmd\RoutesCmd;
 use OZONE\Core\Cli\Cmd\ScopesCmd;
@@ -43,4 +44,5 @@ return [
 	'deploy'     => DeployCmd::class,
 	'lang'       => LangCmd::class,
 	'plugins'    => PluginsCmd::class,
+	'revisions'  => RevisionsCmd::class,
 ];

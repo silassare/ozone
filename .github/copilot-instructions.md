@@ -962,6 +962,9 @@ them without booting it; prefer naming them to adding them from code. A plugin t
 of file other plugins ship says what the described one ships by listening to `PluginDescribeHook`.
 **Seeders** (`oz.seeders`, `oz db seed [--demo]`) write what is missing and never update a row: use
 `Seeders::insertMissing()`, keyed by a stable value, so a re-run on every deploy keeps every edit.
+**Resources edited in production with history** go through `Revisions::of($namespace)`: append-only
+rows in `oz_revisions`, null for a removal, a write based on the revision its author read and refused
+when stale. Never update or delete a revision row, and never keep a second history table beside it.
 
 A **scope** is an entry point (`api`, `www`, ...): `scopes/{name}/` (settings and templates overrides,
 denied to the web), `public/{name}/` (`index.php`, the `static` symlink) and `data/{kind}/{name}/`.
