@@ -335,6 +335,34 @@
 
 ### Added
 
+- **Maintenance mode**: `oz maintenance on|off|status` holds the requests of every scope, of chosen
+  scopes (`--scopes=`), or of the API or the web scopes only (`--only=api|web`), and serves the rest.
+  The switch is a file, `data/root/state/maintenance.json`, and not a setting, so turning it on
+  compiles nothing: every worker sees it on its next request, it survives a restart, and every
+  instance sharing `data/` is held with the others; while it is off, a request pays one stat. A held
+  request gets a 503, with `Retry-After` when `--retry-after=` gave one and `Cache-Control:
+  no-store`: an API request (and a web one asking for JSON only) in the envelope of every answer,
+  message `OZ_MAINTENANCE`, `data` holding `retry_after` and `message`; a web page the maintenance
+  page, `oz.maintenance.blate` on the page layout, which a project overrides as any template and
+  which shows `--message=`. Who gets through: the addresses and CIDR ranges of `--allow=`, the
+  client address read through `oz.proxies`; a browser that followed the secret link `on` prints
+  once (`?oz_maintenance=<secret>`, kept only as its hash), which is sent back to the same path
+  without the secret and given a cookie signed with the project secret and bound to that run, so
+  the next `on` closes it; and a signed-in administrator (admin, or a role weighing at least as
+  much), as the matched route's own authentication says -- a check that fails closed, so a
+  session, a user or roles that cannot be read while a migration runs keep the request held, a
+  scoped authentication grants nothing, and a refused request writes nothing of its session back.
+  Whatever else stops a held request -- no route, a project's answer to an unknown path, an origin
+  refused -- it is answered as maintenance. The `oz:cron` route is served, with its own key, so
+  cron keeps running; `--pause-jobs` holds cron and the queued jobs instead: a tick is skipped
+  without checking in (the first one after `off` catches up the minutes it missed, an hour back at
+  most), a run takes no job and reclaims none, the jobs stay pending and unlocked, and a request
+  collects no garbage. A record that cannot be read holds every scope, lets only administrators
+  through and pauses the jobs, since the file exists only because someone turned maintenance on.
+  `oz doctor check` warns while a maintenance is on (since when, what it holds, whether the jobs
+  wait) and fails on a record it cannot read. `Http\IpRange` is the address and range matching
+  `TrustedProxies` used privately, now shared.
+
 - **Routing by host**: `host()` restricts a route, or a group with its routes, to the requests made
   to a host, inherited down the group tree with the innermost declaration winning. The host is a
   template in the syntax of a path (`{tenant}.example.com`), its params declared with `param()` and

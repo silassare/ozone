@@ -31,6 +31,8 @@ use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\ResponseEmitter;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\Maintenance\MaintenanceException;
+use OZONE\Core\Maintenance\MaintenanceGate;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -85,6 +87,12 @@ final class Context
 	 * The language this request answers in: {@see self::getLanguage()}.
 	 */
 	private ?string $language = null;
+
+	/**
+	 * The maintenance holding this request until its route's authentication shows a signed-in
+	 * administrator, or null for a request no maintenance holds ({@see MaintenanceGate}).
+	 */
+	private ?MaintenanceGate $maintenance = null;
 
 	private static ?self $root_context    = null;
 	private static ?self $current_context = null;
@@ -223,6 +231,12 @@ final class Context
 				throw new ForbiddenException();
 			}
 
+			// Before anything a project hooks on a request: a request a maintenance holds runs nothing
+			// it does not have to. A sub-request belongs to a request that was let through.
+			if (!$this->is_sub_request) {
+				$this->maintenance = MaintenanceGate::hold($this);
+			}
+
 			new RequestHook($this)->dispatch();
 
 			$this->getRouter()
@@ -234,6 +248,12 @@ final class Context
 			// so it has to reach the worker loop rather than become a response.
 			throw $finished;
 		} catch (Throwable $t) {
+			// A held request is answered as maintenance whatever stopped it on the way: a route it did
+			// not find, an authentication it could not give, a database being migrated under it.
+			if (null !== $this->maintenance && !$t instanceof MaintenanceException) {
+				$t = $this->maintenance->refusal();
+			}
+
 			BaseException::tryConvert($t)
 				->informClient($this);
 		} finally {
@@ -241,6 +261,17 @@ final class Context
 		}
 
 		return $this;
+	}
+
+	/**
+	 * The maintenance holding this request, or null when none does.
+	 *
+	 * @internal for the router, which answers a held request that matches no route without
+	 *           dispatching anything a project listens to
+	 */
+	public function maintenanceHold(): ?MaintenanceGate
+	{
+		return $this->maintenance;
 	}
 
 	/**
@@ -689,14 +720,32 @@ final class Context
 
 	/**
 	 * Authenticates the request with the matched route's methods, see
-	 * {@see ContextAuth::authenticate()}.
+	 * {@see ContextAuth::authenticate()}, then lets a request a maintenance holds through only when
+	 * that shows a signed-in administrator ({@see MaintenanceGate::admits()}).
 	 *
 	 * @throws ForbiddenException
+	 * @throws MaintenanceException
 	 */
 	private function authenticate(RouteInfo $ri): void
 	{
 		$this->route_info = $ri;
 
+		$hold = $this->maintenance;
+
+		if (null !== $hold && $hold->exempts($ri)) {
+			$this->maintenance = $hold = null;
+		}
+
 		$this->auth_state->authenticate($ri, $this->parent?->auth_state);
+
+		if (null === $hold) {
+			return;
+		}
+
+		// Before the guards and the handler: a held request runs nothing of the route but what says
+		// who is asking.
+		$hold->screenAuthenticated($this);
+
+		$this->maintenance = null;
 	}
 }

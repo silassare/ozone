@@ -18,6 +18,7 @@ use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Maintenance\Maintenance;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
 use OZONE\Core\Queue\JobsManager;
@@ -68,12 +69,24 @@ final class CronRunner implements BootHookReceiverInterface
 	 * Runs a tick: dispatches the due tasks ({@see Cron::runDues()}), the minutes since the last tick
 	 * included, then runs the cron queues.
 	 *
+	 * Skipped whole while a maintenance pauses the jobs ({@see Maintenance::jobsPaused()}): nothing is
+	 * dispatched, nothing run, and the tick does not check in -- the database a maintenance protects
+	 * may hold the job store and the check-in store both. The first tick after `oz maintenance off`
+	 * then dispatches the minutes the paused ones skipped, each task once and an hour back at most,
+	 * as after a scheduler that was down.
+	 *
 	 * @param string $runner what runs it: one of the `RUNNER_*`
 	 * @param bool   $inline run the background tasks in this process, as a request does, rather than
 	 *                       in processes of their own
+	 *
+	 * @return bool false when the tick was skipped for a maintenance
 	 */
-	public static function tick(string $runner, bool $inline = false): void
+	public static function tick(string $runner, bool $inline = false): bool
 	{
+		if (Maintenance::jobsPaused()) {
+			return false;
+		}
+
 		$last = self::lastTick();
 
 		self::checkIn($runner);
@@ -87,7 +100,7 @@ final class CronRunner implements BootHookReceiverInterface
 		if (!$inline) {
 			JobsManager::run(Queue::DEFAULT_STORE, Queue::CRON_ASYNC);
 
-			return;
+			return true;
 		}
 
 		// A limit of 0 runs every background job in this process (JobsManager::runJob()).
@@ -101,6 +114,8 @@ final class CronRunner implements BootHookReceiverInterface
 		} finally {
 			$async->setMaxConcurrent($limit);
 		}
+
+		return true;
 	}
 
 	/**

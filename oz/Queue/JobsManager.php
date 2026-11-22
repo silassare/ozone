@@ -17,6 +17,7 @@ use OZONE\Core\App\Keys;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Maintenance\Maintenance;
 use OZONE\Core\Queue\Hooks\JobBeforeStart;
 use OZONE\Core\Queue\Hooks\JobCancelled;
 use OZONE\Core\Queue\Hooks\JobFinished;
@@ -139,6 +140,10 @@ final class JobsManager
 	 * ({@see JobStoreInterface::claimable()}), and a pass runs no more jobs than were waiting when
 	 * it began.
 	 *
+	 * While a maintenance pauses the jobs ({@see Maintenance::jobsPaused()}), a pass runs none and
+	 * leaves them pending, and one under way stops before its next job: the jobs wait for
+	 * `oz maintenance off`, they are neither failed nor dropped.
+	 *
 	 * @param null|string $store_name  the store name, if null all registered store will be
 	 *                                 used
 	 * @param string      $queue_name  The queue name
@@ -157,6 +162,10 @@ final class JobsManager
 		?int $priority = null,
 		?int $max_job = null
 	): int {
+		if (Maintenance::jobsPaused()) {
+			return 0;
+		}
+
 		$queue                  = Queue::get($queue_name);
 		$max_consecutive_errors = $queue->getMaxConsecutiveErrorsCount();
 		$max_errors_count       = $queue->getMaxErrorsCount();
@@ -174,6 +183,11 @@ final class JobsManager
 
 			foreach ($store->claimable($queue->getName(), $worker_name, $priority) as $job) {
 				if (!self::runJob($job)) {
+					// Paused since the pass began: what is left waits for the end of the maintenance.
+					if (Maintenance::jobsPaused()) {
+						break 2;
+					}
+
 					// Another worker locked it between the store answering and the lock being taken.
 					// Not an error, and not this worker's job: the next ask skips it.
 					continue;
@@ -279,9 +293,16 @@ final class JobsManager
 
 	/**
 	 * Run a job.
+	 *
+	 * Returns false, the job left pending and unlocked, when another worker holds it or while a
+	 * maintenance pauses the jobs ({@see Maintenance::jobsPaused()}).
 	 */
 	public static function runJob(JobContractInterface $job_contract): bool
 	{
+		if (Maintenance::jobsPaused()) {
+			return false;
+		}
+
 		if ($job_contract->lock()) {
 			new JobBeforeStart($job_contract)->dispatch();
 
@@ -427,6 +448,10 @@ final class JobsManager
 	 * to be locked and in RUNNING state from the dispatching process. This method
 	 * bypasses the lock() check -- the subprocess is the designated handler and is
 	 * responsible for the final unlock via finish().
+	 *
+	 * Not held by a maintenance that pauses the jobs: the job was started before the pause, by a
+	 * process that locked it and set it running, and left waiting it would hold its lock until it
+	 * is reclaimed as stale.
 	 */
 	public static function forceRunJob(JobContractInterface $job_contract): void
 	{

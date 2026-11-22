@@ -30,6 +30,7 @@ return [
 	'OZ_REDIRECT_HOST_NOT_ALLOWED'           => 'Ce serveur ne peut pas vous envoyer vers cette adresse.',
 	'OZ_CROSS_SITE_REQUEST_NOT_ALLOWED'      => "Requête d'une origine non autorisée.",
 	'OZ_CSRF_TOKEN_INVALID'                  => 'Le jeton de sécurité est manquant, invalide ou expiré. Rechargez la page puis réessayez.',
+	'OZ_MAINTENANCE'                         => 'Le service est en maintenance. Veuillez réessayer plus tard.',
 
 	// roles and access rights
 	'OZ_ERROR_YOU_ARE_NOT_ADMIN'             => "Vous n'êtes pas un administrateur.",
@@ -176,6 +177,7 @@ return [
 	'OZ_VIEW_ERROR_TITLE_429'               => 'Trop de requêtes',
 	'OZ_VIEW_ERROR_TITLE_500'               => 'Une erreur est survenue',
 	'OZ_VIEW_ERROR_TITLE_503'               => 'Service indisponible',
+	'OZ_VIEW_MAINTENANCE_TITLE'             => 'En maintenance',
 	'OZ_VIEW_REDIRECT_TITLE'                => 'Redirection en cours',
 	'OZ_VIEW_REDIRECT_MESSAGE'              => 'Si rien ne se passe dans quelques secondes, continuez avec le bouton ci-dessous.',
 	'OZ_VIEW_REDIRECT_LINK'                 => 'Continuer',

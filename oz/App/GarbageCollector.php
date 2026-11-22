@@ -19,6 +19,7 @@ use OZONE\Core\Cli\Cron\CronRunner;
 use OZONE\Core\Cli\Cron\Hooks\CronCollect;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Maintenance\Maintenance;
 use OZONE\Core\Utils\JSONResult;
 use OZONE\Core\Utils\Random;
 use PHPUtils\Events\Event;
@@ -67,14 +68,19 @@ final class GarbageCollector implements BootHookReceiverInterface
 
 	/**
 	 * Whether this request should run the collectors (`OZ_GC_PROBABILITY`): only while no scheduler
-	 * runs cron, since its hourly `oz:gc` task collects then ({@see CronRunner::isScheduled()}).
+	 * runs cron, since its hourly `oz:gc` task collects then ({@see CronRunner::isScheduled()}), and
+	 * never while a maintenance pauses the jobs, which pauses that task too
+	 * ({@see Maintenance::jobsPaused()}).
 	 */
 	public static function shouldRunOnRequest(): bool
 	{
 		$frequency = (int) Settings::get('oz.gc', 'OZ_GC_PROBABILITY', 100);
 
-		// the dice first: the check-in is read on those requests only
-		return $frequency > 0 && Random::bool($frequency) && !CronRunner::isScheduled();
+		// the dice first: the check-in and the maintenance are read on those requests only
+		return $frequency > 0
+			&& Random::bool($frequency)
+			&& !Maintenance::jobsPaused()
+			&& !CronRunner::isScheduled();
 	}
 
 	#[Override]

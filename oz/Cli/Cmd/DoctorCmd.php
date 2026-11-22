@@ -30,6 +30,8 @@ use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\Hooks\Events\DoctorCheckHook;
 use OZONE\Core\Lang\Message\PluralRules;
 use OZONE\Core\Lang\Polyglot;
+use OZONE\Core\Maintenance\Cli\MaintenanceCmd;
+use OZONE\Core\Maintenance\Maintenance;
 use OZONE\Core\Messaging\Messenger;
 use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Migrations;
@@ -252,12 +254,47 @@ final class DoctorCmd extends Command
 
 		return \array_merge(
 			$checks,
+			$this->maintenanceChecks(),
 			$this->databaseChecks(),
 			$this->buildChecks(),
 			$this->cronChecks(),
 			$this->messagingChecks(),
 			$this->translationChecks()
 		);
+	}
+
+	/**
+	 * Whether a maintenance is in force: since when, what it holds, whether the jobs wait. A warning
+	 * while it lasts, which a release check reads past since a deploy may run under one; a failure
+	 * when its record cannot be read, which holds every scope and pauses the jobs until someone
+	 * looks.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	private function maintenanceChecks(): array
+	{
+		try {
+			$mode = Maintenance::current();
+		} catch (Throwable $t) {
+			return [self::row('Maintenance', self::WARN, 'not checked: ' . self::rootCause($t), '')];
+		}
+
+		if (null === $mode) {
+			return [self::row('Maintenance', self::OK, 'off', '')];
+		}
+
+		$detail = MaintenanceCmd::summary($mode);
+
+		if (!$mode->isReadable()) {
+			return [self::row(
+				'Maintenance',
+				self::FAIL,
+				$detail,
+				'Run "oz maintenance off" to serve again, or "oz maintenance on" to write a new record.'
+			)];
+		}
+
+		return [self::row('Maintenance', self::WARN, $detail, 'Run "oz maintenance off" when it is over.')];
 	}
 
 	/**

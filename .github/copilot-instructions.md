@@ -121,11 +121,12 @@ OZone::run($app)  /  OZone::handleRequest($request, $sink)   # one-shot  /  work
   +-- bootstrap($app)              # once per process: plugins, BootHookReceivers,
   |                                # CRUD listeners, InitHook
   +-- Context::handle()
+  |   +-- MaintenanceGate::hold()     # not a sub-request: held, served, or the secret link answered
   |   +-- RequestHook::dispatch()     # MainBootHookReceiver rejects disallowed origins here
   |   +-- Router::handle()
-  |   |   +-- Route matching (static/dynamic, priority-ordered)
+  |   |   +-- Route matching (static/dynamic, priority-ordered)  # held + no route -> 503
   |   |   +-- RouteInfo construction
-  |   |   |   +-- $authenticator($routeInfo)
+  |   |   |   +-- $authenticator($routeInfo)   # a held request passes only as an administrator
   |   |   |   +-- callGuards()
   |   |   |   +-- runMiddlewares()
   |   |   |   +-- selectInterceptor()   # first interceptor where shouldIntercept() == true
@@ -1185,7 +1186,7 @@ so a client names a service and never depends on its path or table. Its actions 
 extend `OZONE\Core\Cli\Command` (`silassare/kli`) and start with `Utils::assertProjectLoaded()` when
 they need a project. Each command documents its options (`oz <cmd> --help`): `project`
 (`create`, `serve`, `link`, `backup`, `build`), `scopes`, `db`, `migrations`, `services`, `routes`, `settings`,
-`users`, `doctor`, `server`, `deploy`, `cron`, `jobs`.
+`users`, `doctor`, `server`, `deploy`, `cron`, `jobs`, `maintenance`.
 
 - **Every process OZone runs is `OZONE\Core\Cli\Process`**, never Symfony's directly: a scope
   build, a provisioning command, a database dump, a cron task's command, the development server, the
@@ -1249,6 +1250,22 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   OZone answer (`JSONResponse`: `{error, msg, data, utime}`, the result under `data`, the reported
   messages under `data.messages`). Never `echo` in a command, and a new command a tool drives gets
   `--json` through `withJsonSupport()`.
+- **`oz maintenance on|off|status`** (`Maintenance\`): the switch is `data/root/state/maintenance.json`,
+  never a setting (a runtime setting compiles new bundles and a new route table), read on every
+  request with one stat while off and never cached, so a worker sees it at once. The application's
+  state directory whatever the scope, and under `data/` because `.ozone/` may be deleted mid-migration.
+  `MaintenanceGate` screens a request in `Context::handle()` before `RequestHook`: an allowed address
+  (read through `oz.proxies`) or the cookie of the secret link passes; anything else is **held** and
+  routed only so its route's own authentication can show an administrator
+  (`MaintenanceGate::admits()`, failing closed on any throwable, refusing a scoped authentication),
+  checked in `Context::authenticate()` before the guards. Whatever else stops a held request -- no
+  route (refused in `Router::handle()` before `RouteNotFound` can answer), a refused origin, an
+  authentication error -- becomes the 503, and a refusal forgets the authentication so the session
+  is not written. The `oz:cron` route is exempt (it has its key). A record that cannot be read holds
+  everything and pauses the jobs (fail closed). With `--pause-jobs`, `CronRunner::tick()` returns
+  false without checking in, `JobsManager::run()` and `runJob()` take nothing (jobs stay pending),
+  and request-time garbage collection is skipped; `forceRunJob()`, the async hand-off of a job
+  locked before the pause, is not held.
 - **`oz users grant`** gives a role to an existing user (`Roles::assign()`, restoring a revoked one): the
   way to make the first super admin, never a web installer. `oz doctor check` warns while an installed
   project has none.

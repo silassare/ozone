@@ -36,8 +36,11 @@ final class CronCmd extends Command
 			// action: run scheduled cron tasks
 			$run = $this->action('run', 'Run the due cron tasks: every minute, from a scheduler (crontab, a timer).');
 
-			$run->handler(static function (): void {
-				CronRunner::tick(CronRunner::RUNNER_SCHEDULER);
+			$run->handler(function (): void {
+				if (!CronRunner::tick(CronRunner::RUNNER_SCHEDULER)) {
+					$this->getCli()
+						->info('Tick skipped: a maintenance pauses the jobs.');
+				}
 			});
 
 			// action: the scheduler as a long-running process

@@ -450,6 +450,15 @@ final class Router
 		$uri     = $request->getUri();
 		$result  = $this->find($request->getMethod(), $uri->getPath(), host: $uri->getHost());
 
+		// A request a maintenance holds is let through by its route's authentication or not at all:
+		// with no route to ask, it is answered as maintenance, before a listener of the two events
+		// below can answer it otherwise (a page served for every unknown path, say).
+		$hold = $context->maintenanceHold();
+
+		if (null !== $hold && RouteSearchStatus::FOUND !== $result->status()) {
+			throw $hold->refusal();
+		}
+
 		switch ($result->status()) {
 			case RouteSearchStatus::NOT_FOUND:
 				new RouteNotFound($context)->dispatch();

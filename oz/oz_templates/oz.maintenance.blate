@@ -1,0 +1,12 @@
+{@extends 'oz://oz.page.layout.blate' $$}
+{@slot title}{$t('OZ_VIEW_MAINTENANCE_TITLE')}{/slot}
+{@slot content}
+				<div class="oz-card__heading">
+					<h1 class="oz-card__title">{$t('OZ_VIEW_MAINTENANCE_TITLE')}</h1>
+					<p class="oz-card__text">{$t('OZ_MAINTENANCE')}</p>
+					{@if oz_maintenance_message}
+					<p class="oz-card__note">{oz_maintenance_message}</p>
+					{/if}
+				</div>
+{/slot}
+{/extends}

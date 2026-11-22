@@ -24,25 +24,27 @@ use OZONE\Core\Cli\Cmd\ScopesCmd;
 use OZONE\Core\Cli\Cmd\ServerCmd;
 use OZONE\Core\Cli\Cmd\ServicesCmd;
 use OZONE\Core\Cli\Cmd\SettingsCmd;
+use OZONE\Core\Maintenance\Cli\MaintenanceCmd;
 use OZONE\Core\Migrations\Cli\MigrationsCmd;
 use OZONE\Core\Queue\Cli\JobsCmd;
 use OZONE\Core\Users\Cli\UsersCmd;
 
 return [
-	'project'    => ProjectCmd::class,
-	'scopes'     => ScopesCmd::class,
-	'db'         => DbCmd::class,
-	'migrations' => MigrationsCmd::class,
-	'services'   => ServicesCmd::class,
-	'routes'     => RoutesCmd::class,
-	'users'      => UsersCmd::class,
-	'cron'       => CronCmd::class,
-	'jobs'       => JobsCmd::class,
-	'settings'   => SettingsCmd::class,
-	'doctor'     => DoctorCmd::class,
-	'server'     => ServerCmd::class,
-	'deploy'     => DeployCmd::class,
-	'lang'       => LangCmd::class,
-	'plugins'    => PluginsCmd::class,
-	'revisions'  => RevisionsCmd::class,
+	'project'     => ProjectCmd::class,
+	'scopes'      => ScopesCmd::class,
+	'db'          => DbCmd::class,
+	'migrations'  => MigrationsCmd::class,
+	'services'    => ServicesCmd::class,
+	'routes'      => RoutesCmd::class,
+	'users'       => UsersCmd::class,
+	'cron'        => CronCmd::class,
+	'jobs'        => JobsCmd::class,
+	'settings'    => SettingsCmd::class,
+	'doctor'      => DoctorCmd::class,
+	'server'      => ServerCmd::class,
+	'deploy'      => DeployCmd::class,
+	'lang'        => LangCmd::class,
+	'plugins'     => PluginsCmd::class,
+	'revisions'   => RevisionsCmd::class,
+	'maintenance' => MaintenanceCmd::class,
 ];

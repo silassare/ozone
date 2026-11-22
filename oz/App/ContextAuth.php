@@ -89,6 +89,21 @@ final class ContextAuth
 	}
 
 	/**
+	 * Forgets the method that authenticated the request, so nothing of its state is written back
+	 * when the request is answered.
+	 *
+	 * For a request refused once it was authenticated -- a maintenance lets in no one but an
+	 * administrator, and learns who is asking only from the route's authentication -- which was not
+	 * served, and whose session must not be written while the database may be being migrated.
+	 *
+	 * @internal
+	 */
+	public function forget(): void
+	{
+		$this->method = null;
+	}
+
+	/**
 	 * The method that authenticated the request, or null (no route yet, or none defined).
 	 */
 	public function current(): ?AuthenticationMethodInterface

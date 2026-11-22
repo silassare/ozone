@@ -21,6 +21,7 @@ use Kli\Types\KliTypeString;
 use Override;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\Maintenance\Maintenance;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
@@ -77,7 +78,7 @@ final class JobsCmd extends Command
 				->description('Run the job even if it is locked (also used for async hand-off).')
 				->bool();
 
-			$jobs_run->handler(self::run(...));
+			$jobs_run->handler($this->run(...));
 
 			$jobs_finish = $this->action('finish', 'Finish jobs.');
 
@@ -318,7 +319,7 @@ final class JobsCmd extends Command
 		}
 	}
 
-	private static function run(KliArgs $args): void
+	private function run(KliArgs $args): void
 	{
 		$store   = $args->get('store');
 		$job_ref = $args->get('job');
@@ -334,6 +335,15 @@ final class JobsCmd extends Command
 			}
 
 			$job = JobsManager::getStore((string) $store)->getOrFail($job_ref);
+
+			// A locked job under --force is the hand-off of a run that started it before the pause
+			// (JobsManager::forceRunJob()), and goes on; any other waits for the end of the maintenance.
+			if (Maintenance::jobsPaused() && !($force && $job->isLocked())) {
+				$this->getCli()
+					->info(\sprintf('Job "%s" left pending: a maintenance pauses the jobs.', $job_ref));
+
+				return;
+			}
 
 			if ($force) {
 				if ($job->isLocked()) {
@@ -360,6 +370,13 @@ final class JobsCmd extends Command
 		$queue    = (string) $args->get('queue');
 		$priority = $args->get('priority');
 		$max_jobs = $args->get('max-jobs');
+
+		if (Maintenance::jobsPaused()) {
+			$this->getCli()
+				->info('No job run: a maintenance pauses the jobs.');
+
+			return;
+		}
 
 		JobsManager::run($store, $queue, $worker, $priority, $max_jobs);
 	}

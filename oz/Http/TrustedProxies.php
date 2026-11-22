@@ -58,7 +58,7 @@ final class TrustedProxies
 	 */
 	public function isTrusted(string $ip): bool
 	{
-		$packed = self::pack($ip);
+		$packed = IpRange::pack($ip);
 
 		if (null === $packed) {
 			return false;
@@ -67,7 +67,7 @@ final class TrustedProxies
 		$trusted = false;
 
 		foreach ($this->map as $entry => $allowed) {
-			if (!self::matches($packed, (string) $entry)) {
+			if (!IpRange::containsPacked((string) $entry, $packed)) {
 				continue;
 			}
 
@@ -256,57 +256,5 @@ final class TrustedProxies
 		}
 
 		return false !== \filter_var($hop, \FILTER_VALIDATE_IP) ? $hop : null;
-	}
-
-	/**
-	 * Whether a packed address matches an entry: an address, or a CIDR range.
-	 */
-	private static function matches(string $packed, string $entry): bool
-	{
-		[$subnet, $bits] = \array_pad(\explode('/', $entry, 2), 2, null);
-
-		$subnet_packed = self::pack((string) $subnet);
-
-		if (null === $subnet_packed || \strlen($subnet_packed) !== \strlen($packed)) {
-			return false;
-		}
-
-		if (null === $bits) {
-			return $subnet_packed === $packed;
-		}
-
-		if (!\ctype_digit($bits) || (int) $bits > \strlen($packed) * 8) {
-			return false;
-		}
-
-		$bits  = (int) $bits;
-		$bytes = \intdiv($bits, 8);
-		$rest  = $bits % 8;
-
-		if (\substr($packed, 0, $bytes) !== \substr($subnet_packed, 0, $bytes)) {
-			return false;
-		}
-
-		if (0 === $rest) {
-			return true;
-		}
-
-		$mask = (0xFF << (8 - $rest)) & 0xFF;
-
-		return (\ord($packed[$bytes]) & $mask) === (\ord($subnet_packed[$bytes]) & $mask);
-	}
-
-	/**
-	 * The binary form of an IP address, or null when it is not one.
-	 */
-	private static function pack(string $ip): ?string
-	{
-		if (false === \filter_var($ip, \FILTER_VALIDATE_IP)) {
-			return null;
-		}
-
-		$packed = \inet_pton($ip);
-
-		return false === $packed ? null : $packed;
 	}
 }

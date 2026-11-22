@@ -61,6 +61,8 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	public const int INTERNAL_ERROR = 500;
 
+	public const int SERVICE_UNAVAILABLE = 503;
+
 	public const int UNKNOWN_ERROR = 520;
 
 	// ozone custom error codes
@@ -77,6 +79,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 		self::METHOD_NOT_ALLOWED  => 405,
 		self::RATE_LIMIT_REACHED  => 429,
 		self::INTERNAL_ERROR      => 500,
+		self::SERVICE_UNAVAILABLE => 503,
 		// default error same as the CloudFlare's Unknown Error
 		self::UNKNOWN_ERROR       => 520,
 		// ozone custom error codes

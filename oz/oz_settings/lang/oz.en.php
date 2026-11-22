@@ -30,6 +30,7 @@ return [
 	'OZ_REDIRECT_HOST_NOT_ALLOWED'           => 'This server may not send you to that address.',
 	'OZ_CROSS_SITE_REQUEST_NOT_ALLOWED'      => 'Requests from this origin are not allowed.',
 	'OZ_CSRF_TOKEN_INVALID'                  => 'The security token is missing, invalid or expired. Reload the page and try again.',
+	'OZ_MAINTENANCE'                         => 'The service is under maintenance. Please try again later.',
 
 	// roles and access rights
 	'OZ_ERROR_YOU_ARE_NOT_ADMIN'             => 'You are not an administrator.',
@@ -176,6 +177,7 @@ return [
 	'OZ_VIEW_ERROR_TITLE_429'               => 'Too many requests',
 	'OZ_VIEW_ERROR_TITLE_500'               => 'Something went wrong',
 	'OZ_VIEW_ERROR_TITLE_503'               => 'Service unavailable',
+	'OZ_VIEW_MAINTENANCE_TITLE'             => 'Under maintenance',
 	'OZ_VIEW_REDIRECT_TITLE'                => 'Taking you there',
 	'OZ_VIEW_REDIRECT_MESSAGE'              => 'If nothing happens in a few seconds, continue with the button below.',
 	'OZ_VIEW_REDIRECT_LINK'                 => 'Continue',
