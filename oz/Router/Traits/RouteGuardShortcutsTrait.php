@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Router\Traits;
 
 use OZONE\Core\Roles\Enums\Role;
+use OZONE\Core\Roles\Enums\RoleStrategy;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Router\Guards\AuthenticatedUserRouteGuard;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
@@ -119,6 +120,36 @@ trait RouteGuardShortcutsTrait
 		];
 
 		return $this->guard(static fn () => new UserRoleRouteGuard($roles));
+	}
+
+	/**
+	 * Adds a guard comparing the user's roles with these by a strategy: any of them, all of them,
+	 * or at least the weight of the lightest ({@see RoleStrategy}).
+	 *
+	 * @param null|RoleInterface $at_least a user whose role weighs at least this passes whatever the
+	 *                                     list (`super-admin`: the role that may do everything); null
+	 *                                     for a rule about a role rather than about power
+	 *
+	 * @return $this
+	 */
+	public function withRoles(RoleStrategy $strategy, ?RoleInterface $at_least, RoleInterface ...$roles): static
+	{
+		$roles = self::atLeastOne($roles, 'role');
+
+		$this->guard_descriptors[] = [
+			'type'     => 'role',
+			'roles'    => \array_map(static fn ($r) => $r->value, $roles),
+			'strict'   => null === $at_least,
+			'strategy' => $strategy->value,
+			'at_least' => $at_least?->value,
+		];
+
+		return $this->guard(static fn () => new UserRoleRouteGuard(
+			\array_values($roles),
+			true,
+			$strategy,
+			null === $at_least ? null : (string) $at_least->value,
+		));
 	}
 
 	/**

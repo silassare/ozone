@@ -18,6 +18,7 @@ use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Roles\Enums\RoleCheckMode;
+use OZONE\Core\Roles\Enums\RoleStrategy;
 use OZONE\Core\Roles\Roles;
 use OZONE\Core\Roles\RolesUtils;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -72,6 +73,56 @@ final class RolesTest extends TestCase
 		self::assertTrue(Roles::hasOneOfRoles($user, [Role::ADMIN, Role::EDITOR], null, RoleCheckMode::READ));
 		self::assertFalse(Roles::hasOneOfRoles($user, [Role::ADMIN], null, RoleCheckMode::READ));
 		self::assertTrue(Roles::hasOneOfRoles($user, [Role::ADMIN], Role::EDITOR, RoleCheckMode::READ));
+	}
+
+	public function testRolesAreComparedByTheStrategyAsked(): void
+	{
+		$editor = self::user('105');
+		Roles::assign($editor, Role::EDITOR);
+		RolesUtils::roles($editor, true);
+
+		$admin = self::user('106');
+		Roles::assign($admin, Role::ADMIN);
+		Roles::assign($admin, Role::EDITOR);
+		RolesUtils::roles($admin, true);
+
+		$read = RoleCheckMode::READ;
+
+		// any: one of them.
+		self::assertTrue(Roles::satisfies($editor, [Role::ADMIN, Role::EDITOR], RoleStrategy::ANY, null, $read));
+		self::assertFalse(Roles::satisfies($editor, [Role::ADMIN], RoleStrategy::ANY, null, $read));
+		// all: every one of them.
+		self::assertTrue(Roles::satisfies($admin, [Role::ADMIN, Role::EDITOR], RoleStrategy::ALL, null, $read));
+		self::assertFalse(Roles::satisfies($editor, [Role::ADMIN, Role::EDITOR], RoleStrategy::ALL, null, $read));
+		// gte: at least the weight of the lightest named -- an admin who is no editor is one above.
+		$only_admin = self::user('109');
+		Roles::assign($only_admin, Role::ADMIN);
+		RolesUtils::roles($only_admin, true);
+
+		self::assertTrue(Roles::satisfies($only_admin, [Role::EDITOR], RoleStrategy::GTE, null, $read));
+		self::assertFalse(Roles::satisfies($only_admin, [Role::EDITOR], RoleStrategy::ANY, null, $read));
+		self::assertTrue(Roles::satisfies($editor, [Role::EDITOR, Role::ADMIN], RoleStrategy::GTE, null, $read));
+		self::assertFalse(Roles::satisfies($editor, [Role::ADMIN], RoleStrategy::GTE, null, $read));
+	}
+
+	public function testARoleWeighingAtLeastTheOneGivenPassesWhateverTheList(): void
+	{
+		$super = self::user('107');
+		Roles::assign($super, Role::SUPER_ADMIN);
+		RolesUtils::roles($super, true);
+
+		$admin = self::user('108');
+		Roles::assign($admin, Role::ADMIN);
+		RolesUtils::roles($admin, true);
+
+		$read = RoleCheckMode::READ;
+
+		// The rule about power: super-admin is not stopped by a list it is not on.
+		self::assertTrue(Roles::satisfies($super, [Role::EDITOR], RoleStrategy::ALL, Role::SUPER_ADMIN, $read));
+		// And only super-admin: an admin is held to the list.
+		self::assertFalse(Roles::satisfies($admin, [Role::EDITOR], RoleStrategy::ANY, Role::SUPER_ADMIN, $read));
+		// The rule about a role: nobody past the list.
+		self::assertFalse(Roles::satisfies($super, [Role::EDITOR], RoleStrategy::ANY, null, $read));
 	}
 
 	public function testRevokedRoleCanBeRestored(): void

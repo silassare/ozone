@@ -21,6 +21,7 @@ use OZONE\Core\Db\OZRole;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Roles\Enums\RoleCheckMode;
+use OZONE\Core\Roles\Enums\RoleStrategy;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 
 /**
@@ -137,6 +138,52 @@ class Roles
 	}
 
 	/**
+	 * Whether a user's roles satisfy a list of roles compared by a strategy.
+	 *
+	 * `any` is one of them, `all` is every one of them, `gte` is a role weighing at least the
+	 * lightest of them. A user with a role weighing at least `$at_least` passes whatever the list
+	 * (`super-admin` for "the role that may do everything is not stopped by a list it is not on");
+	 * null lets nobody past the list.
+	 *
+	 * @param list<RoleInterface|string> $roles
+	 */
+	public static function satisfies(
+		AuthUserInterface $user,
+		array $roles,
+		RoleStrategy $strategy = RoleStrategy::ANY,
+		?RoleInterface $at_least = null,
+		RoleCheckMode $check_mode = RoleCheckMode::GRANT_ACCESS
+	): bool {
+		// As for any role check: in a scoped auth, the user's own roles grant nothing.
+		if (RoleCheckMode::GRANT_ACCESS === $check_mode && auth()->isScoped()) {
+			return false;
+		}
+
+		$held = [];
+
+		foreach (RolesUtils::roles($user) as $entry) {
+			$held[] = $entry->getRole();
+		}
+
+		if (null !== $at_least) {
+			foreach ($held as $role) {
+				if (RolesUtils::gte($role, $at_least)) {
+					return true;
+				}
+			}
+		}
+
+		$wanted = RolesUtils::ensureRolesString($roles);
+		$names  = \array_map(static fn (RoleInterface $role): string => $role->value, $held);
+
+		return match ($strategy) {
+			RoleStrategy::ANY => [] !== \array_intersect($wanted, $names),
+			RoleStrategy::ALL => [] !== $wanted && [] === \array_diff($wanted, $names),
+			RoleStrategy::GTE => self::weighsAtLeastOneOf($held, $wanted),
+		};
+	}
+
+	/**
 	 * Assigns a role to a given user.
 	 *
 	 * @param AuthUserInterface    $user    the user
@@ -200,5 +247,28 @@ class Roles
 			->save();
 
 		return true;
+	}
+
+	/**
+	 * Whether one of these roles weighs at least the lightest of those wanted.
+	 *
+	 * @param list<RoleInterface> $held
+	 * @param list<string>        $wanted
+	 */
+	private static function weighsAtLeastOneOf(array $held, array $wanted): bool
+	{
+		if ([] === $wanted) {
+			return false;
+		}
+
+		$bar = \min(\array_map(static fn (string $role): int => RolesUtils::normalize($role)->weight(), $wanted));
+
+		foreach ($held as $role) {
+			if ($role->weight() >= $bar) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

@@ -326,6 +326,14 @@
 
 ### Added
 
+- **A role guard compares by a strategy**: `withRoles(RoleStrategy $strategy, ?RoleInterface
+  $at_least, RoleInterface ...$roles)` -- any of the roles, all of them, or at least the weight of
+  the lightest (`RoleStrategy::GTE`, "an editor or above") -- and a user whose role weighs at least
+  `$at_least` passes whatever the list (`super-admin` for "the role that may do everything is not
+  stopped by a list it is not on"; null for a rule about a role rather than about power).
+  `Roles::satisfies()` is the check, `UserRoleRouteGuard` carries the strategy and the role through
+  a compiled route table, and `withRole()` and `withRoleOrAdmin()` mean what they did.
+
 - **A plugin adds its own checks to `oz doctor check`**: the doctor dispatches `DoctorCheckHook`
   after its own project checks, and a listener adds rows of the same shape (`add($name, $status,
   $detail, $fix)`, status `ok`, `warn` or `fail`), reported and counted with OZone's, a failure
@@ -610,6 +618,13 @@
 - `REST\Enums\RESTFulAction`, the action table driving `RESTFulService` routes and docs (`REST\RESTFulApiDoc`); `RESTFulService::beforeAction()` / `afterAction()` hooks and `configureRoute()` for per-action guards, forms or middlewares; `RESTFulService::routeName()` accepts a `RESTFulAction`.
 
 ### Fixed
+
+- **A file's deletion refused by a listener left the row without its bytes.** `FS::deleteFileByID()`
+  deleted the stored bytes, then the row; a listener of the row's deletion
+  (`TableCRUD::events('oz_files')->onBeforeEntityDeletion()`) that refused it -- a plugin whose pages
+  still show the file -- left a row whose file was gone. The row is deleted first now, so a refusal
+  leaves both. A bulk delete of `oz_files` rows dispatches no per-row event and cannot be refused
+  per file.
 
 - **Two tests starting a server at the same moment no longer share it.** `OZTestProject::startServer()`
   let `oz project serve` take the first free port of 8080, 8888, 9000 and 2227, which it writes down
