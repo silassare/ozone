@@ -56,7 +56,8 @@ final class RevisionsCmd extends Command
 			'number'   => $row['number'],
 			'written'  => \date('Y-m-d H:i:s', $row['created_at']),
 			'author'   => null === $row['author'] ? '' : \implode(':', $row['author']),
-			'content'  => $row['removed'] ? 'removed' : \substr((string) $row['digest'], 0, 12),
+			// The first digits of the digest, after its `sha256:`: enough to tell two contents apart.
+			'content'  => $row['removed'] ? 'removed' : \substr((string) $row['digest'], 7, 12),
 			'note'     => (string) $row['note'],
 		], $rows));
 

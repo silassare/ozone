@@ -66,17 +66,15 @@ final class Revisions
 	}
 
 	/**
-	 * The digest of a content: SHA-256 of its JSON with the keys of every object sorted, so the
-	 * same content written twice in another key order has one digest. A list keeps its order.
+	 * The digest of a content: `sha256:` and the SHA-256 of its bytes, as written.
 	 *
-	 * @param array<array-key, mixed> $content
+	 * Of the bytes and not of what they parse to, so a resource read from a file and the same
+	 * resource kept here are digested alike, and a record of what was checked by digest answers
+	 * for both.
 	 */
-	public static function digestOf(array $content): string
+	public static function digestOf(string $content): string
 	{
-		return \hash('sha256', (string) \json_encode(
-			self::canonical($content),
-			\JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION
-		));
+		return 'sha256:' . \hash('sha256', $content);
 	}
 
 	/**
@@ -180,15 +178,15 @@ final class Revisions
 	 * ask the database for the next number, and its unique key keeps one of them: the other is
 	 * refused like any stale write.
 	 *
-	 * @param null|array<array-key, mixed> $content  the content, or null to remove the resource
-	 * @param null|int                     $based_on the number of the revision the author read
-	 * @param array<array-key, mixed>      $meta     what the owner of the namespace records with it
+	 * @param null|string             $content  the content as written, or null to remove the resource
+	 * @param null|int                $based_on the number of the revision the author read
+	 * @param array<array-key, mixed> $meta     what the owner of the namespace records with it
 	 *
 	 * @throws RuntimeException when the key is empty or longer than the table holds
 	 */
 	public function write(
 		string $key,
-		?array $content,
+		?string $content,
 		?int $based_on,
 		?string $note = null,
 		array $meta = []
@@ -267,23 +265,5 @@ final class Revisions
 		$restored = Revision::of($past);
 
 		return $this->write($key, $restored->content, $based_on, $note ?? \sprintf('Restored revision %d.', $number));
-	}
-
-	/**
-	 * A value with the keys of every object sorted, recursively; a list keeps its order.
-	 */
-	private static function canonical(mixed $value): mixed
-	{
-		if (!\is_array($value)) {
-			return $value;
-		}
-
-		$value = \array_map(self::canonical(...), $value);
-
-		if (!\array_is_list($value)) {
-			\ksort($value, \SORT_STRING);
-		}
-
-		return $value;
 	}
 }

@@ -236,10 +236,10 @@ final class RevisionsInProjectTest extends TestCase
 						$write->option('based-on', 'b', [], 3)->string()->def('');
 						$write->handler(function (KliArgs $args): void {
 							$based_on = (string) $args->get('based-on');
-							$content  = \json_decode((string) $args->get('content'), true);
+							$content  = (string) $args->get('content');
 							$write    = Revisions::of(%s)->write(
 								(string) $args->get('key'),
-								\is_array($content) ? $content : null,
+								'null' === $content ? null : $content,
 								'' === $based_on ? null : (int) $based_on
 							);
 
@@ -258,7 +258,7 @@ final class RevisionsInProjectTest extends TestCase
 									->setNamespace(%s)
 									->setKey((string) $args->get('key'))
 									->setNumber((int) $args->get('number'))
-									->setContent(['taken' => true])
+									->setContent('{"taken":true}')
 									->save();
 								$refused = false;
 							} catch (DBALUniqueViolationException) {

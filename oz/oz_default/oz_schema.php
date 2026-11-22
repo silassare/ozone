@@ -541,14 +541,17 @@ return static function (NamespaceBuilder $ns): void {
 			->setMetaKey('api.doc.description', 'The revision number of the resource: 1, 2, 3...');
 
 		// Null is a revision too: "nothing is stored for this key", which is how a reset is kept in
-		// the history rather than erasing it. Big, since a revised resource may be a whole page.
-		$tb->map('content')->big()->nullable()
+		// the history rather than erasing it. Text and not a map: the bytes as written, so a format
+		// telling `{}` from `[]` at any depth reads back what it wrote, which a PHP array cannot
+		// hold. Medium, since a revised resource may be a whole page.
+		$tb->string('content')->medium()->nullable()
 			->setMetaKey('field.label', 'Content')
 			->setMetaKey('api.doc.description', 'The content as written, or null when this revision removed it.');
 
-		$tb->string('digest')->max(64)->nullable()
+		// `sha256:` and 64 hex digits.
+		$tb->string('digest')->max(71)->nullable()
 			->setMetaKey('field.label', 'Digest')
-			->setMetaKey('api.doc.description', 'The SHA-256 of the content in canonical JSON, or null with it.');
+			->setMetaKey('api.doc.description', 'The SHA-256 of the content as written, or null with it.');
 
 		$tb->map('meta')->default([])
 			->setMetaKey('field.label', 'Meta')

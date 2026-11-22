@@ -328,13 +328,15 @@
 
 - **Resources kept with their history** (`Revisions\Revisions`, table `oz_revisions`). A resource
   lives under a namespace its owner names and a key; every write is a row, never updated or deleted,
-  and the current content is the latest one. Null content is a revision too, "nothing stored for
-  this key", so a reset stays in the history, and `restore()` writes a past content again as the
+  and the current content is the latest one. The content is text, as written -- a format telling
+  `{}` from `[]` at any depth reads back what it wrote, which a PHP array cannot hold -- digested
+  `sha256:` over its bytes. Null content is a revision too, "nothing stored for this key", so a
+  reset stays in the history, and `restore()` writes a past content again as the
   next revision. A write names the revision it was based on and is refused with the current one
   when that moved (`RevisionWrite`, the rule of `StoreWrite`); two writers based on one revision
   both ask for the next number and the table's unique key keeps one. `currentAll()` answers the
   current revision of every key, `version()` what a cache of them is keyed on, each revision keeps
-  its author, note, canonical digest and the owner's own `meta`, and `RevisionWritten` is
+  its author, note, digest and the owner's own `meta`, and `RevisionWritten` is
   dispatched with values only. `oz revisions history` and `oz revisions restore` (`--json`) are for
   an operator; who may write what is the owner's to guard.
 
