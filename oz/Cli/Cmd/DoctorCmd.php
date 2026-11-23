@@ -34,6 +34,7 @@ use OZONE\Core\FS\Drivers\PublicLocalStorage;
 use OZONE\Core\Hooks\Events\DoctorCheckHook;
 use OZONE\Core\Lang\Message\PluralRules;
 use OZONE\Core\Lang\Polyglot;
+use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Maintenance\Cli\MaintenanceCmd;
 use OZONE\Core\Maintenance\Maintenance;
 use OZONE\Core\Messaging\Messenger;
@@ -268,8 +269,52 @@ final class DoctorCmd extends Command
 			$this->messagingChecks(),
 			$this->translationChecks(),
 			self::publicFilesChecks(),
-			$this->robotsTxtChecks()
+			$this->robotsTxtChecks(),
+			self::scopeClassesChecks()
 		);
+	}
+
+	/**
+	 * Whether two scopes of the project declare the same class in their own directories.
+	 *
+	 * The project namespace reads a scope's `scopes/{name}/` directory too, and a process that calls
+	 * into another scope reads that scope's as well, for good: PHP cannot unload a class. Of two
+	 * scopes declaring one class, the first to load it wins, so the other scope runs the wrong one.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	public static function scopeClassesChecks(): array
+	{
+		$prefix = \trim((string) Settings::get('oz.config', 'OZ_PROJECT_NAMESPACE'), '\\') . '\\';
+		$root   = app()->getProjectDir()->resolve('scopes');
+		$owners = [];
+
+		foreach (\glob($root . DS . '*', \GLOB_ONLYDIR) ?: [] as $dir) {
+			foreach (ClassLoader::classesUnder($prefix, $dir) as $class => $_) {
+				$first = \strstr(\substr($class, \strlen($prefix)), '\\', true);
+
+				// The scope's settings and templates are no classes, whatever their names.
+				if ('settings' !== $first && 'templates' !== $first) {
+					$owners[$class][] = \basename($dir);
+				}
+			}
+		}
+
+		$rows = [];
+
+		foreach ($owners as $class => $scopes) {
+			if (\count($scopes) > 1) {
+				$rows[] = self::row(
+					'Scope classes',
+					self::WARN,
+					\sprintf('%s is declared by the scopes %s', $class, \implode(', ', $scopes)),
+					'Rename it in all but one of them, or move it to app/ if they share it: a process'
+						. ' calling from one into another runs whichever it loaded first.'
+				);
+			}
+		}
+
+		return [] === $rows ? [self::row('Scope classes', self::OK, 'no class declared by two scopes', '')] : $rows;
 	}
 
 	/**

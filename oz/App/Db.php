@@ -179,6 +179,18 @@ final class Db
 	}
 
 	/**
+	 * Whether this process's connection has a transaction open.
+	 *
+	 * Initializes no database: a process that has not initialized it has no transaction open. Gobl
+	 * keeps no accessor of its own for it, so the connection is asked, which connects a database
+	 * initialized but not used yet.
+	 */
+	public static function inTransaction(): bool
+	{
+		return null !== self::$db && self::$db->getConnection()->inTransaction();
+	}
+
+	/**
 	 * Creates a new RDBMS instance.
 	 *
 	 * The instance is created using the configuration defined in "oz.db".

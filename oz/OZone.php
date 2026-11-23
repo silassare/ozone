@@ -14,17 +14,21 @@ declare(strict_types=1);
 namespace OZONE\Core;
 
 use Gobl\ORM\ORMOptions;
+use InvalidArgumentException;
+use OZONE\Core\App\AbstractApp;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
+use OZONE\Core\App\SubScope;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Cli\Cmd\DoctorCmd;
 use OZONE\Core\CRUD\TableCRUD;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\Utils\ErrorUtils;
+use OZONE\Core\FS\Assets;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\EndRequestHook;
 use OZONE\Core\Hooks\Events\InitHook;
@@ -44,6 +48,7 @@ use OZONE\Core\Router\RouteTable;
 use OZONE\Core\Runtime\Exceptions\RequestFinished;
 use OZONE\Core\Runtime\Interfaces\ResponseSinkInterface;
 use OZONE\Core\Runtime\Runtime;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Stores\CacheRegistry;
 use OZONE\Core\Utils\Env;
@@ -56,9 +61,61 @@ final class OZone
 {
 	public const string INTERNAL_PATH_PREFIX = '/~ozone-internal~/';
 
-	private static ?Router $api_router;
+	/**
+	 * The settings groups a process reads once and wires for good, whatever scope is in use: the
+	 * plugins and boot receivers it booted, the database and its CRUD listeners, the stores, the
+	 * logs. Each name stands for itself and every group under it (`oz.db` and `oz.db.*`).
+	 *
+	 * A scope of the project declaring one of them otherwise than the scope a process serves cannot
+	 * be served by that process: {@see self::inScope()} refuses it, naming the group.
+	 */
+	private const array SCOPE_SHARED_SETTINGS = [
+		'oz.boot',
+		'oz.plugins',
+		'oz.db',
+		'oz.gobl.crud',
+		'oz.stores',
+		'oz.logs',
+	];
 
-	private static ?Router $web_router;
+	private static ?Router $api_router = null;
+
+	private static ?Router $web_router = null;
+
+	/**
+	 * The API router's providers: {@see self::getApiRoutesProviders()}.
+	 *
+	 * @var null|array<class-string, bool>
+	 */
+	private static ?array $api_providers = null;
+
+	/**
+	 * The web router's providers: {@see self::getWebRoutesProviders()}.
+	 *
+	 * @var null|array<class-string, bool>
+	 */
+	private static ?array $web_providers = null;
+
+	/**
+	 * The routers, their providers and their route tables of each scope this process has switched
+	 * from or to, while another scope's are in use ({@see self::inScope()}): a scope's routes are its
+	 * own, and a worker keeps them for its life as it keeps its own scope's.
+	 *
+	 * @var array<string, array{
+	 *     api: null|Router,
+	 *     web: null|Router,
+	 *     api_providers: null|array<class-string, bool>,
+	 *     web_providers: null|array<class-string, bool>,
+	 *     tables: array<string, array{file: string, compiled: bool}>,
+	 * }>
+	 */
+	private static array $routing_layers = [];
+
+	/**
+	 * How many reads of another scope's settings are running ({@see self::inScope()}, settings only):
+	 * nothing but a read may run inside one.
+	 */
+	private static int $settings_reads = 0;
 
 	/**
 	 * The running app.
@@ -292,21 +349,19 @@ final class OZone
 	 */
 	public static function getApiRoutesProviders(): array
 	{
-		static $results = null;
-
-		if (null === $results) {
+		if (null === self::$api_providers) {
 			// Empty first, then what the settings say: loading them runs a project's own settings
 			// files, and a project is invited to return a registry's output from `oz.routes.api`.
 			// A registry that asks for the providers used to find this still null and load the
 			// group again, from inside its own load.
-			$results = [];
+			self::$api_providers = [];
 
-			$a       = Settings::load('oz.routes');
-			$b       = Settings::load('oz.routes.api');
-			$results = Settings::applyMergeStrategy($a, $b);
+			$a                   = Settings::load('oz.routes');
+			$b                   = Settings::load('oz.routes.api');
+			self::$api_providers = Settings::applyMergeStrategy($a, $b);
 		}
 
-		return $results;
+		return self::$api_providers;
 	}
 
 	/**
@@ -316,21 +371,19 @@ final class OZone
 	 */
 	public static function getWebRoutesProviders(): array
 	{
-		static $results = null;
-
-		if (null === $results) {
+		if (null === self::$web_providers) {
 			// Empty first, then what the settings say: loading them runs a project's own settings
 			// files, and a project is invited to return a registry's output from `oz.routes.web`.
 			// A registry that asks for the providers used to find this still null and load the
 			// group again, from inside its own load.
-			$results = [];
+			self::$web_providers = [];
 
-			$a       = Settings::load('oz.routes');
-			$b       = Settings::load('oz.routes.web');
-			$results = Settings::applyMergeStrategy($a, $b);
+			$a                   = Settings::load('oz.routes');
+			$b                   = Settings::load('oz.routes.web');
+			self::$web_providers = Settings::applyMergeStrategy($a, $b);
 		}
 
-		return $results;
+		return self::$web_providers;
 	}
 
 	/**
@@ -338,7 +391,7 @@ final class OZone
 	 */
 	public static function getApiRouter(): Router
 	{
-		if (!isset(self::$api_router)) {
+		if (null === self::$api_router) {
 			self::createRouter(self::$api_router = new Router(), true);
 		}
 
@@ -350,11 +403,113 @@ final class OZone
 	 */
 	public static function getWebRouter(): Router
 	{
-		if (!isset(self::$web_router)) {
+		if (null === self::$web_router) {
 			self::createRouter(self::$web_router = new Router(), false);
 		}
 
 		return self::$web_router;
+	}
+
+	/**
+	 * Runs a function with another scope of the project in use, then puts the scope in use back,
+	 * whatever happened.
+	 *
+	 * In use, in this order and undone in the reverse one: what `scope()` answers (so the
+	 * maintenance gate, `TempFS` and the file stores follow), the scope's classes (its
+	 * `scopes/{name}/` directory read by the project namespace, for the rest of the process:
+	 * {@see SubScope::addClasses()}), its asset sources, its routers with their providers and route
+	 * tables, and its settings ({@see Settings::enterScope()}, which refuses a scope declaring a
+	 * group this process wired for good otherwise than the served scope:
+	 * {@see self::SCOPE_SHARED_SETTINGS}, and a scope asked for while its settings are being put
+	 * together). What a process sets up once is never swapped: the database connection, its schema
+	 * and CRUD listeners; the plugins, boot receivers and event listeners; the class loader's other
+	 * namespaces; the runtime; the log writer; the trusted proxies. A scope's settings and routers
+	 * are put together the first time and kept, so a switch back and forth is a few array moves,
+	 * and a worker keeps them for its life.
+	 *
+	 * `$settings_only` is for a caller that reads the scope's settings and does nothing else (the
+	 * server name of a scope, for a deploy): the scope's classes and settings are in use, its assets
+	 * and routers are not, and the groups the process wired for good are not compared, since a read
+	 * wires nothing. Nothing that would act on the scope may run inside it: a switch of any other
+	 * kind is refused there, an anonymous call included.
+	 *
+	 * The request being served is not touched: a function that answers a request in the scope
+	 * builds a context of its own ({@see Context::callAnonymously()}).
+	 *
+	 * @internal
+	 *
+	 * @template T
+	 *
+	 * @param ScopeInterface $scope         the application, or one of its scopes, as
+	 *                                      `app()->getScope()` gives it
+	 * @param callable():T   $fn            what to run
+	 * @param bool           $settings_only true to read the scope's settings and nothing else
+	 *
+	 * @return T
+	 *
+	 * @throws InvalidArgumentException when the scope is not one of the running project's
+	 * @throws RuntimeException         when the scope's settings cannot be used by this process, and
+	 *                                  for a switch other than a read inside a read
+	 */
+	public static function inScope(ScopeInterface $scope, callable $fn, bool $settings_only = false): mixed
+	{
+		if (!$settings_only && self::$settings_reads > 0) {
+			throw new RuntimeException(\sprintf(
+				'The scope "%s" cannot be entered while only the settings of a scope are being read.',
+				$scope->getName()
+			));
+		}
+
+		$app  = self::app();
+		$from = $app->getScope();
+
+		if ($scope === $from) {
+			return $fn();
+		}
+
+		if (!$app instanceof AbstractApp || $app->getScope($scope->getName()) !== $scope) {
+			throw new InvalidArgumentException(\sprintf(
+				'"%s" is not a scope of the running project, as app()->getScope() gives it.',
+				$scope->getName()
+			));
+		}
+
+		$previous = AbstractApp::enterScope($scope->getName());
+
+		try {
+			if ($scope instanceof SubScope) {
+				$scope->addClasses();
+			}
+
+			if ($settings_only) {
+				return self::readInScope($from, $scope, $fn);
+			}
+
+			Assets::enterScope($from, $scope);
+
+			try {
+				self::enterRouting($from, $scope);
+
+				try {
+					// Last, being the only step that runs a project's code: the scope's settings files,
+					// the first time. Whatever they do, every other part of the scope is in use by then
+					// and kept as the scope's own if they switch scope in turn.
+					Settings::enterScope($from, $scope, self::SCOPE_SHARED_SETTINGS);
+
+					try {
+						return $fn();
+					} finally {
+						Settings::leaveScope($scope, $from);
+					}
+				} finally {
+					self::leaveRouting($scope, $from);
+				}
+			} finally {
+				Assets::leaveScope($scope, $from);
+			}
+		} finally {
+			AbstractApp::leaveScope($previous);
+		}
 	}
 
 	/**
@@ -489,10 +644,16 @@ final class OZone
 
 		ErrorUtils::registerHandlers();
 
-		// Building the current scope adds its stateful settings as a source: here, before any group
-		// loads, rather than when something first asks for the scope (a log line, a temp file), which
-		// left every group loaded before that without the scope's overrides.
-		$app->getScope();
+		// The served scope's stateful settings, a source here, before any group loads, rather than
+		// when something first asks for the scope (a log line, a temp file), which left every group
+		// loaded before that without the scope's overrides. Registered here and not by building the
+		// scope, which any other scope's code may do without serving it. The application registers
+		// its own from its constructor.
+		$scope = $app->getScope();
+
+		if ($scope !== $app) {
+			Settings::addSource(StateLayout::path($scope, StateLayout::SETTINGS), true);
+		}
 
 		// Production, outside the console: classes found through the map `oz project build` wrote.
 		if (!self::isCliMode() && self::inProductionMode() && \is_file($class_map = self::classMapFile())) {
@@ -595,7 +756,7 @@ final class OZone
 	private static function createRouter(Router $router, bool $api): void
 	{
 		$providers = $api ? self::getApiRoutesProviders() : self::getWebRoutesProviders();
-		$file      = self::routeTableFile($api, $providers);
+		$file      = self::routeTableFile(scope(), $api, $providers);
 		$table     = null === $file ? null : RouteTable::load($file);
 
 		$group = $router->group('/', static function (Router $router) use ($providers, $table): void {
@@ -638,10 +799,12 @@ final class OZone
 	 * were built from ({@see RouteProviderInterface::routesVersion()}). Kept with the rest of what a
 	 * build compiles, under one directory per scope.
 	 *
+	 * @param ScopeInterface      $scope     the scope the router serves, which is not always the one
+	 *                                       this process serves ({@see self::inScope()})
 	 * @param bool                $api       true for the API router, false for the web one
 	 * @param array<string, bool> $providers the router's route providers
 	 */
-	private static function routeTableFile(bool $api, array $providers): ?string
+	private static function routeTableFile(ScopeInterface $scope, bool $api, array $providers): ?string
 	{
 		if (self::isCliMode() || !self::inProductionMode()) {
 			return null;
@@ -656,9 +819,8 @@ final class OZone
 			}
 		}
 
-		$app   = app();
-		$scope = scope();
-		$key   = \hash('xxh128', \serialize([
+		$app = app();
+		$key = \hash('xxh128', \serialize([
 			OZ_OZONE_VERSION,
 			$providers,
 			@\filemtime(StateLayout::path($app, StateLayout::SETTINGS)),
@@ -672,6 +834,105 @@ final class OZone
 			$scope->getStateSlug(),
 			($api ? 'api' : 'web') . '.' . $key . '.php'
 		);
+	}
+
+	/**
+	 * Runs a read of another scope's settings: {@see self::inScope()} with `$settings_only`.
+	 *
+	 * @template T
+	 *
+	 * @param callable():T $fn
+	 *
+	 * @return T
+	 */
+	private static function readInScope(ScopeInterface $from, ScopeInterface $scope, callable $fn): mixed
+	{
+		Settings::enterScope($from, $scope, null);
+
+		++self::$settings_reads;
+
+		try {
+			return $fn();
+		} finally {
+			--self::$settings_reads;
+
+			Settings::leaveScope($scope, $from);
+		}
+	}
+
+	/**
+	 * Keeps the routing of the scope being left and puts the routing of the scope entered in use:
+	 * none yet the first time, built on first use as the served scope's is.
+	 */
+	private static function enterRouting(ScopeInterface $from, ScopeInterface $to): void
+	{
+		self::$routing_layers[$from->getName()] = self::routing();
+
+		self::useRouting(self::$routing_layers[$to->getName()] ?? [
+			'api'           => null,
+			'web'           => null,
+			'api_providers' => null,
+			'web_providers' => null,
+			'tables'        => [],
+		]);
+	}
+
+	/**
+	 * Keeps the routing of the scope entered and puts the routing of the scope left back in use.
+	 */
+	private static function leaveRouting(ScopeInterface $to, ScopeInterface $back): void
+	{
+		$layer = self::$routing_layers[$back->getName()] ?? null;
+
+		if (null === $layer) {
+			throw new RuntimeException(\sprintf('No routing was kept for the scope "%s".', $back->getName()));
+		}
+
+		self::$routing_layers[$to->getName()] = self::routing();
+
+		self::useRouting($layer);
+	}
+
+	/**
+	 * The routing in use.
+	 *
+	 * @return array{
+	 *     api: null|Router,
+	 *     web: null|Router,
+	 *     api_providers: null|array<class-string, bool>,
+	 *     web_providers: null|array<class-string, bool>,
+	 *     tables: array<string, array{file: string, compiled: bool}>,
+	 * }
+	 */
+	private static function routing(): array
+	{
+		return [
+			'api'           => self::$api_router,
+			'web'           => self::$web_router,
+			'api_providers' => self::$api_providers,
+			'web_providers' => self::$web_providers,
+			'tables'        => self::$route_table_builds,
+		];
+	}
+
+	/**
+	 * Puts routing in use.
+	 *
+	 * @param array{
+	 *     api: null|Router,
+	 *     web: null|Router,
+	 *     api_providers: null|array<class-string, bool>,
+	 *     web_providers: null|array<class-string, bool>,
+	 *     tables: array<string, array{file: string, compiled: bool}>,
+	 * } $layer
+	 */
+	private static function useRouting(array $layer): void
+	{
+		self::$api_router         = $layer['api'];
+		self::$web_router         = $layer['web'];
+		self::$api_providers      = $layer['api_providers'];
+		self::$web_providers      = $layer['web_providers'];
+		self::$route_table_builds = $layer['tables'];
 	}
 
 	/**

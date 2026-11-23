@@ -15,9 +15,9 @@ declare(strict_types=1);
  * A worker loop, run as its own process by {@see WorkerLoopTest}.
  *
  * It has the shape of a FrankenPHP or RoadRunner entry script -- bootstrap once, then one
- * `OZone::handleRequest()` per request -- and it runs outside PHPUnit on purpose: the framework
- * clears output buffers down to level 1 before writing an error response, which is correct (level 1
- * is the buffer a worker bridge owns) but makes the emitted bytes unobservable from inside a test.
+ * `OZone::handleRequest()` per request -- and it runs outside PHPUnit on purpose: what a request
+ * emits goes to PHP's output, through whatever buffers a test would hold, and the claim is a process
+ * that survives its own responses, which a test sharing the process cannot observe.
  *
  * Every request writes one line to STDERR, so the test can see that each was served and that the
  * process reached the end of the loop. Reaching it at all is the claim: under the classic runtime
@@ -83,10 +83,10 @@ foreach ($paths as $index => $path) {
 	// behind, and in a process that never exits that grows without bound.
 	$leaked = \ob_get_level() - $level_before - 1;
 
-	// The framework closes buffers down to level 1 before writing an error response (level 1 is the
-	// buffer a worker bridge owns, and is left alone by design), so what the request wrote is
-	// wherever it ended up. Collect everything above where this iteration started, then put the
-	// level back so the next iteration measures the framework and not this loop.
+	// Before writing an error response the framework drops the buffers the request opened, above the
+	// level its context started at, and leaves this loop's alone. Collect everything above where this
+	// iteration started, then put the level back so the next iteration measures the framework and
+	// not this loop.
 	$body = '';
 
 	while (\ob_get_level() > $level_before) {

@@ -169,6 +169,26 @@ final class ProjectLinkTest extends TestCase
 		self::$proj->oz('project', 'link')->mustRun();
 	}
 
+	/**
+	 * A scope made before scopes recorded their kind is given its record by `oz project link`, from
+	 * what its entry point declares; a recorded one is left as it is.
+	 */
+	public function testLinkRecordsTheKindOfAScopeMadeBeforeTheRecord(): void
+	{
+		$record = self::path('scopes/' . self::SCOPE . '/scope.json');
+		$api    = self::path('scopes/api/scope.json');
+
+		\unlink($record);
+		\file_put_contents($api, '{"kind": "api"}');
+
+		$proc = self::$proj->oz('project', 'link');
+		$proc->mustRun();
+
+		self::assertSame(['kind' => 'web'], \json_decode((string) \file_get_contents($record), true));
+		self::assertSame('{"kind": "api"}', \file_get_contents($api), 'A record already there is rewritten.');
+		self::assertStringContainsString(self::SCOPE . ': recorded as a scope of the web', $proc->getOutput());
+	}
+
 	public function testAFileWrittenInThePoolIsReachableThroughTheLink(): void
 	{
 		$name = 'probe-' . \bin2hex(\random_bytes(4)) . '.txt';

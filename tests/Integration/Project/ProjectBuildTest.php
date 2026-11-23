@@ -472,6 +472,87 @@ final class ProjectBuildTest extends TestCase
 	}
 
 	/**
+	 * A scope is built as what its record says it serves, and a scope without one is refused, naming
+	 * what writes it, rather than guessed from its entry point's source.
+	 */
+	public function testAScopeIsBuiltAsItsRecordSays(): void
+	{
+		$record = self::proj()->getPath() . '/scopes/api/scope.json';
+		$kept   = (string) \file_get_contents($record);
+
+		\unlink($record);
+
+		try {
+			$proc = self::proj()->oz('project', 'build', '--skip-orm', '--no-preload');
+			$proc->run();
+
+			$out = $proc->getOutput() . $proc->getErrorOutput();
+
+			self::assertNotSame(0, $proc->getExitCode(), $out);
+			self::assertStringContainsString('oz project link', (string) \preg_replace('~\s+~', ' ', $out));
+		} finally {
+			\file_put_contents($record, $kept);
+		}
+
+		self::proj()->oz('project', 'build', '--clear', '--skip-orm', '--no-preload')->mustRun();
+
+		self::assertCount(1, self::buildFiles('routes/api/api.*.php'));
+	}
+
+	/**
+	 * A scope's `index.php` makes the project namespace read the scope's own directory too, so a
+	 * class of that scope -- a route provider only it enables -- lives in `scopes/{name}/`. The
+	 * build sets the scope up as that file does, or the provider is a class it cannot find, and
+	 * the scope's route table is never written.
+	 */
+	public function testAScopeBuildFindsTheClassesOfTheScopesOwnDirectory(): void
+	{
+		$ns = self::proj()->getNamespace();
+
+		self::proj()->writeFile('scopes/api/ScopeOwnRoutesProvider.php', \sprintf(
+			"<?php\n\ndeclare(strict_types=1);\n\nnamespace %s;\n\n"
+				. "use OZONE\\Core\\Router\\Interfaces\\RouteProviderInterface;\n"
+				. "use OZONE\\Core\\Router\\RouteInfo;\n"
+				. "use OZONE\\Core\\Router\\Router;\n\n"
+				. "final class ScopeOwnRoutesProvider implements RouteProviderInterface\n{\n"
+				. "\tpublic static function routesVersion(): ?string\n\t{\n\t\treturn null;\n\t}\n\n"
+				. "\tpublic static function registerRoutes(Router \$router): void\n\t{\n"
+				. "\t\t\$router->get('/scope-own', static fn (RouteInfo \$ri) => \$ri->getContext()->getResponse())\n"
+				. "\t\t\t->name('scope-own:ping');\n"
+				. "\t}\n}\n",
+			$ns
+		));
+		self::proj()->writeFile(
+			'scopes/api/settings/oz.routes.api.php',
+			\sprintf(
+				"<?php\n\ndeclare(strict_types=1);\n\nreturn [\\%s\\ScopeOwnRoutesProvider::class => true];\n",
+				$ns
+			)
+		);
+
+		try {
+			$proc = self::proj()->oz('project', 'build', '--clear', '--skip-orm', '--no-preload');
+			$proc->run();
+
+			$out = $proc->getOutput() . $proc->getErrorOutput();
+
+			self::assertSame(0, $proc->getExitCode(), $out);
+
+			$tables = self::buildFiles('routes/api/api.*.php');
+
+			self::assertCount(1, $tables, $out);
+			self::assertStringContainsString('scope-own:ping', (string) \file_get_contents($tables[0]));
+		} finally {
+			foreach (['scopes/api/ScopeOwnRoutesProvider.php', 'scopes/api/settings/oz.routes.api.php'] as $file) {
+				\unlink(self::proj()->getPath() . \DIRECTORY_SEPARATOR . $file);
+			}
+		}
+
+		// Left as the other tests of this class expect to find it.
+		self::proj()->oz('project', 'build', '--clear', '--skip-orm', '--no-preload')->mustRun();
+	}
+
+	/**
 	 * The project this class runs against, which its own setup created.
 	 *
 	 * Empty until that setup has run, and a test reaching it before then says so here

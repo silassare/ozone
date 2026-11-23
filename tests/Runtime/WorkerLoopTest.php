@@ -25,8 +25,8 @@ use Symfony\Component\Process\Process;
  *
  * It is a subprocess rather than an in-process loop for two reasons. The claim being tested is about
  * a process surviving its own responses, which a test that shares the process cannot observe; and
- * the framework clears output buffers down to level 1 before writing an error response, so under
- * PHPUnit -- which owns level 1 -- the emitted bytes are not the test's to read.
+ * the emitted bytes go to PHP's output, which under PHPUnit is PHPUnit's buffer and not the test's to
+ * read.
  *
  * @internal
  */

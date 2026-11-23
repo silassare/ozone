@@ -15,6 +15,8 @@ namespace OZONE\Tests\Support\Servers;
 
 use Gobl\ORM\ORMOptions;
 use Override;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZCountriesQuery;
 use OZONE\Core\Db\OZCountry;
 use OZONE\Core\Http\Body;
@@ -25,6 +27,7 @@ use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Runtime\Runtime;
 use OZONE\Core\Runtime\WorkerRuntime;
+use OZONE\Tests\Support\AnonymousCallRoutes;
 use RuntimeException;
 
 /**
@@ -38,6 +41,11 @@ use RuntimeException;
  */
 final class RuntimeProbe implements RouteProviderInterface
 {
+	/**
+	 * The scope of the served project `/anon` calls into as nobody (made by prepare.php).
+	 */
+	public const string ANON_SCOPE = 'probe-scope';
+
 	/**
 	 * Requests this process has answered on `/info`: above one, the process outlived a request.
 	 */
@@ -157,6 +165,24 @@ final class RuntimeProbe implements RouteProviderInterface
 				return $ri->getContext()->getResponse()
 					->withHeader('Content-Type', 'application/octet-stream')
 					->withBody(Body::fromString(self::pattern($size)));
+			});
+
+			// A route of another scope of the project, called as nobody: what it saw, and what this
+			// request finds in place once the call is over, settings and scope included.
+			$router->get('/anon', static function (RouteInfo $ri): Response {
+				$context = $ri->getContext();
+				$inner   = $context->callAnonymously('anon:where', [], [], self::ANON_SCOPE);
+
+				return $context->getResponse()->withJson([
+					'status'      => $inner->getStatusCode(),
+					'scope'       => $inner->getHeaderLine('X-Scope'),
+					'where'       => $inner->getHeaderLine('X-Where'),
+					'user'        => $inner->getHeaderLine('X-User'),
+					'scope_after' => scope()->getName(),
+					'where_after' => Settings::get(AnonymousCallRoutes::PROBE_GROUP, 'WHERE'),
+					'root_after'  => Context::root() === $context,
+					'pid'         => \getmypid(),
+				]);
 			});
 
 			// Output written around the Response object is refused by the router; under RoadRunner it

@@ -18,6 +18,7 @@ use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\OZone;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use Throwable;
@@ -302,40 +303,28 @@ final readonly class DeployInitializer
 	}
 
 	/**
-	 * The host a scope answers on, from its own `OZ_DEFAULT_ORIGIN`.
-	 *
-	 * Read from the scope's settings **file**, not through `Settings::get()`: settings are a single
-	 * layered set for the scope that is running, so the origin of a scope other than the current one
-	 * is not reachable that way -- and generating every vhost with the running scope's host would be
-	 * worse than useless.
+	 * The host a scope answers on: its `OZ_DEFAULT_ORIGIN`, as the scope's own settings resolve it
+	 * (read with the scope's settings in use, {@see OZone::inScope()}, whichever scope this process
+	 * serves). A read and nothing else, so a scope this process could not serve -- one with logs or
+	 * plugins of its own -- still has its server name.
 	 */
 	public static function serverName(string $scope_name): string
 	{
-		$scope = app()->getScope($scope_name);
+		$origin = OZone::inScope(
+			app()->getScope($scope_name),
+			static fn (): string => (string) Settings::get('oz.request', 'OZ_DEFAULT_ORIGIN', ''),
+			true
+		);
 
-		foreach ([$scope->getSettingsDir(), $scope->getStatefulSettingsDir()] as $dir) {
-			try {
-				$file = $dir->resolve('oz.request.php');
-
-				if (!\is_file($file) || !\is_readable($file)) {
-					continue;
-				}
-
-				$settings = require $file;
-				$origin   = \is_array($settings) ? (string) ($settings['OZ_DEFAULT_ORIGIN'] ?? '') : '';
-				$host     = '' === $origin ? '' : Uri::createFromString($origin)->getHost();
-
-				if ('' !== $host) {
-					return $host;
-				}
-			} catch (Throwable) {
-				// Keep looking, then fall back below.
-			}
+		try {
+			$host = '' === $origin ? '' : Uri::createFromString($origin)->getHost();
+		} catch (Throwable) {
+			$host = '';
 		}
 
 		// A name the operator has to edit, rather than a vhost that silently answers on the wrong
 		// host.
-		return $scope_name . '.example.com';
+		return '' === $host ? $scope_name . '.example.com' : $host;
 	}
 
 	/**

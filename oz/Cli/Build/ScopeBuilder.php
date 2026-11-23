@@ -18,6 +18,7 @@ use OZONE\Core\App\Db;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
+use OZONE\Core\App\SubScope;
 use OZONE\Core\FS\Assets;
 use OZONE\Core\OZone;
 use OZONE\Core\Runtime\Runtime;
@@ -87,6 +88,10 @@ final class ScopeBuilder
 		if (\is_dir($dir . DS . 'templates')) {
 			Assets::addSource($dir . DS . 'templates');
 		}
+
+		// The project namespace reads the scope's own directory too, as in its `index.php`: a build
+		// that cannot find a class of the scope fails the whole scope.
+		SubScope::addClassesOf($dir);
 
 		Runtime::set(new WorkerRuntime('oz-project-build'));
 

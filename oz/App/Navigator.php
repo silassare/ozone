@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace OZONE\Core\App;
 
 use InvalidArgumentException;
+use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\RedirectHook;
+use OZONE\Core\Http\Body;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\RedirectPolicy;
 use OZONE\Core\Http\Request;
@@ -23,6 +25,12 @@ use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\Route;
+use OZONE\Core\Runtime\Exceptions\RequestFinished;
+use OZONE\Core\Runtime\Interfaces\ResponseSinkInterface;
+use OZONE\Core\Runtime\ResponseCapture;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
+use OZONE\Core\Scopes\ScopeKind;
+use OZONE\Core\Utils\Utils;
 use OZONE\Core\Web\Views\RedirectView;
 
 /**
@@ -33,6 +41,14 @@ use OZONE\Core\Web\Views\RedirectView;
  * request starts with an empty one.
  *
  * @internal use the {@see Context} methods
+ *
+ * @psalm-type AnonymousCallKey = array{
+ *     scope: string,
+ *     route: string,
+ *     params: array,
+ *     query: array,
+ *     language: null|string,
+ * }
  */
 final class Navigator
 {
@@ -104,6 +120,83 @@ final class Navigator
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Calls a route as an anonymous visitor would, in this process, and answers what the visitor
+	 * would be answered, unsent.
+	 *
+	 * Not a sub-request ({@see self::callRoute()}, which keeps the visitor's identity, body and
+	 * language): a request of its own, made from the route's name and nothing else. A `GET` from
+	 * `127.0.0.1`, to the scope's `OZ_DEFAULT_ORIGIN`, with no cookie, no `Authorization`, no
+	 * `Origin`, no forwarding header and an empty body; `Accept: application/json` for an API scope;
+	 * `Accept-Language` only when a language is given. It is a root of its own: its own redirection
+	 * history and route trail, no authentication of this request's, internal routes refused, the
+	 * scope's maintenance, rate limits and `RequestHook`, `RouteFound` and `RouteBeforeRun` as for any
+	 * visitor. What comes back is the whole visitor's response, `ResponseHook` headers included,
+	 * an error or a redirection answered as a status like any other; no session is written,
+	 * `FinishHook` and `EndRequestHook` are not dispatched for it, and the process goes on whatever
+	 * the runtime. In another scope it runs with that scope in use ({@see OZone::inScope()}).
+	 *
+	 * The work is the scope, the route, its params, the query and the language. The same call made
+	 * again inside itself is refused as a cycle, naming the calls in flight: a GET as nobody with the
+	 * same inputs answers the same, so it can only recurse. Calls that differ are recursion with
+	 * less of the work each time, and are bounded by `OZ_ANONYMOUS_CALL_MAX_DEPTH` (`oz.request`).
+	 *
+	 * @param string      $route_name the route name: a GET, by name only
+	 * @param array       $params     the route parameters
+	 * @param array       $query      the query parameters
+	 * @param null|string $scope      the scope of the route, null for the one in use
+	 * @param null|string $language   the language asked for (`Accept-Language`), null for none
+	 *
+	 * @throws RuntimeException inside an open transaction, on a cycle or past the depth bound, and
+	 *                          when the scope cannot be used by this process
+	 */
+	public function callAnonymously(
+		string $route_name,
+		array $params = [],
+		array $query = [],
+		?string $scope = null,
+		?string $language = null
+	): Response {
+		// The rows an open transaction wrote are this connection's alone: the call would read what no
+		// visitor can see, and answer what no visitor would be answered.
+		if (Db::inTransaction()) {
+			throw new RuntimeException(
+				'A route cannot be called as nobody inside an open transaction: it would read rows no'
+					. ' visitor can see.',
+				['route' => $route_name]
+			);
+		}
+
+		$target = null === $scope ? scope() : app()->getScope($scope);
+		$key    = [
+			'scope'    => $target->getName(),
+			'route'    => $route_name,
+			'params'   => $params,
+			'query'    => $query,
+			'language' => $language,
+		];
+		$chain = self::callsInFlight($this->context);
+
+		if (\in_array($key, $chain, true)) {
+			throw new RuntimeException(\sprintf(
+				'A route called as nobody calls itself with the same inputs, which never ends: %s.',
+				self::describeCalls([...$chain, $key])
+			));
+		}
+
+		$max = (int) Settings::get('oz.request', 'OZ_ANONYMOUS_CALL_MAX_DEPTH');
+
+		if (\count($chain) >= $max) {
+			throw new RuntimeException(\sprintf(
+				'Routes called as nobody are nested deeper than OZ_ANONYMOUS_CALL_MAX_DEPTH (%d): %s.',
+				$max,
+				self::describeCalls([...$chain, $key])
+			));
+		}
+
+		return OZone::inScope($target, fn (): Response => $this->answerAnonymously($target, $key));
 	}
 
 	/**
@@ -232,6 +325,134 @@ final class Navigator
 		}
 
 		$this->redirectRoute(RedirectView::REDIRECT_ROUTE, ['url' => $uri_str, 'status' => $status]);
+	}
+
+	/**
+	 * Answers a route called as nobody, with its scope in use: {@see self::callAnonymously()}.
+	 *
+	 * @param AnonymousCallKey $key
+	 */
+	private function answerAnonymously(ScopeInterface $scope, array $key): Response
+	{
+		$is_api    = ScopeKind::API === ScopeKind::of($scope);
+		$origin    = (string) Settings::get('oz.request', 'OZ_DEFAULT_ORIGIN');
+		$ob_level  = \ob_get_level();
+		$tree      = Context::detachTree();
+		$reporting = BaseException::enterRequest();
+
+		try {
+			// A context for the path alone, first: a route's path may take a value from the request
+			// it is built for (the `{lang}` of a public page), and that request is the visitor's.
+			$probe = self::visitorContext($origin, '/', [], $is_api, $key['language'], null);
+			$path  = $probe->getRouter()->buildRoutePath($probe, $key['route'], $key['params']);
+
+			Context::release();
+
+			$capture = new ResponseCapture();
+			$visitor = self::visitorContext($origin, $path, $key['query'], $is_api, $key['language'], $capture)
+				->asAnonymousCallOf($this->context, $key);
+
+			try {
+				$visitor->handle()
+					->respond();
+			} catch (RequestFinished) {
+				// Answered: into the capture.
+			}
+
+			return $capture->response() ?? throw new RuntimeException(\sprintf(
+				'The route "%s" called as nobody was not answered.',
+				$key['route']
+			));
+		} finally {
+			// What the call left open is its own, never what the caller had opened before it.
+			Utils::closeOutputBuffers($ob_level, false);
+			BaseException::leaveRequest($reporting);
+			Context::restoreTree($tree);
+		}
+	}
+
+	/**
+	 * The root context of a visitor's GET, from 127.0.0.1, carrying nothing but what it is given.
+	 */
+	private static function visitorContext(
+		string $origin,
+		string $path,
+		array $query,
+		bool $is_api,
+		?string $language,
+		?ResponseSinkInterface $sink
+	): Context {
+		$uri = Uri::createFromString($origin)
+			->withPath($path)
+			->withQueryArray($query);
+
+		$headers = [];
+
+		if ($is_api) {
+			$headers['Accept'] = 'application/json';
+		}
+
+		if (null !== $language) {
+			$headers['Accept-Language'] = $language;
+		}
+
+		$env     = HTTPEnvironment::fromParts('GET', (string) $uri, $headers, ['REMOTE_ADDR' => '127.0.0.1']);
+		$request = Request::createFromHTTPEnvironment($env, Body::fromString(''));
+
+		return new Context($env, $request, null, $is_api, $sink);
+	}
+
+	/**
+	 * The routes called as nobody that the given context is answering, from the innermost out: each
+	 * call's root knows the call and the context that made it.
+	 *
+	 * @return list<AnonymousCallKey>
+	 */
+	private static function callsInFlight(Context $context): array
+	{
+		$chain = [];
+		$from  = $context;
+
+		while (null !== $from) {
+			$root = $from;
+
+			while (null !== ($parent = $root->getParent())) {
+				$root = $parent;
+			}
+
+			$call = $root->anonymousCall();
+
+			if (null === $call) {
+				break;
+			}
+
+			$chain[] = $call['key'];
+			$from    = $call['caller'];
+		}
+
+		return $chain;
+	}
+
+	/**
+	 * Calls in flight as an error names them, the first one made first.
+	 *
+	 * @param list<AnonymousCallKey> $chain the calls, innermost first, then the one being made
+	 */
+	private static function describeCalls(array $chain): string
+	{
+		$made = \array_pop($chain);
+		$list = [...\array_reverse($chain), $made];
+
+		return \implode(' -> ', \array_map(static function (array $key): string {
+			$inputs = \array_filter([
+				'params'   => $key['params'],
+				'query'    => $key['query'],
+				'language' => $key['language'],
+			], static fn (mixed $value): bool => null !== $value && [] !== $value);
+
+			return $key['route'] . ' in ' . $key['scope']
+				. ([] === $inputs ? '' : ' ' . \json_encode($inputs, \JSON_UNESCAPED_SLASHES));
+		}, $list));
 	}
 
 	/**

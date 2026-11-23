@@ -17,6 +17,7 @@ use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Process\Process;
 
 /**
  * Verifies `oz deploy init` in a real project: what it generates, that the content is derived from
@@ -99,6 +100,37 @@ final class DeployInitTest extends TestCase
 
 		// No token survived into a file a web server would read.
 		self::assertDoesNotMatchRegularExpression('~__[A-Z][A-Z0-9_]*__~', $vhost);
+	}
+
+	/**
+	 * A scope with logs of its own cannot be served by a process serving another scope, which wired
+	 * its logs once; a deploy only reads its server name, which wires nothing, and generates its
+	 * vhost like any other's.
+	 */
+	public function testAScopeWithLogsOfItsOwnStillGetsItsVhost(): void
+	{
+		$scope = 'own-logs';
+		$host  = 'logs.example.com';
+
+		self::$proj->oz('scopes', 'add', '--name=' . $scope, '--origin=http://' . $host, '--api=true')->mustRun();
+		self::$proj->writeFile(
+			'scopes/' . $scope . '/settings/oz.logs.php',
+			"<?php\n\ndeclare(strict_types=1);\n\nreturn ['OZ_LOG_OF_ITS_OWN' => true];\n"
+		);
+
+		try {
+			$proc = self::$proj->oz('deploy', 'init', '--target=bare', '--force', '--user=deploy', '--web-user=nginx');
+			$proc->run();
+
+			self::assertSame(0, $proc->getExitCode(), $proc->getOutput() . $proc->getErrorOutput());
+			self::assertStringContainsString(
+				'server_name ' . $host . ';',
+				(string) \file_get_contents(self::path('deploy/nginx/' . $host . '.conf'))
+			);
+		} finally {
+			// As the other tests of this class expect the project.
+			new Process(['rm', '-rf', self::path('scopes/' . $scope), self::path('public/' . $scope)])->mustRun();
+		}
 	}
 
 	public function testBarePoolCarriesTheScopeAndTheRequestedUser(): void

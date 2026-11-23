@@ -22,6 +22,7 @@ use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
+use OZONE\Core\Scopes\ScopeKind;
 use OZONE\Core\Scopes\StateLayout;
 
 /**
@@ -122,6 +123,12 @@ final class ScopesCmd extends Command
 			'.htaccess' => [
 				'type'    => 'file',
 				'content' => 'deny from all',
+			],
+			// Whether the scope serves the API or the web, for what needs to know it without serving
+			// the scope: its build, a call into it from another scope.
+			ScopeKind::RECORD_FILE => [
+				'type'    => 'file',
+				'content' => ($use_api_context ? ScopeKind::API : ScopeKind::WEB)->record(),
 			],
 		];
 		$public_structures = [

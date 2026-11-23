@@ -54,6 +54,8 @@ use Throwable;
  *   ({@see ContextAuth});
  * - sub-requests and redirections ({@see Navigator});
  * - sending the response ({@see ResponseEmitter}, or the worker's {@see ResponseSinkInterface}).
+ *
+ * @psalm-import-type AnonymousCallKey from Navigator
  */
 final class Context
 {
@@ -94,6 +96,19 @@ final class Context
 	 */
 	private ?MaintenanceGate $maintenance = null;
 
+	/**
+	 * The output buffer level when this request began: {@see self::outputBufferLevel()}.
+	 */
+	private readonly int $output_buffer_level;
+
+	/**
+	 * What this request is, when it is a route called as nobody: the call, and the context that
+	 * made it ({@see self::anonymousCall()}).
+	 *
+	 * @var null|array{key: AnonymousCallKey, caller: Context}
+	 */
+	private ?array $anonymous_call = null;
+
 	private static ?self $root_context    = null;
 	private static ?self $current_context = null;
 
@@ -117,8 +132,9 @@ final class Context
 			throw new RuntimeException('Parent context is required. Root context already set.');
 		}
 
-		$this->is_sub_request = null !== $this->parent;
-		$this->context_type   = $is_api ? self::CONTEXT_TYPE_API : self::CONTEXT_TYPE_WEB;
+		$this->is_sub_request      = null !== $this->parent;
+		$this->context_type        = $is_api ? self::CONTEXT_TYPE_API : self::CONTEXT_TYPE_WEB;
+		$this->output_buffer_level = \ob_get_level();
 
 		$this->http_environment = $http_env;
 		$this->request          = $request ?? Request::createFromHTTPEnvironment($http_env);
@@ -148,6 +164,36 @@ final class Context
 	{
 		self::$root_context    = null;
 		self::$current_context = null;
+	}
+
+	/**
+	 * Takes the context tree out of use, so that a request made in process can own a root of its own,
+	 * until {@see self::restoreTree()} is given what this returns.
+	 *
+	 * @internal for {@see Navigator::callAnonymously()}
+	 *
+	 * @return array{0: null|self, 1: null|self} the root and current contexts
+	 */
+	public static function detachTree(): array
+	{
+		$tree = [self::$root_context, self::$current_context];
+
+		self::$root_context    = null;
+		self::$current_context = null;
+
+		return $tree;
+	}
+
+	/**
+	 * Puts back the context tree {@see self::detachTree()} took out of use.
+	 *
+	 * @internal for {@see Navigator::callAnonymously()}
+	 *
+	 * @param array{0: null|self, 1: null|self} $tree what {@see self::detachTree()} returned
+	 */
+	public static function restoreTree(array $tree): void
+	{
+		[self::$root_context, self::$current_context] = $tree;
 	}
 
 	/**
@@ -275,6 +321,18 @@ final class Context
 	}
 
 	/**
+	 * The output buffer level when this request began: what is above it is the request's own output,
+	 * which an error answer drops, and what is at or below it belongs to whoever started the request
+	 * -- a server's buffer, or the handler that made this sub-request.
+	 *
+	 * @internal
+	 */
+	public function outputBufferLevel(): int
+	{
+		return $this->output_buffer_level;
+	}
+
+	/**
 	 * Gets HTTP environment.
 	 */
 	public function getHTTPEnvironment(): StoreNotEditable
@@ -326,6 +384,56 @@ final class Context
 	public function getParent(): ?self
 	{
 		return $this->parent;
+	}
+
+	/**
+	 * Marks this request as a route called as nobody, by the context given.
+	 *
+	 * @internal for {@see Navigator::callAnonymously()}
+	 *
+	 * @param AnonymousCallKey $key
+	 *
+	 * @throws RuntimeException when this is a sub-request or was handled already
+	 */
+	public function asAnonymousCallOf(self $caller, array $key): static
+	{
+		if (null !== $this->parent || $this->handle_called) {
+			throw new RuntimeException('Only a request not handled yet can be an anonymous call.');
+		}
+
+		$this->anonymous_call = ['key' => $key, 'caller' => $caller];
+
+		return $this;
+	}
+
+	/**
+	 * The call this request answers when it is a route called as nobody, and the context that made
+	 * it; null for any other request.
+	 *
+	 * Each call keeps its own, so the calls in flight are found from any of them by walking back
+	 * through the callers, and nothing about them is kept anywhere else.
+	 *
+	 * @return null|array{key: AnonymousCallKey, caller: Context}
+	 */
+	public function anonymousCall(): ?array
+	{
+		return $this->anonymous_call;
+	}
+
+	/**
+	 * How many requests this one is a sub-request of: 0 for a request, 1 for its sub-requests.
+	 */
+	public function subRequestDepth(): int
+	{
+		$depth   = 0;
+		$context = $this->parent;
+
+		while (null !== $context) {
+			++$depth;
+			$context = $context->parent;
+		}
+
+		return $depth;
 	}
 
 	/**
@@ -568,7 +676,8 @@ final class Context
 
 		new ResponseHook($this)->dispatch();
 
-		if ($this->auth_state->isStateful()) {
+		// A route called as nobody keeps nothing: there is no visitor to come back for it.
+		if (null === $this->anonymous_call && $this->auth_state->isStateful()) {
 			$this->auth_state->requireStateful()->persist();
 		}
 
@@ -612,6 +721,30 @@ final class Context
 		bool $override_response = true
 	): Response {
 		return $this->navigator()->callRoute($route_name, $params, $query, $override_response);
+	}
+
+	/**
+	 * Calls a route as an anonymous visitor would, in this process: a request of its own, with no
+	 * session, no identity, no body and nothing of this request's, in the route's scope.
+	 *
+	 * Shortcut for {@see Navigator::callAnonymously()}.
+	 *
+	 * @param string      $route_name the route name: a GET, by name only
+	 * @param array       $params     the route parameters
+	 * @param array       $query      the query parameters
+	 * @param null|string $scope      the scope of the route, null for the one in use
+	 * @param null|string $language   the language asked for (`Accept-Language`), null for none
+	 *
+	 * @return Response what a visitor would be answered, unsent
+	 */
+	public function callAnonymously(
+		string $route_name,
+		array $params = [],
+		array $query = [],
+		?string $scope = null,
+		?string $language = null
+	): Response {
+		return $this->navigator()->callAnonymously($route_name, $params, $query, $scope, $language);
 	}
 
 	/**
@@ -698,6 +831,13 @@ final class Context
 	 */
 	private function finish(?ResponseSinkInterface $sink): never
 	{
+		// A route called as nobody was answered to the code that called it, which goes on: nothing is
+		// flushed, the request that made the call has its own `FinishHook` to come, and its process
+		// does not end here whatever the runtime.
+		if (null !== $this->anonymous_call) {
+			throw new RequestFinished();
+		}
+
 		$runtime = Runtime::current();
 
 		// The response is on its way; what follows runs with the client already served. A sink has

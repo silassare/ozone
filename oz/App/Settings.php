@@ -15,7 +15,9 @@ namespace OZONE\Core\App;
 
 use Exception;
 use FilesystemIterator;
+use Generator;
 use InvalidArgumentException;
+use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\PathSources;
@@ -23,6 +25,7 @@ use OZONE\Core\FS\Templates;
 use OZONE\Core\OZone;
 use OZONE\Core\Plugins\CorePlugin;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
+use OZONE\Core\Scopes\StateLayout;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use stdClass;
@@ -31,6 +34,15 @@ use UnitEnum;
 
 /**
  * Class Settings.
+ *
+ * @psalm-type SettingsLayer = array{
+ *     groups: array<string, SettingsGroup>,
+ *     strategies: array<string, array<string, string>>,
+ *     locked: array<string, array<string, true>>,
+ *     values: array<string, array>,
+ *     loading: array<string, true>,
+ *     sources: PathSources,
+ * }
  */
 final class Settings
 {
@@ -183,19 +195,222 @@ final class Settings
 	private static array $compiling_sources = [];
 
 	/**
+	 * The settings sources of the scope in use: {@see self::getSources()}.
+	 */
+	private static ?PathSources $sources = null;
+
+	/**
+	 * The settings of each scope this process has switched from or to, by scope name, kept while
+	 * another scope's are in use ({@see self::enterScope()}): its groups, values, strategies, locks,
+	 * the groups it is loading and its sources. A switch back to a scope is then a few array moves,
+	 * arrays being copied on write.
+	 *
+	 * What is keyed by a directory or a file is shared by every scope, since the same directory
+	 * holds the same groups whichever scope reads it: the bundles, the files as loaded, the
+	 * directories being compiled.
+	 *
+	 * @var array<string, SettingsLayer>
+	 */
+	private static array $layers = [];
+
+	/**
+	 * The scopes whose settings are being put together right now ({@see self::enterScope()}).
+	 *
+	 * @var array<string, true>
+	 */
+	private static array $building_layers = [];
+
+	/**
+	 * The settings of a scope being put together, while a settings file of it has switched to
+	 * another scope: kept apart from {@see self::$layers}, which holds finished ones only, so that a
+	 * switch back into the scope from there finds nothing to use and is refused, rather than taking
+	 * a half-built layer for a finished one -- one whose shared groups were never all compared.
+	 *
+	 * @var array<string, SettingsLayer>
+	 */
+	private static array $unfinished_layers = [];
+
+	/**
+	 * The scopes whose settings were compared on the groups a process reads once
+	 * ({@see self::enterScope()}): settings put together for a read alone are not, until a caller
+	 * enters them for more.
+	 *
+	 * @var array<string, true>
+	 */
+	private static array $compared_layers = [];
+
+	/**
 	 * Gets settings path sources.
 	 */
 	public static function getSources(): PathSources
 	{
-		/** @var null|PathSources $sources */
-		static $sources = null;
-
-		if (null === $sources) {
-			$sources = new PathSources();
-			$sources->add(CorePlugin::settingsSource());
+		if (null === self::$sources) {
+			self::$sources = new PathSources();
+			self::$sources->add(CorePlugin::settingsSource());
 		}
 
-		return $sources;
+		return self::$sources;
+	}
+
+	/**
+	 * Puts the settings of another scope in place of those in use, until {@see self::leaveScope()}.
+	 *
+	 * Another scope's settings are the same sources with that scope's own directories (its source
+	 * settings, its stateful ones) in place of the scope's being left: what its own entry point
+	 * would have added. They are put together once per process and kept, so going back and forth
+	 * costs a few array moves and {@see self::get()} is untouched.
+	 *
+	 * Some groups are read once per process and wired for good -- plugins, boot receivers, the
+	 * database, the stores, the logs -- so a scope whose own directories declare one of them
+	 * otherwise could not be served by this process at all: what it said would be read and never
+	 * acted on. Unless the caller only reads values (`$shared_groups` null), each such group either
+	 * scope declares in its own directories is compared the first time, and a difference is refused,
+	 * naming the group. A scope's settings put together for a read alone are compared the first time
+	 * they are entered for more.
+	 *
+	 * @internal for {@see OZone::inScope()}
+	 *
+	 * @param ScopeInterface    $from          the scope whose settings are in use
+	 * @param ScopeInterface    $to            the scope whose settings to use
+	 * @param null|list<string> $shared_groups the groups read once per process: each one, and every
+	 *                                         group under it (`oz.db` and `oz.db.*`); null to compare
+	 *                                         nothing, for a caller that reads values and wires
+	 *                                         nothing
+	 *
+	 * @throws RuntimeException when the settings of `$to` are asked for while they are being put
+	 *                          together or compared, or when a shared group differs; the settings of
+	 *                          `$from` are then still in use
+	 */
+	public static function enterScope(ScopeInterface $from, ScopeInterface $to, ?array $shared_groups): void
+	{
+		$from_name = $from->getName();
+		$to_name   = $to->getName();
+		$known     = self::$layers[$to_name] ?? null;
+		$compare   = null !== $shared_groups && !isset(self::$compared_layers[$to_name]);
+
+		if (null !== $known && !$compare) {
+			self::keep($from_name, self::layer());
+
+			self::useLayer($known);
+
+			return;
+		}
+
+		// Registered while it is put together or compared, which runs settings files that may reach
+		// for the scope again: the layer is not there yet, or not known to fit, and doing the work a
+		// second time inside the first is doing it without end.
+		if (isset(self::$building_layers[$to_name])) {
+			throw new RuntimeException(\sprintf(
+				'The settings of the scope "%s" were asked for while they were being put together.',
+				$to_name
+			));
+		}
+
+		self::$building_layers[$to_name] = true;
+
+		try {
+			$leaving  = self::scopeSources($from);
+			$entering = self::scopeSources($to);
+			$compared = $compare
+				? self::sharedGroupsIn([...\array_keys($leaving), ...\array_keys($entering)], $shared_groups ?? [])
+				: [];
+			$before   = [];
+
+			foreach ($compared as $group) {
+				$before[$group] = self::loadIfDeclared($group);
+			}
+
+			$outer = self::layer();
+
+			self::keep($from_name, $outer);
+
+			if (null === $known) {
+				$sources = $outer['sources']->without(...\array_keys($leaving));
+
+				foreach ($entering as $dir => $stateful) {
+					$sources->add($dir, $stateful);
+				}
+
+				$known = [
+					'groups'     => [],
+					'strategies' => [],
+					'locked'     => [],
+					'values'     => [],
+					'loading'    => [],
+					'sources'    => $sources,
+				];
+			}
+
+			self::useLayer($known);
+
+			try {
+				foreach ($compared as $group) {
+					if (self::loadIfDeclared($group) !== $before[$group]) {
+						throw new RuntimeException(\sprintf(
+							'The scope "%s" declares the settings group "%s" otherwise than the scope "%s":'
+								. ' this process read it once and wired what it says for "%s", so it cannot'
+								. ' serve "%s".',
+							$to_name,
+							$group,
+							$from_name,
+							$from_name,
+							$to_name
+						));
+					}
+				}
+			} catch (Throwable $t) {
+				self::useLayer($outer);
+
+				throw $t;
+			}
+
+			if ($compare) {
+				self::$compared_layers[$to_name] = true;
+			}
+		} finally {
+			unset(self::$building_layers[$to_name]);
+		}
+	}
+
+	/**
+	 * Puts back the settings of the scope {@see self::enterScope()} left, keeping those of the scope
+	 * it entered for the next time.
+	 *
+	 * @internal for {@see OZone::inScope()}
+	 *
+	 * @param ScopeInterface $to   the scope whose settings are in use
+	 * @param ScopeInterface $back the scope whose settings to use again
+	 */
+	public static function leaveScope(ScopeInterface $to, ScopeInterface $back): void
+	{
+		$name = $back->getName();
+		// An unfinished layer is the newer one: the finished one kept before it is being compared.
+		$layer = self::$unfinished_layers[$name] ?? self::$layers[$name] ?? null;
+
+		if (null === $layer) {
+			throw new RuntimeException(\sprintf('No settings were kept for the scope "%s".', $name));
+		}
+
+		self::keep($to->getName(), self::layer());
+
+		unset(self::$unfinished_layers[$name]);
+
+		self::useLayer($layer);
+	}
+
+	/**
+	 * Keeps the settings of a scope while another's are in use: with the finished ones, or apart
+	 * while they are being put together ({@see self::$unfinished_layers}).
+	 *
+	 * @param SettingsLayer $layer
+	 */
+	private static function keep(string $scope, array $layer): void
+	{
+		if (isset(self::$building_layers[$scope])) {
+			self::$unfinished_layers[$scope] = $layer;
+		} else {
+			self::$layers[$scope] = $layer;
+		}
 	}
 
 	/**
@@ -582,6 +797,19 @@ final class Settings
 
 		// updates settings
 		self::loadAll($group, true);
+
+		// The file written may be a source of other scopes too (the application's), whose kept
+		// settings would otherwise answer what it held before.
+		foreach (self::$layers as $name => $layer) {
+			unset(
+				$layer['groups'][$group],
+				$layer['values'][$group],
+				$layer['strategies'][$group],
+				$layer['locked'][$group]
+			);
+
+			self::$layers[$name] = $layer;
+		}
 	}
 
 	/**
@@ -852,27 +1080,10 @@ final class Settings
 	 */
 	private static function compileBundle(string $dir): ?array
 	{
-		$root   = \rtrim($dir, '/\\') . DS;
 		$groups = [];
 
 		try {
-			$files = new RecursiveIteratorIterator(
-				new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
-			);
-
-			foreach ($files as $file) {
-				$path = $file->getPathname();
-
-				if (!\str_ends_with($path, '.php')) {
-					continue;
-				}
-
-				$group = \str_replace(DS, '/', \substr($path, \strlen($root), -4));
-
-				if (!\preg_match(self::REG_SETTING_GROUP_NAME, $group)) {
-					continue;
-				}
-
+			foreach (self::groupFiles($dir) as $group => $path) {
 				$result = require $path;
 
 				if (!\is_array($result)) {
@@ -912,6 +1123,132 @@ final class Settings
 		\ksort($groups);
 
 		return $groups;
+	}
+
+	/**
+	 * The settings groups a source directory declares, each with its file: every `.php` file under
+	 * it whose path is a group name.
+	 *
+	 * @return Generator<string, string>
+	 */
+	private static function groupFiles(string $dir): Generator
+	{
+		$root  = \rtrim($dir, '/\\') . DS;
+		$files = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
+		);
+
+		foreach ($files as $file) {
+			$path = $file->getPathname();
+
+			if (!\str_ends_with($path, '.php')) {
+				continue;
+			}
+
+			$group = \str_replace(DS, '/', \substr($path, \strlen($root), -4));
+
+			if (\preg_match(self::REG_SETTING_GROUP_NAME, $group)) {
+				yield $group => $path;
+			}
+		}
+	}
+
+	/**
+	 * The settings directories a scope adds of its own, each saying whether it is stateful: none for
+	 * the application, whose directories are every scope's.
+	 *
+	 * @return array<string, bool>
+	 */
+	private static function scopeSources(ScopeInterface $scope): array
+	{
+		if ($scope instanceof AppInterface) {
+			return [];
+		}
+
+		$dirs   = [];
+		$source = $scope->getSourcesDir()->getRoot() . DS . 'settings';
+
+		if (\is_dir($source)) {
+			$dirs[$source] = false;
+		}
+
+		$dirs[StateLayout::path($scope, StateLayout::SETTINGS)] = true;
+
+		return $dirs;
+	}
+
+	/**
+	 * Of the groups the directories declare, those of the shared ones or under them.
+	 *
+	 * @param list<string> $dirs
+	 * @param list<string> $shared
+	 *
+	 * @return list<string>
+	 */
+	private static function sharedGroupsIn(array $dirs, array $shared): array
+	{
+		$found = [];
+
+		foreach ($dirs as $dir) {
+			if (!\is_dir($dir)) {
+				continue;
+			}
+
+			foreach (self::groupFiles($dir) as $group => $_) {
+				foreach ($shared as $name) {
+					if ($group === $name || \str_starts_with($group, $name . '.')) {
+						$found[$group] = true;
+
+						break;
+					}
+				}
+			}
+		}
+
+		return \array_keys($found);
+	}
+
+	/**
+	 * A group's values, or null when no source declares it.
+	 */
+	private static function loadIfDeclared(string $group): ?array
+	{
+		self::checkSettingGroupName($group);
+		self::loadAll($group);
+
+		return isset(self::$settings_groups[$group]) ? self::load($group) : null;
+	}
+
+	/**
+	 * The settings in use.
+	 *
+	 * @return SettingsLayer
+	 */
+	private static function layer(): array
+	{
+		return [
+			'groups'     => self::$settings_groups,
+			'strategies' => self::$merge_strategies,
+			'locked'     => self::$locked,
+			'values'     => self::$values,
+			'loading'    => self::$loading_groups,
+			'sources'    => self::getSources(),
+		];
+	}
+
+	/**
+	 * Puts settings in use.
+	 *
+	 * @param SettingsLayer $layer
+	 */
+	private static function useLayer(array $layer): void
+	{
+		self::$settings_groups  = $layer['groups'];
+		self::$merge_strategies = $layer['strategies'];
+		self::$locked           = $layer['locked'];
+		self::$values           = $layer['values'];
+		self::$loading_groups   = $layer['loading'];
+		self::$sources          = $layer['sources'];
 	}
 
 	/**

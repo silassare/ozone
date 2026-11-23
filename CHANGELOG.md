@@ -355,6 +355,55 @@
 
 ### Added
 
+- **A route of any scope of the project can be called as an anonymous visitor, in process**:
+  `Context::callAnonymously($route_name, $params, $query, $scope, $language)` (through
+  `Navigator::callAnonymously()`), from a request, a command or a job. It answers the `Response` a
+  visitor with no credentials would get, unsent, `ResponseHook` headers included: a GET built from
+  the route's name alone, from `127.0.0.1`, to the scope's `OZ_DEFAULT_ORIGIN`, with no cookie, no
+  `Authorization`, no `Origin`, no forwarding header and an empty body, `Accept: application/json`
+  for an API scope and `Accept-Language` only when a language is given. It is a request of its own
+  and not a sub-request (`callRoute()` keeps the visitor's identity, body and language): a new root
+  context, nothing of the caller's authentication, internal routes refused, the scope's maintenance,
+  rate limits (counted on `127.0.0.1`) and `RequestHook` / `RouteFound` / `RouteBeforeRun` as for any
+  visitor. No session is written, `FinishHook` and `EndRequestHook` are not dispatched for it, a
+  redirection comes back as a 3xx, an error as its status, and the caller goes on whatever the
+  runtime, the console included. Refused inside an open transaction of the process's connection (it
+  would read rows no visitor can see). The same call made again inside itself is refused as a cycle,
+  naming the calls in flight; calls that differ are bounded by `OZ_ANONYMOUS_CALL_MAX_DEPTH`
+  (`oz.request`, 16).
+  Another scope is put in use for the call by `OZone::inScope()` (`@internal`), which runs a function
+  with the scope in use and puts the caller's back whatever happens: what `scope()` answers, the
+  scope's asset sources, its routers with their providers and route tables (in production the
+  scope's own table), and its settings -- the same sources with the scope's own directories in place
+  of the served scope's. A scope's settings and routers are put together the first time and kept, so
+  a switch back and forth is a few array moves and `Settings::get()` is untouched; a worker keeps them
+  for its life. The groups a process reads once and wires for good (`oz.boot`, `oz.plugins`, `oz.db`
+  and `oz.db.*`, `oz.gobl.crud`, `oz.stores` and `oz.stores.*`, `oz.logs`) are compared the first
+  time, and a scope declaring one of them otherwise than the served scope is refused, naming the
+  group; a scope asked for while its settings are being put together is refused, naming it.
+  Entering a scope also makes the project namespace read its `scopes/{name}/` directory, as its
+  entry point does, so a class only that scope uses -- a route provider its settings enable -- is
+  found; additively and for the rest of the process, since PHP cannot unload a class, and
+  `oz doctor check` warns (`Scope classes`) of a class two scopes declare, of which the first loaded
+  wins. The database connection, plugins, listeners, the class loader's other namespaces, runtime,
+  log writer and trusted proxies are never swapped. A **settings-only** switch
+  (`inScope($scope, $fn, true)`) is for a caller that reads the scope's settings and does nothing
+  else: its settings and classes are in use, its assets and routers are not, the groups wired for
+  good are not compared (a read wires nothing), and no other switch may run inside it, an anonymous
+  call included; settings put together for a read are compared the first time a call enters them.
+  `DeployInitializer::serverName()` reads a scope's `OZ_DEFAULT_ORIGIN` that way, as the scope
+  resolves it, where it read the scope's settings files itself: a scope with logs or plugins of its
+  own still gets its vhost from `oz deploy init --target=bare`, a scope that declares no origin now
+  gets the one it would answer with (the application's), and a stateful value wins over the source
+  file's.
+- **A scope records whether it serves the API or the web**, in `scopes/{name}/scope.json`
+  (`{"kind": "api"}` or `{"kind": "web"}`, `Scopes\ScopeKind`), written by `oz scopes add` (and so
+  `oz project create`) and read by what needs the kind of a scope it does not serve: the build of
+  each scope (`scope_build.php`, which searched the scope's `index.php` for
+  `OZ_OZONE_IS_WEB_CONTEXT`) and the anonymous call. `oz project link` writes the record of a scope
+  made before it, from what its entry point declares, which every deploy and clone already runs
+  before `oz project build`; a build of a scope without a record fails, naming `oz project link`.
+  The record is the project's to commit.
 - **`OZ_PUBLIC_FILES_BASE_URL` (`oz.files`) says where the web server exposes the public files
   directory**, for the direct links of `PublicLocalStorage`: an absolute http(s) URL (a subdomain, a
   CDN) or a path read from the root of the host being served, ending with `/`. No default, since
@@ -722,6 +771,32 @@
 
 ### Fixed
 
+- **Naming another scope added its stateful settings to the process's.** `app()->getScope('other')`
+  -- `oz project link`, `oz deploy init`, `oz maintenance` with scopes -- built a `SubScope` whose
+  constructor registered `data/other/settings` as a settings source, the last one, so its values won
+  over the served scope's for the rest of the process. A project's scope registers no source when it
+  is built; `OZone::bootstrap()` registers the served scope's.
+- **A request whose sub-request failed died on its next error.** `BaseException::$just_die`, which
+  stops a failure to report a failure from looping, stayed set from the first report to the end of
+  the request, so a second failing sub-request, or the request failing after one did, was answered
+  "error handling error". It is set while a report is being made, and only then.
+- **An error answered in a sub-request closed its caller's output buffers.** `informClient()` (and a
+  maintenance's answer) closed every buffer down to level 1, the handler's that made the sub-request
+  among them. A context records the buffer level it began at (`Context::outputBufferLevel()`,
+  `@internal`), and an error answer drops only what is above it.
+- **Under the console, an error answered in a sub-request ended the process.** `informClient()`
+  printed the message and exited when there was no HTTP client, so a command or a cron job whose
+  sub-request was refused stopped there. The error is answered as a response under the console too,
+  and the caller reads its status.
+- **A request making ten sub-requests was refused as a recursion.** `Router::runRoute()` counted
+  every route run in the request tree and refused the tenth, one after the other or not. What it
+  bounds now is how deep a chain of sub-requests goes, by `OZ_SUB_REQUEST_MAX_DEPTH` (`oz.request`,
+  16); sub-requests made in a row are never counted, and the trail of the tree is still what a
+  refusal reports.
+- **A scope build could not find a class of the scope's own directory.** A scope's `index.php` makes
+  the project namespace read `scopes/{name}/` too; `oz project build` set the scope up without it, so
+  a route provider living there was not a class, the router refused it and the whole scope build
+  failed. `ScopeBuilder` adds it as the entry point does.
 - **A public file's direct link missed the file.** With `OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED`
   (`oz.files`) on, `PublicLocalStorage::publicUri()` built the file's path in the public files
   directory on the host of the request (`/uploads/Y/m/name`), which no web server maps: the

@@ -30,6 +30,12 @@ use Throwable;
 abstract class AbstractApp implements AppInterface
 {
 	/**
+	 * The scope in use, when it is not the one this process serves (`OZ_SCOPE_NAME`): what
+	 * {@see self::getScope()} answers with no name, while {@see \OZONE\Core\OZone::inScope()} runs.
+	 */
+	private static ?string $scope_in_use = null;
+
+	/**
 	 * AbstractApp constructor.
 	 */
 	public function __construct()
@@ -61,10 +67,40 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function onUnhandledError(int $code, string $message, string $file, int $line): void {}
 
+	/**
+	 * Makes another scope the one {@see self::getScope()} answers with no name, until
+	 * {@see self::leaveScope()} is given what this returns.
+	 *
+	 * @internal for {@see \OZONE\Core\OZone::inScope()}
+	 *
+	 * @param string $scope the scope name
+	 *
+	 * @return null|string the scope in use before
+	 */
+	public static function enterScope(string $scope): ?string
+	{
+		$previous           = self::$scope_in_use;
+		self::$scope_in_use = $scope;
+
+		return $previous;
+	}
+
+	/**
+	 * Puts back the scope {@see self::enterScope()} replaced.
+	 *
+	 * @internal for {@see \OZONE\Core\OZone::inScope()}
+	 *
+	 * @param null|string $previous what {@see self::enterScope()} returned
+	 */
+	public static function leaveScope(?string $previous): void
+	{
+		self::$scope_in_use = $previous;
+	}
+
 	#[Override]
 	public function getScope(?string $scope = null): ScopeInterface
 	{
-		$scope ??= OZ_SCOPE_NAME;
+		$scope ??= self::$scope_in_use ?? OZ_SCOPE_NAME;
 
 		if (ScopeInterface::ROOT_SCOPE === $scope) {
 			return $this;

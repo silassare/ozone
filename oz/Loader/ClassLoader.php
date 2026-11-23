@@ -347,27 +347,42 @@ class ClassLoader
 
 		foreach (self::$psr4_namespaces_map as $prefix => $dirs) {
 			foreach ($dirs as $dir) {
-				$root = \rtrim($dir, '/\\');
+				// the first base directory wins, as it does when searching
+				$map += self::classesUnder($prefix, $dir);
+			}
+		}
 
-				if (!\is_dir($root)) {
-					continue;
-				}
+		return $map;
+	}
 
-				$files = new RecursiveIteratorIterator(
-					new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
-				);
+	/**
+	 * The classes one base directory of a namespace holds, found by the PSR-4 rule from their file
+	 * names: none when it is not a directory.
+	 *
+	 * @param string $prefix the namespace prefix, ending with a backslash
+	 * @param string $dir    the base directory
+	 *
+	 * @return array<string, string> class name -> file
+	 */
+	public static function classesUnder(string $prefix, string $dir): array
+	{
+		$map  = [];
+		$root = \rtrim($dir, '/\\');
 
-				foreach ($files as $file) {
-					$path     = $file->getPathname();
-					$relative = \substr($path, \strlen($root) + 1, -4);
+		if (!\is_dir($root)) {
+			return $map;
+		}
 
-					if (!\str_ends_with($path, '.php') || !\preg_match(self::PSR4_RELATIVE_REG, $relative)) {
-						continue;
-					}
+		$files = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
+		);
 
-					// the first base directory wins, as it does when searching
-					$map[$prefix . \str_replace(['/', '\\'], '\\', $relative)] ??= $path;
-				}
+		foreach ($files as $file) {
+			$path     = $file->getPathname();
+			$relative = \substr($path, \strlen($root) + 1, -4);
+
+			if (\str_ends_with($path, '.php') && \preg_match(self::PSR4_RELATIVE_REG, $relative)) {
+				$map[$prefix . \str_replace(['/', '\\'], '\\', $relative)] = $path;
 			}
 		}
 

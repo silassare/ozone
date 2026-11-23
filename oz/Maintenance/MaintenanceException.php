@@ -93,7 +93,7 @@ final class MaintenanceException extends BaseException
 	#[Override]
 	public function informClient(Context $context): void
 	{
-		Utils::closeOutputBuffers(1, false);
+		Utils::closeOutputBuffers($context->outputBufferLevel(), false);
 
 		try {
 			$context->setResponse($this->answer($context));

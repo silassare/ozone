@@ -103,8 +103,8 @@ final class RequestIsolationTest extends TestCase
 			$context = new Context(HTTPEnvironment::mock(['REQUEST_METHOD' => 'GET']));
 			$trail   = $context->navigator()->recordRouteRun('r', '/r');
 
-			// Ten route runs in one request is what the guard refuses; twelve requests of one run
-			// each has to stay fine, however many a worker handles.
+			// A request starts its trail afresh: twelve requests of one run each leave twelve
+			// trails of one, however many a worker handles.
 			self::assertCount(1, $trail, 'request ' . $request . ' inherited an earlier history');
 		}
 	}

@@ -59,7 +59,10 @@
   constructor reaching the logger -- claim the key on entry and clear it in a `finally`, and let a
   real cycle be an error that names it. `KeyValueStore::remember()` does this for every caller;
   `AbstractApp::getScope()`, `Plugins`, `ClassLoader::resolveLazyNamespace()`, `ApiDoc::get()` (which
-  publishes before it loads) and `Request::getParsedBody()` each do it for their own.
+  publishes before it loads), `Request::getParsedBody()` and `Settings::enterScope()` (another scope's
+  settings, kept apart from the finished ones while they are put together) each do it for their own.
+  Where the work is a key plus data a caller shrinks, a repeat is recursion: bound its depth by a
+  setting instead (`OZ_SUB_REQUEST_MAX_DEPTH`, `OZ_ANONYMOUS_CALL_MAX_DEPTH`).
 - **Request-scoped state belongs on the `Context`, never in a `static`**: a worker process serves many requests (section 2).
 - **No Unicode shortcut characters in PHP comments or docblocks.** Use plain ASCII equivalents:
 
@@ -145,7 +148,7 @@ OZone::run($app)  /  OZone::handleRequest($request, $sink)   # one-shot  /  work
 `Context` is the request's facade: the context tree (root / current / parent / sub-request), router,
 request, response and `handle()`. Its other concerns live in `Http\ClientInfo` (`client()`: IP,
 host, trusted-proxy check, origin, CORS headers), `App\ContextAuth` (`authState()`), `App\Navigator`
-(`navigator()`: redirects, sub-requests, the redirect history per root context) and
+(`navigator()`: redirects, sub-requests, anonymous calls, the redirect history per root context) and
 `Http\ResponseEmitter`. The `Context` methods that delegate to them (`getUserIP()`, `auth()`,
 `redirect()`, `callRoute()`, ...) are permanent, not deprecated. `Request` delegates body parsing to
 `Http\RequestBodyParser` (`Request::registerMediaTypeParser()`) and the method override to
@@ -279,8 +282,11 @@ Bridges (`oz/Runtime/Bridges/`), each declaring its `WorkerRuntime`:
 over HTTP (`tests/Runtime/Servers/`); `tests/Runtime/WorkerLoopTest` runs `tests/Support/worker_loop.php`
 as its own process, with and without a sink.
 
-Anything request-scoped belongs on the `Context`: `Router::runRoute()`'s recursion trail lives on the
-root context's `Navigator`, and `BaseException::$just_die` needed `release()`, for that reason. The
+Anything request-scoped belongs on the `Context`: `Router::runRoute()`'s route trail lives on the
+root context's `Navigator` (what it bounds is the depth of a chain of sub-requests, never how many a
+request makes), and `BaseException::$just_die` says only that a report is being made, for that
+reason; a context records the output buffer level it began at, and an error answer drops only the
+buffers above it, never its caller's. The
 same goes for a context captured at boot: `bootstrap()` builds its context from a mock environment
 under a worker (there is no request yet) and `handleRequest()` releases it, so nothing may keep it:
 CRUD listeners read the request being handled when an event fires (section 11).
@@ -478,7 +484,8 @@ parent of another, sharing path, name, guards and middlewares without a group bl
   none never beats, at equal priority, one declaring a host (`Router::routePriorityComparator()`).
   `buildRoutePath()` stays a path: the host decision is `Router::buildRouteHost()`, which
   `Context::buildRouteUri()` and `redirectRoute()` apply. A sub-request (`callRoute()`) stays on
-  the host being served. The API doc gives such a route an operation-level `servers` entry
+  the host being served; an anonymous call (`callAnonymously()`, section 13) is sent to its scope's
+  `OZ_DEFAULT_ORIGIN`. The API doc gives such a route an operation-level `servers` entry
   (`OperationBuilder::documentHost()`).
 - Not found -> `RouteNotFound` -> `NotFoundException`; wrong method -> `RouteMethodNotAllowed` ->
   `MethodNotAllowedException`, except an OPTIONS preflight, which passes.
@@ -951,7 +958,7 @@ individually idempotent.
 | `InitHook`                                                  | end of bootstrap, database available                                       |
 | `RequestHook`                                               | before each request, sub-requests included (origins rejected here)         |
 | `ResponseHook`                                              | before the response is sent (CORS, `OZ_SECURITY_HEADERS` and the CSP here) |
-| `FinishHook`                                                | after the response was sent, whichever way; not for sub-requests           |
+| `FinishHook`                                                | after the response was sent, whichever way; not for sub-requests or calls  |
 | `EndRequestHook`                                            | a request's state is released (`OZone::endRequest()`): per-request cleanup |
 | `RedirectHook`                                              | before a redirect (`Uri $to`)                                              |
 | `DbSchemaCollectHook` / `DbSchemaReadyHook` / `DbReadyHook` | see `Db::init()`                                                           |
@@ -987,10 +994,32 @@ when stale. Never update or delete a revision row, and never keep a second histo
 
 A **scope** is an entry point (`api`, `www`, ...): `scopes/{name}/` (settings and templates overrides,
 denied to the web), `public/{name}/` (`index.php`, the `static` symlink) and `data/{kind}/{name}/`.
-`OZone::bootstrap()` builds the current scope first, so its stateful settings are a source before any
-group loads (the last source, so they win). An
-`api` scope loads `oz.routes.api`, others `oz.routes.web`. `oz project create` makes an `api` scope;
-`oz scopes add` adds more.
+`OZone::bootstrap()` registers the served scope's stateful settings first, so they are a source before
+any group loads (the last source, so they win); building another scope (`app()->getScope('x')`)
+registers nothing. An `api` scope loads `oz.routes.api`, others `oz.routes.web`. `oz project create`
+makes an `api` scope; `oz scopes add` adds more. **A scope's kind is recorded in
+`scopes/{name}/scope.json`** (`Scopes\ScopeKind`), which `oz scopes add` writes and `oz project link`
+backfills from the entry point: what needs the kind of a scope it does not serve (its build, a call
+into it) reads the record, never the entry point's source.
+
+**A route of any scope can be called as nobody, in process** (`Context::callAnonymously()`): a GET by
+route name, a new root context from `127.0.0.1` with nothing of the caller's (no session, no
+identity, no body), answered as a visitor would be and unsent; no session written, no `FinishHook`,
+no `EndRequestHook`, and the caller goes on whatever the runtime. It is refused inside an open
+transaction, the same call inside itself is a cycle, and the rest is bounded by
+`OZ_ANONYMOUS_CALL_MAX_DEPTH`. Another scope runs under `OZone::inScope()` (`@internal`), which
+swaps, and puts back in `finally`, what is the scope's: what `scope()` answers, its asset sources,
+its routers (and in production its own route table) and its settings layer. Each owner keeps its own
+statics behind an `@internal` enter / leave pair; layers are built once and kept, so a warm switch is
+array moves. Process-wide wiring is never swapped -- the database, plugins, listeners, class loader,
+runtime, logs, proxies -- so a scope declaring `oz.boot`, `oz.plugins`, `oz.db*`, `oz.gobl.crud`,
+`oz.stores*` or `oz.logs` otherwise than the served one is refused, naming the group. Entering a
+scope also makes the project namespace read `scopes/{name}/`, for good (PHP unloads no class;
+`oz doctor check` warns of a class two scopes declare). **Never read another scope's settings files
+by hand**: read them through `OZone::inScope($scope, $fn, true)`, the settings-only switch, which
+merges them as that scope does and compares nothing, since a read wires nothing
+(`DeployInitializer::serverName()`); nothing but a read may run inside it. A static derived from
+settings that is not one of those swapped serves the served scope's value inside a call.
 
 **`/robots.txt` is a route of every scope** (`Web\RobotsTxt`, `oz:robots`), never a file: its text
 comes from the `RobotsTxtProviderInterface` that `OZ_ROBOTS_TXT_PROVIDER` (`oz.request`, a scope may
@@ -1215,7 +1244,8 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   what it must not do is add a catch of its own or read `getTermSignal()`.
 
 - **`oz project build`** compiles for production what requests would compile at first use: per
-  scope, in a process set up as the scope's `index.php` (`Cli\Build\ScopeBuilder`), the compiled
+  scope, in a process set up as the scope's `index.php` (`Cli\Build\ScopeBuilder`: its recorded
+  kind, its settings and templates, and the project namespace reading `scopes/{name}/`), the compiled
   `.env`, the settings bundles and the route tables; then the class map (`ClassLoader::useClassMap()`)
   and, in classic mode, a preload list (`--no-preload`; Docker: `OZ_PRELOAD=0`): every class of OZone
   and of its first-party packages (`silassare/*`, `psr/*`) that preloading can compile, plus what

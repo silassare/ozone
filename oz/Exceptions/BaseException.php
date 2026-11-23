@@ -123,15 +123,44 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	/**
 	 * Forgets that an error has already been handled in this process.
 	 *
-	 * `$just_die` exists so a failure *while reporting a failure* cannot loop. It is never unset,
-	 * so in a persistent worker the first handled error makes every later one die immediately,
-	 * without a response.
+	 * `$just_die` exists so a failure *while reporting a failure* cannot loop, and says only that a
+	 * report is being made: {@see self::informClient()} clears it when its report ends. Released
+	 * here too at the end of a request, so nothing a request did can outlive it in a worker.
 	 *
 	 * @internal on {@see EndRequestHook}
 	 */
 	public static function release(): void
 	{
 		self::$just_die = false;
+	}
+
+	/**
+	 * Lets a request made in process report its own errors, until {@see self::leaveRequest()} is
+	 * given what this returns: one made while an error is being reported -- an error page that calls
+	 * a route -- would otherwise die on its first error, as a failure to report.
+	 *
+	 * @internal for {@see \OZONE\Core\App\Navigator::callAnonymously()}
+	 *
+	 * @return bool whether an error was being reported
+	 */
+	public static function enterRequest(): bool
+	{
+		$reporting      = self::$just_die;
+		self::$just_die = false;
+
+		return $reporting;
+	}
+
+	/**
+	 * Puts back what {@see self::enterRequest()} replaced.
+	 *
+	 * @internal for {@see \OZONE\Core\App\Navigator::callAnonymously()}
+	 *
+	 * @param bool $reporting what {@see self::enterRequest()} returned
+	 */
+	public static function leaveRequest(bool $reporting): void
+	{
+		self::$just_die = $reporting;
 	}
 
 	/**
@@ -154,6 +183,10 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	/**
 	 * Show exception according to accept header name or request type.
+	 *
+	 * The response is built under the console too: the request being answered may be a sub-request
+	 * a command or a job made, which reads the status of what it gets back, and printing the error
+	 * and exiting there ended the whole process on the first refusal a sub-request met.
 	 */
 	public function informClient(Context $context): void
 	{
@@ -164,24 +197,20 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 		oz_logger($this);
 
-		self::clearOutPutBuffer();
+		self::clearOutPutBuffer($context);
 
 		// We are in a critical situation: 'Error handling error'
 		if (true === self::$just_die) {
 			self::dieWithAnErrorHandlingErrorOccurred();
 		}
 
-		// Any other error or exception should not be tolerated
-		// We must avoid any other error, if there is another error we must die
+		// Set while this report is being made, and only then: a failure from inside it is a failure
+		// to report, which has nothing left to report it with. Once the response is built the report
+		// is over, and a later error of the same request -- a second sub-request failing, the
+		// request itself failing after one did -- is reported like the first.
 		self::$just_die = true;
 
 		try {
-			if (OZone::isCliMode()) {
-				echo \PHP_EOL . $this->getMessage() . \PHP_EOL;
-
-				Runtime::current()->terminate(1);
-			}
-
 			$response = $this->getCustomResponse();
 
 			if (null === $response) {
@@ -196,6 +225,8 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 		} catch (Throwable $t) {
 			oz_logger($t);
 			self::dieWithAnErrorHandlingErrorOccurred();
+		} finally {
+			self::$just_die = false;
 		}
 	}
 
@@ -243,7 +274,8 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 			\header('HTTP/1.1 500 Internal Server Error');
 		}
 
-		self::clearOutPutBuffer();
+		// The process is going down: whatever it buffered goes, down to the level a server owns.
+		Utils::closeOutputBuffers(1, false);
 
 		$err_msg = \preg_replace('~\"([^\"]+)\"~', '<span>$1</span>', $err_msg);
 
@@ -432,10 +464,12 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	}
 
 	/**
-	 * Try clear output buffer.
+	 * Drops what the request being answered wrote: the buffers it opened, above the level its context
+	 * recorded, and never one opened before it -- a sub-request's error used to close the buffers of
+	 * the handler that made it.
 	 */
-	private static function clearOutPutBuffer(): void
+	private static function clearOutPutBuffer(Context $context): void
 	{
-		Utils::closeOutputBuffers(1, false);
+		Utils::closeOutputBuffers($context->outputBufferLevel(), false);
 	}
 }

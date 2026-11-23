@@ -111,6 +111,38 @@ abstract class WorkerServerTestCase extends TestCase
 		self::assertSame($a['msg'], $b['msg'] ?? null);
 	}
 
+	/**
+	 * A route of another scope called as nobody from a request of a worker, twice: each call runs in
+	 * the scope with its settings, and nothing of it is left in place for the request that made it
+	 * or for the next one the process serves.
+	 */
+	public function testAnAnonymousCallIntoAnotherScopeLeavesNothingBehind(): void
+	{
+		$answers = [];
+
+		for ($i = 0; $i < 2; ++$i) {
+			$answer = $this->json('GET', '/runtime-probe/anon');
+
+			unset($answer['pid']);
+
+			$answers[] = $answer;
+		}
+
+		self::assertSame([
+			'status'      => 200,
+			'scope'       => RuntimeProbe::ANON_SCOPE,
+			'where'       => 'scope',
+			'user'        => 'no',
+			'scope_after' => 'root',
+			'where_after' => 'app',
+			'root_after'  => true,
+		], $answers[0]);
+		self::assertSame($answers[0], $answers[1]);
+
+		// The next request of the processes is served as before.
+		self::assertSame('pong', $this->request('GET', '/runtime-probe/ping')['body']);
+	}
+
 	public function testAHandlerThatRespondsThenThrowsIsAnswered(): void
 	{
 		$response = $this->request('GET', '/runtime-probe/respond-mid');

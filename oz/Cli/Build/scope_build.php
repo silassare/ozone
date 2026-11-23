@@ -15,6 +15,7 @@ declare(strict_types=1);
 // from the project directory, with the scope name as argument. Prints its report as JSON, last.
 
 use OZONE\Core\Cli\Build\ScopeBuilder;
+use OZONE\Core\Scopes\ScopeKind;
 
 $scope = $argv[1] ?? '';
 $root  = \getcwd() . \DIRECTORY_SEPARATOR;
@@ -22,13 +23,13 @@ $root  = \getcwd() . \DIRECTORY_SEPARATOR;
 // As the scope's index.php sets it up.
 \define('OZ_SCOPE_NAME', $scope);
 
-$index = $root . 'public' . \DIRECTORY_SEPARATOR . $scope . \DIRECTORY_SEPARATOR . 'index.php';
+require_once $root . 'app' . \DIRECTORY_SEPARATOR . 'boot.php';
 
-if (\is_file($index) && \str_contains((string) \file_get_contents($index), 'OZ_OZONE_IS_WEB_CONTEXT')) {
+// The scope's recorded kind, which `oz project link` writes for a scope made before it was
+// recorded; nothing reads it before the app boots.
+if (ScopeKind::WEB === ScopeKind::read($root, $scope)) {
 	\define('OZ_OZONE_IS_WEB_CONTEXT', true);
 }
-
-require_once $root . 'app' . \DIRECTORY_SEPARATOR . 'boot.php';
 
 /** @psalm-suppress MissingFile the project's, which psalm does not analyse */
 $app = require OZ_APP_DIR . 'app.php';

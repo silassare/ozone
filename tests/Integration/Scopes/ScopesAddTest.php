@@ -179,6 +179,20 @@ final class ScopesAddTest extends TestCase
 	}
 
 	/**
+	 * Each scope records what it serves, for what needs to know it without serving the scope.
+	 */
+	public function testEachScopeRecordsWhatItServes(): void
+	{
+		foreach (['api' => 'api', 'myapi' => 'api', 'admin' => 'api', 'web' => 'web'] as $scope => $kind) {
+			self::assertSame(
+				['kind' => $kind],
+				\json_decode((string) \file_get_contents(self::path("scopes/{$scope}/scope.json")), true),
+				$scope
+			);
+		}
+	}
+
+	/**
 	 * An API scope's index.php must NOT set OZ_OZONE_IS_WEB_CONTEXT.
 	 */
 	public function testApiScopeIndexPhpDoesNotSetWebContext(): void

@@ -23,6 +23,7 @@ use Override;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Build\ProjectBuilder;
+use OZONE\Core\Cli\Cli;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Utils\Requirements;
@@ -32,6 +33,7 @@ use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\OZone;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
+use OZONE\Core\Scopes\ScopeKind;
 use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Utils\Random;
 use PHPUtils\Str;
@@ -92,7 +94,10 @@ final class ProjectCmd extends Command
 		$create->handler($this->create(...));
 
 		// action: project link
-		$link = $this->action('link', 'Create the state directories and the public files symlinks.');
+		$link = $this->action(
+			'link',
+			'Create the state directories and the public files symlinks, and record each scope\'s kind.'
+		);
 		$link->handler($this->link(...));
 
 		// action: project backup
@@ -446,10 +451,15 @@ final class ProjectCmd extends Command
 
 	/**
 	 * Creates every scope's state directories, and the symlink its web root follows to reach the
-	 * public files.
+	 * public files; and records the kind of a scope made before kinds were recorded.
 	 *
 	 * Needed after a clone, and after any deploy that produces a new release directory: the links
 	 * are not version-controlled, and the state directories live outside the release.
+	 *
+	 * The kind is written here because this is what every release and every clone already runs
+	 * before anything reads it: a deploy links before it builds (`oz project build` reads the kind of
+	 * each scope), so a project upgraded to an OZone that reads the record is given one without a
+	 * step of its own, and the record is then the project's to commit.
 	 */
 	private function link(): void
 	{
@@ -458,7 +468,12 @@ final class ProjectCmd extends Command
 		$cli     = $this->getCli();
 		$app     = app();
 		$project = $app->getProjectDir();
-		$scopes  = \array_merge([ScopeInterface::ROOT_SCOPE], self::scopeNames($project));
+		$names   = self::scopeNames($project);
+		$scopes  = \array_merge([ScopeInterface::ROOT_SCOPE], $names);
+
+		foreach ($names as $name) {
+			self::recordKind($cli, $project->getRoot(), $name);
+		}
 
 		foreach ($scopes as $name) {
 			$scope = $app->getScope($name);
@@ -482,6 +497,38 @@ final class ProjectCmd extends Command
 				default => null,
 			};
 		}
+	}
+
+	/**
+	 * Writes the record of a scope's kind when it has none, from what its entry point declares.
+	 */
+	private static function recordKind(Cli $cli, string $project_dir, string $name): void
+	{
+		if (null !== ScopeKind::find($project_dir, $name)) {
+			return;
+		}
+
+		$kind = ScopeKind::fromEntryPoint($project_dir, $name);
+
+		if (null === $kind) {
+			$cli->error(\sprintf(
+				'%s: no entry point to tell whether it serves the API or the web; write %s'
+					. ' with {"kind": "api"} or {"kind": "web"}.',
+				$name,
+				ScopeKind::recordPath($project_dir, $name)
+			), true, null);
+
+			return;
+		}
+
+		$kind->write($project_dir, $name);
+
+		$cli->success(\sprintf(
+			'%s: recorded as a scope of the %s in %s',
+			$name,
+			ScopeKind::API === $kind ? 'API' : 'web',
+			ScopeKind::recordPath($project_dir, $name)
+		));
 	}
 
 	/**

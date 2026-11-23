@@ -14,7 +14,10 @@ declare(strict_types=1);
 namespace OZONE\Core\FS;
 
 use Override;
+use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Stores\CacheRegistry;
 use PHPUtils\FS\PathUtils;
 use PHPUtils\Str;
@@ -32,6 +35,25 @@ use PHPUtils\Str;
  */
 final class Assets implements BootHookReceiverInterface
 {
+	/**
+	 * The asset sources of the scope in use: {@see self::getSources()}.
+	 */
+	private static ?PathSources $sources = null;
+
+	/**
+	 * The runtime cache {@see self::localize()} keeps what it found in: one per set of sources, since
+	 * the same path names another file in another scope.
+	 */
+	private static string $cache = self::class;
+
+	/**
+	 * The sources and cache of each scope this process has switched from or to, while another
+	 * scope's are in use ({@see self::enterScope()}).
+	 *
+	 * @var array<string, array{sources: PathSources, cache: string}>
+	 */
+	private static array $layers = [];
+
 	#[Override]
 	public static function boot(): void
 	{
@@ -56,16 +78,64 @@ final class Assets implements BootHookReceiverInterface
 	 */
 	public static function getSources(): PathSources
 	{
-		/** @var null|PathSources $sources */
-		static $sources = null;
-
-		if (null === $sources) {
-			$sources = new PathSources();
-			$sources->add(OZ_OZONE_DIR . 'oz_assets')
+		if (null === self::$sources) {
+			self::$sources = new PathSources();
+			self::$sources->add(OZ_OZONE_DIR . 'oz_assets')
 				->add(Templates::OZ_TEMPLATE_DIR);
 		}
 
-		return $sources;
+		return self::$sources;
+	}
+
+	/**
+	 * Puts the asset sources of another scope in place of those in use, until
+	 * {@see self::leaveScope()}: the same sources with that scope's templates directory in place of
+	 * the left scope's, as its own entry point would have added it.
+	 *
+	 * @internal for {@see \OZONE\Core\OZone::inScope()}
+	 *
+	 * @param ScopeInterface $from the scope whose sources are in use
+	 * @param ScopeInterface $to   the scope whose sources to use
+	 */
+	public static function enterScope(ScopeInterface $from, ScopeInterface $to): void
+	{
+		$current = ['sources' => self::getSources(), 'cache' => self::$cache];
+		$layer   = self::$layers[$to->getName()] ?? null;
+
+		if (null === $layer) {
+			$sources = $current['sources']->without(...self::scopeTemplates($from));
+
+			foreach (self::scopeTemplates($to) as $dir) {
+				$sources->add($dir);
+			}
+
+			$layer = ['sources' => $sources, 'cache' => self::class . '@' . $to->getName()];
+		}
+
+		self::$layers[$from->getName()] = $current;
+		self::$sources                  = $layer['sources'];
+		self::$cache                    = $layer['cache'];
+	}
+
+	/**
+	 * Puts back the asset sources of the scope {@see self::enterScope()} left.
+	 *
+	 * @internal for {@see \OZONE\Core\OZone::inScope()}
+	 *
+	 * @param ScopeInterface $to   the scope whose sources are in use
+	 * @param ScopeInterface $back the scope whose sources to use again
+	 */
+	public static function leaveScope(ScopeInterface $to, ScopeInterface $back): void
+	{
+		$layer = self::$layers[$back->getName()] ?? null;
+
+		if (null === $layer) {
+			throw new RuntimeException(\sprintf('No asset sources were kept for the scope "%s".', $back->getName()));
+		}
+
+		self::$layers[$to->getName()] = ['sources' => self::getSources(), 'cache' => self::$cache];
+		self::$sources                = $layer['sources'];
+		self::$cache                  = $layer['cache'];
 	}
 
 	/**
@@ -140,6 +210,23 @@ final class Assets implements BootHookReceiverInterface
 			return $found;
 		};
 
-		return CacheRegistry::runtime(self::class)->remember($cache_key, $factory);
+		return CacheRegistry::runtime(self::$cache)->remember($cache_key, $factory);
+	}
+
+	/**
+	 * The templates directory a scope adds of its own, when it has one: none for the application,
+	 * whose directory is every scope's.
+	 *
+	 * @return list<string>
+	 */
+	private static function scopeTemplates(ScopeInterface $scope): array
+	{
+		if ($scope instanceof AppInterface) {
+			return [];
+		}
+
+		$dir = $scope->getSourcesDir()->getRoot() . DS . 'templates';
+
+		return \is_dir($dir) ? [$dir] : [];
 	}
 }

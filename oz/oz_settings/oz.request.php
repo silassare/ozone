@@ -133,6 +133,29 @@ return [
 	'OZ_REDIRECT_ALLOWED_HOSTS'    => [],
 
 	/**
+	 * How deep a chain of sub-requests may go: a sub-request made by a sub-request made by a
+	 * request, and so on (`Context::callRoute()`, `redirectRoute()` served in place).
+	 *
+	 * What it stops is a route that reaches itself again through its sub-requests, which would
+	 * otherwise recurse until the process dies. Sub-requests made one after the other are not a
+	 * chain and are never counted. Each step is a whole request, so an honest page needs a few.
+	 *
+	 * @default 16
+	 */
+	'OZ_SUB_REQUEST_MAX_DEPTH'     => 16,
+
+	/**
+	 * How deep a chain of anonymous calls may go: a route called as nobody
+	 * (`Context::callAnonymously()`) that calls another one, and so on, whatever the scopes.
+	 *
+	 * The same call made again inside itself is refused whatever this says, as a cycle; this bounds
+	 * the calls that differ, each of them a whole request.
+	 *
+	 * @default 16
+	 */
+	'OZ_ANONYMOUS_CALL_MAX_DEPTH'  => 16,
+
+	/**
 	 * What `/robots.txt` answers: a class implementing {@see RobotsTxtProviderInterface}, given the
 	 * request so it can answer per scope and per host. Override per scope
 	 * (`scopes/{name}/settings/oz.request.php`).

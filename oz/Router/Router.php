@@ -15,6 +15,7 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -1051,16 +1052,24 @@ final class Router
 		$route   = $ri->route();
 		$handler = $ri->getEffectiveHandler();
 
-		// Per request, on the root context: a `static` here never reset, so a persistent worker
-		// (RoadRunner, Swoole, FrankenPHP worker mode) threw below on its eleventh route run
-		// whatever the request, and a single request making many sub-requests hit the same wall.
-		$history = $ri->getContext()->navigator()->recordRouteRun($route->getName(), $route->getPath());
+		$context = $ri->getContext();
 
-		// In a simple and good app
-		// this should not be called to much keep it simple
-		// 10 is a limit, it may be 5 or 100.
-		if (\count($history) >= 10) {
-			throw new RuntimeException('Possible recursive redirection.', $history);
+		// The trail of this request tree, on its root context, for what a refusal reports.
+		$history = $context->navigator()->recordRouteRun($route->getName(), $route->getPath());
+
+		// A sub-request inside a sub-request is how a route that redirects to itself recurses: what is
+		// bounded is how deep the chain goes, never how many routes the tree ran. Counting the routes
+		// refused the tenth sub-request of a page making ten of them one after the other, which is no
+		// recursion at all; and the same route deeper down is not a cycle either, since its params
+		// may be a smaller part of the work (a tree rendered node by node). The root itself is never
+		// refused, so a request with no parent reads no setting here.
+		$depth = $context->subRequestDepth();
+
+		if ($depth > 0 && $depth > (int) Settings::get('oz.request', 'OZ_SUB_REQUEST_MAX_DEPTH')) {
+			throw new RuntimeException('Possible recursive redirection.', [
+				'depth'  => $depth,
+				'routes' => $history,
+			]);
 		}
 
 		$debug_data = static fn (Route $route, array $data = []): array => [

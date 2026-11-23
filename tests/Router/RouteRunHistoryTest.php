@@ -22,10 +22,11 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class RouteRunHistoryTest.
  *
- * The recursion guard of `Router::runRoute()` counts the routes run in **one request tree**, owned
- * by the root context. It used to count them in one *process*, through a `static` that was never
- * reset, so a single request making many sub-requests hit the limit, and a persistent worker hit it
- * on its eleventh route run whatever the request.
+ * The trail of the routes run in **one request tree**, owned by the root context, which the
+ * recursion guard of `Router::runRoute()` reports when it refuses a chain of sub-requests too deep.
+ * It used to be kept in one *process*, through a `static` that was never reset, and counted as the
+ * guard itself, so a single request making many sub-requests hit the limit, and a persistent worker
+ * hit it on its eleventh route run whatever the request.
  *
  * Isolation between *requests* is `RequestIsolationTest`: this suite shares one root context, so the
  * assertions here are about growth within a tree.
@@ -45,7 +46,7 @@ final class RouteRunHistoryTest extends TestCase
 		$root->navigator()->recordRouteRun('a', '/a');
 		$trail = $sub->navigator()->recordRouteRun('b', '/b');
 
-		// A sub-request must see the parent's trail: that is what catches a loop going through one.
+		// A sub-request must see the parent's trail: that is what a refusal reports of a loop.
 		self::assertCount($before + 2, $trail);
 		$last_two = \array_slice($trail, -2);
 
@@ -60,8 +61,8 @@ final class RouteRunHistoryTest extends TestCase
 
 		$before = \count($root->navigator()->recordRouteRun('probe', '/probe'));
 
-		// A chain of sub-requests, each one a child of the last: they all report to the root, so a
-		// loop is caught however deep it goes.
+		// A chain of sub-requests, each one a child of the last: they all report to the root, so the
+		// trail of a refused loop is whole however deep it went.
 		for ($depth = 0; $depth < 5; ++$depth) {
 			$current = self::context($current);
 			$trail   = $current->navigator()->recordRouteRun('d' . $depth, '/d');

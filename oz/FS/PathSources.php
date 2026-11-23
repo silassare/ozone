@@ -67,6 +67,32 @@ class PathSources
 	}
 
 	/**
+	 * A copy of these sources without the given ones, the others keeping their order.
+	 *
+	 * Sources only ever add up in a process; this is for a set built beside it, such as the settings
+	 * of another scope, which are the same sources with that scope's own directories in place of the
+	 * served one's.
+	 */
+	public function without(string ...$paths): static
+	{
+		$copy = clone $this;
+		$fm   = FS::fromRoot();
+
+		foreach ($paths as $path) {
+			$path = $fm->resolve($path);
+
+			unset(
+				$copy->sources['oz'][$path],
+				$copy->sources['project'][$path],
+				$copy->sources['plugins'][$path],
+				$copy->stateful[$path]
+			);
+		}
+
+		return $copy;
+	}
+
+	/**
 	 * Returns internal path sources.
 	 *
 	 * @return string[]
