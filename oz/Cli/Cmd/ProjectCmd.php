@@ -351,7 +351,6 @@ final class ProjectCmd extends Command
 		$router = OZ_OZONE_DIR . 'server.php';
 
 		$cmd = [
-			Process::phpBinary(),
 			'-S',
 			"{$host}:{$port}",
 			'-t',
@@ -371,7 +370,7 @@ final class ProjectCmd extends Command
 		];
 		$sc->getCacheDir()->wf('./server.json', \json_encode($server_info, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT));
 
-		$process = new Process($cmd);
+		$process = Process::php($cmd);
 
 		$process->enableTtyIfSupported();
 

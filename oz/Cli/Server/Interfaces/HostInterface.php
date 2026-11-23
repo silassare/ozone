@@ -39,9 +39,24 @@ interface HostInterface extends ShellRunnerInterface
 	public function isLocal(): bool;
 
 	/**
-	 * Whether an executable is on the host's PATH.
+	 * Whether an executable file of that name is on the host's PATH: {@see findExecutable()}.
 	 */
 	public function hasBinary(string $binary): bool;
+
+	/**
+	 * The first executable file named one of `$names` on the host's PATH, as an absolute path of the
+	 * host; null when there is none. The directories in PATH order, and in each the names in the
+	 * order given, so a name is preferred over another only within a directory. A directory, or a
+	 * file that cannot be run, is never an answer.
+	 *
+	 * @param list<string> $names
+	 */
+	public function findExecutable(array $names): ?string;
+
+	/**
+	 * Whether a path is a file the host can run (a symbolic link is followed).
+	 */
+	public function isExecutableFile(string $path): bool;
 
 	/**
 	 * Whether commands run as root on the host.

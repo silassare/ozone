@@ -147,7 +147,37 @@ final readonly class SshHost implements HostInterface
 	#[Override]
 	public function hasBinary(string $binary): bool
 	{
-		return $this->succeeds(\sprintf('command -v %s >/dev/null 2>&1', \escapeshellarg($binary)));
+		return null !== $this->findExecutable([$binary]);
+	}
+
+	#[Override]
+	public function findExecutable(array $names): ?string
+	{
+		if ([] === $names) {
+			return null;
+		}
+
+		// The loop `which` runs, in POSIX shell rather than `command -v`, which also answers a shell
+		// builtin, a function or an alias by its name: only a file the host can run is an answer.
+		// `set -f` keeps a PATH entry from being taken for a pattern.
+		[$code, $stdout] = $this->exec(\sprintf(
+			'set -f; IFS=:; for d in $PATH; do [ -n "$d" ] || continue; for n in %s; do'
+				. ' if [ -f "$d/$n" ] && [ -x "$d/$n" ]; then printf \'%%s\\n\' "$d/$n"; exit 0; fi;'
+				. ' done; done; exit 1',
+			\implode(' ', \array_map(\escapeshellarg(...), $names))
+		));
+
+		$found = \trim($stdout);
+
+		return 0 === $code && '' !== $found ? $found : null;
+	}
+
+	#[Override]
+	public function isExecutableFile(string $path): bool
+	{
+		$quoted = \escapeshellarg($path);
+
+		return $this->succeeds(\sprintf('test -f %s && test -x %s', $quoted, $quoted));
 	}
 
 	#[Override]

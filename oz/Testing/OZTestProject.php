@@ -130,9 +130,8 @@ final class OZTestProject
 			$namespace = self::toNamespace($name);
 			$prefix    = self::toPrefix($name);
 
-			$create = new Process(
+			$create = Process::php(
 				[
-					Process::phpBinary(),
 					$ozone_root . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz',
 					'project',
 					'create',
@@ -332,9 +331,8 @@ final class OZTestProject
 	 */
 	public function ozIn(string $cwd, string ...$args): Process
 	{
-		return new Process(
+		return Process::php(
 			[
-				Process::phpBinary(),
 				self::ozoneRoot() . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz',
 				...$args,
 			],

@@ -17,6 +17,7 @@ use Kli\KliAction;
 use Kli\KliArgs;
 use Override;
 use OZONE\Core\Cli\Command;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Deploy\DeployInitializer;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Cli\Deploy\Releaser;
@@ -54,6 +55,7 @@ final class DeployCmd extends Command
 			(string) $args->get('max-body-size'),
 			!$args->get('no-preload'),
 			(string) $args->get('cron'),
+			(string) $args->get('php'),
 		);
 
 		$plan = $initializer->plan();
@@ -122,20 +124,7 @@ final class DeployCmd extends Command
 			return $remote;
 		};
 
-		$releaser = new Releaser(
-			$root,
-			$source((string) $args->get('repository')),
-			(string) $args->get('ref'),
-			(string) $args->get('release'),
-			(int) $args->get('keep'),
-			!$args->get('skip-migrations'),
-			($url = (string) $args->get('health-url')) === '' ? null : $url,
-			self::parseList((string) $args->get('restart')),
-			archive: $source((string) $args->get('archive')),
-			maintenance: (bool) $args->get('maintenance'),
-			retry_after: null === ($retry = $args->get('retry-after')) ? null : (int) $retry,
-		);
-
+		// Before the host is asked anything, its PHP among them.
 		if (null !== $args->get('retry-after') && !$args->get('maintenance')) {
 			$cli->error('--retry-after is the Retry-After of the maintenance: it needs --maintenance.');
 
@@ -147,6 +136,21 @@ final class DeployCmd extends Command
 
 			return;
 		}
+
+		$releaser = new Releaser(
+			$root,
+			$source((string) $args->get('repository')),
+			(string) $args->get('ref'),
+			(string) $args->get('release'),
+			(int) $args->get('keep'),
+			!$args->get('skip-migrations'),
+			($url = (string) $args->get('health-url')) === '' ? null : $url,
+			self::parseList((string) $args->get('restart')),
+			php: Process::hostPhpBinary($host, (string) $args->get('php')),
+			archive: $source((string) $args->get('archive')),
+			maintenance: (bool) $args->get('maintenance'),
+			retry_after: null === ($retry = $args->get('retry-after')) ? null : (int) $retry,
+		);
 
 		$cli->writeLn(\sprintf('Host:        %s', $host->describe()));
 		$cli->writeLn(\sprintf('Deploy root: %s', $root));
@@ -343,6 +347,13 @@ final class DeployCmd extends Command
 			)
 			->string()
 			->def(DeployInitializer::CRON_TIMER);
+		$init->option('php', '', [], 12)
+			->description(
+				'For --target=bare: the absolute path of the PHP command line the systemd units run `oz`'
+					. ' with; this machine\'s by default (OZ_PHP_CLI_BINARY, or the one running `oz`).'
+			)
+			->string()
+			->def('');
 
 		$init->handler($this->init(...));
 
@@ -393,6 +404,13 @@ final class DeployCmd extends Command
 			->description('With --maintenance: the seconds a held client is told to wait (Retry-After).')
 			->number(1)
 			->integer();
+		$run->option('php')
+			->description(
+				'The absolute path of the PHP command line on the host; by default the first of php8.x,'
+					. ' php8x and php on its PATH (on this machine: OZ_PHP_CLI_BINARY, or the one running `oz`).'
+			)
+			->string()
+			->def('');
 		self::withHostOptions($run);
 		$run->handler($this->run(...));
 

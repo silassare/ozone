@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Cli;
 
 use Override;
+use OZONE\Core\Cli\Process as OZProcess;
 use OZONE\Core\Cli\Server\SshHost;
+use OZONE\Core\Exceptions\RuntimeException;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -136,6 +138,92 @@ final class ServerOverSshTest extends TestCase
 
 		self::assertTrue($host->upload($local, '/srv/probe/uploads/upload.bin'));
 		self::assertSame(\md5_file($local), \md5((string) $host->readFile('/srv/probe/uploads/upload.bin')));
+	}
+
+	/**
+	 * The PHP a deploy runs `oz` with is the server's, asked of the server: the first executable
+	 * file of this version's names on its PATH, the directories in order -- a directory, or a file
+	 * that cannot be run, never an answer. Run before the provisioning installs a real PHP, the
+	 * server has none, which is an error naming what was looked for.
+	 */
+	#[DataProvider('providePlatforms')]
+	public function testThePhpOfTheServerIsAskedOfTheServer(string $platform): void
+	{
+		$host = $this->host($platform);
+
+		[$versioned, $short, $plain] = OZProcess::phpNames(\PHP_MAJOR_VERSION . '.' . \PHP_MINOR_VERSION);
+
+		try {
+			OZProcess::hostPhpBinary($host);
+			self::fail('A PHP was answered on a server that has none.');
+		} catch (RuntimeException $e) {
+			self::assertStringContainsString(
+				\sprintf('%s has none of %s, %s, %s on its PATH', $host->describe(), $versioned, $short, $plain),
+				$e->getMessage()
+			);
+		}
+
+		// Three directories of the server's PATH, each the first entry that reaches its directory: an
+		// entry that is a link to an earlier one's (a merged /usr) is the same place.
+		$listed = '';
+
+		self::assertSame(0, $host->run(
+			'IFS=:; for d in $PATH; do [ -d "$d" ] && printf \'%s\t%s\n\' "$d" "$(readlink -f "$d")"; done; true',
+			$listed
+		));
+
+		$dirs = [];
+
+		foreach (\explode("\n", \trim($listed)) as $line) {
+			[$dir, $real] = \explode("\t", $line) + ['', ''];
+
+			if ('' !== $real && !isset($dirs[$real])) {
+				$dirs[$real] = $dir;
+			}
+		}
+
+		self::assertGreaterThanOrEqual(3, \count($dirs), $listed);
+
+		[$first, $second, $third] = \array_values($dirs);
+
+		$made = [$first . '/' . $plain, $first . '/' . $short, $second . '/' . $plain, $third . '/' . $versioned];
+
+		try {
+			self::assertSame(0, $host->run(\sprintf(
+				'mkdir %1$s && echo "exit 99" > %2$s && chmod 644 %2$s'
+					. ' && echo "exit 99" > %3$s && chmod 755 %3$s && echo "exit 99" > %4$s && chmod 755 %4$s',
+				...\array_map(\escapeshellarg(...), $made)
+			)));
+
+			// The second directory's plain name before the third's versioned one: a name is preferred
+			// over another within a directory only. The first's are a directory and a file that
+			// cannot be run.
+			self::assertSame($second . '/' . $plain, $host->findExecutable([$versioned, $short, $plain]));
+			self::assertSame($second . '/' . $plain, OZProcess::hostPhpBinary($host));
+			self::assertSame($third . '/' . $versioned, $host->findExecutable([$versioned]));
+			self::assertNull($host->findExecutable([$short]));
+			self::assertTrue($host->hasBinary($plain));
+			self::assertFalse($host->hasBinary($short));
+
+			self::assertTrue($host->isExecutableFile($third . '/' . $versioned));
+			self::assertFalse($host->isExecutableFile($first . '/' . $plain));
+			self::assertFalse($host->isExecutableFile($first . '/' . $short));
+
+			// Given (`--php`): used as it is, when it is an executable file there.
+			self::assertSame($third . '/' . $versioned, OZProcess::hostPhpBinary($host, $third . '/' . $versioned));
+
+			$this->expectException(RuntimeException::class);
+			$this->expectExceptionMessage(\sprintf(
+				'--php is "%s", which is not the absolute path of an executable file on %s.',
+				$first . '/' . $short,
+				$host->describe()
+			));
+
+			OZProcess::hostPhpBinary($host, $first . '/' . $short);
+		} finally {
+			// The provisioning that follows installs a real PHP: nothing of this may stand in its way.
+			$host->run('rm -rf ' . \implode(' ', \array_map(\escapeshellarg(...), $made)));
+		}
 	}
 
 	#[DataProvider('providePlatforms')]

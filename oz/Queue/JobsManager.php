@@ -542,10 +542,10 @@ final class JobsManager
 		// than OZ_PROJECT_DIR.'bin/oz', because freshly scaffolded projects do not
 		// have a project-level bin/ directory; the binary lives inside the package.
 		$bin = \dirname(OZ_OZONE_DIR) . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz';
-		// Not PHP_BINARY: a request runs this when its cron tick runs a queue, and its binary is
-		// php-fpm, php-cgi or a server's, none of which runs a script.
+		// Process::php(): a request runs this when its cron tick runs a queue, so neither its binary
+		// (php-fpm, php-cgi, a server's) nor its environment (the request's own, under CGI) is the
+		// job's.
 		$cmd = [
-			Process::phpBinary(),
 			$bin,
 			'jobs',
 			'run',
@@ -565,7 +565,7 @@ final class JobsManager
 		//    of anonymous pipes. Without this, __destruct() closes the read-end of
 		//    those pipes and the subprocess gets SIGPIPE on its next write, killing
 		//    it even though stop() was never called.
-		$process = new Process($cmd, OZ_PROJECT_DIR, null, null, 0);
+		$process = Process::php($cmd, OZ_PROJECT_DIR);
 		$process->setOptions(['create_new_console' => true]);
 		$process->disableOutput();
 		$process->start();

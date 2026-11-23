@@ -29,7 +29,10 @@ use Symfony\Component\Process\Process;
  * The request is served by php-cgi, a real SAPI (Apache's mod_fcgid and mod_cgi, lighttpd) and the
  * one this image ships whose binary is not the CLI's, as PHP-FPM's and FrankenPHP's are not either.
  * Started the way a web server starts it, with the request in its environment and, as a PHP-FPM
- * pool's cleared one would be, no PATH.
+ * pool's cleared one would be, no PATH. Under CGI the request *is* environment, the cookie and the
+ * credentials among it, with whatever else the server adds: none of it may reach the job.
+ *
+ * The request asks for no route: it is answered 404, and its tick runs all the same.
  *
  * @internal
  */
@@ -117,6 +120,16 @@ final class AsyncJobFromRequestTest extends TestCase
 			'REMOTE_ADDR'       => '127.0.0.1',
 			'HTTP_HOST'         => '127.0.0.1',
 			'HTTP_ACCEPT'       => 'application/json',
+			'HTTP_COOKIE'       => 'OZSID=the-visitors-session',
+			'HTTP_AUTHORIZATION' => 'Bearer the-visitors-token',
+			// What Apache adds beside the request's own variables.
+			'SSL_CLIENT_S_DN'       => 'CN=the-visitor',
+			'UNIQUE_ID'             => 'aBcDeF',
+			'CONTEXT_DOCUMENT_ROOT' => \dirname($index),
+			// What a job does need of the server's.
+			'HOME'              => $path,
+			'LANG'              => 'C.UTF-8',
+			'TZ'                => 'UTC',
 		], null, 60);
 
 		$request->mustRun();
@@ -136,6 +149,23 @@ final class AsyncJobFromRequestTest extends TestCase
 
 		self::assertSame('cli', $job['sapi'] ?? null);
 		self::assertNotSame(self::json($tick)['pid'] ?? null, $job['pid'] ?? null);
+
+		// Nothing of the request reached the job, and what it needs of the server did.
+		$env = \is_array($job['env'] ?? null) ? $job['env'] : [];
+
+		self::assertSame([], \array_values(\array_filter(
+			\array_keys($env),
+			static fn (int|string $name): bool => \str_starts_with((string) $name, 'HTTP_')
+		)), 'The request\'s headers reached the job: ' . \implode(', ', \array_keys($env)));
+
+		foreach (['SSL_CLIENT_S_DN', 'UNIQUE_ID', 'CONTEXT_DOCUMENT_ROOT', 'REQUEST_METHOD', 'SCRIPT_FILENAME'] as $name) {
+			self::assertArrayNotHasKey($name, $env, 'The request\'s environment reached the job: ' . $name);
+		}
+
+		self::assertSame(['HOME' => $path, 'LANG' => 'C.UTF-8', 'TZ' => 'UTC'], \array_intersect_key(
+			$env,
+			['HOME' => true, 'LANG' => true, 'TZ' => true]
+		));
 	}
 
 	public static function provideDbConfig(): iterable

@@ -74,10 +74,29 @@ final class LocalHost implements HostInterface
 	#[Override]
 	public function hasBinary(string $binary): bool
 	{
-		return \array_any(
-			\explode(\PATH_SEPARATOR, (string) \getenv('PATH')),
-			static fn (string $dir): bool => '' !== $dir && \is_executable(\rtrim($dir, DS) . DS . $binary)
-		);
+		return null !== $this->findExecutable([$binary]);
+	}
+
+	#[Override]
+	public function findExecutable(array $names): ?string
+	{
+		foreach (\explode(\PATH_SEPARATOR, (string) \getenv('PATH')) as $dir) {
+			foreach ($names as $name) {
+				$found = Process::which($name, [$dir]);
+
+				if (null !== $found) {
+					return $found;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	#[Override]
+	public function isExecutableFile(string $path): bool
+	{
+		return \is_file($path) && \is_executable($path);
 	}
 
 	#[Override]

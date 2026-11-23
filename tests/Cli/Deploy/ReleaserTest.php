@@ -49,6 +49,37 @@ final class ReleaserTest extends TestCase
 		}
 	}
 
+	/**
+	 * Every `oz` command of a release runs with the PHP of the host it is made on, quoted: what
+	 * `oz deploy run` resolved there or was given with `--php`, else this machine's.
+	 */
+	public function testTheReleaseRunsItsCommandsWithThePhpOfItsHost(): void
+	{
+		$given    = '/opt/php 8/bin/php';
+		$releaser = new Releaser(self::ROOT, self::REPO, php: $given, maintenance: true);
+		$oz_steps = ['link-public', 'orm', Releaser::STEP_MAINTENANCE_ON, 'migrations', 'build', Releaser::STEP_MAINTENANCE_OFF];
+
+		self::assertSame($given, $releaser->php());
+
+		foreach ($oz_steps as $name) {
+			foreach (self::commandsOf($releaser, $name) as $command) {
+				self::assertMatchesRegularExpression(
+					'~^cd \'[^\']+\' && \'/opt/php 8/bin/php\' \'[^\']+/vendor/bin/oz\' ~',
+					$command,
+					$name
+				);
+			}
+		}
+
+		$default = new Releaser(self::ROOT, self::REPO);
+
+		self::assertSame(\PHP_BINARY, $default->php());
+		self::assertStringContainsString(
+			' && ' . \escapeshellarg(\PHP_BINARY) . ' ',
+			self::commandsOf($default, 'link-public')[0]
+		);
+	}
+
 	public function testTheBuildComesAfterTheMigrations(): void
 	{
 		$names = self::stepNames(new Releaser(self::ROOT, self::REPO));

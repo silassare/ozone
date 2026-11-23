@@ -15,7 +15,9 @@ namespace OZONE\Tests\Cli;
 
 use Override;
 use OZONE\Core\Cli\Process;
+use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Tests\Support\ExecutableTree;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -28,6 +30,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(Process::class)]
+#[CoversClass(LocalHost::class)]
 final class PhpBinaryTest extends TestCase
 {
 	private const string VERSION = '8.5';
@@ -44,16 +47,14 @@ final class PhpBinaryTest extends TestCase
 		parent::setUp();
 
 		$this->cwd  = (string) \getcwd();
-		$this->root = self::fixtureRoot() . \DIRECTORY_SEPARATOR . 'oz_php_binary_' . \bin2hex(\random_bytes(4));
-
-		\mkdir($this->root, 0o775, true);
+		$this->root = ExecutableTree::create();
 	}
 
 	#[Override]
 	protected function tearDown(): void
 	{
 		\chdir($this->cwd);
-		self::remove($this->root);
+		ExecutableTree::remove($this->root);
 
 		parent::tearDown();
 	}
@@ -255,6 +256,146 @@ final class PhpBinaryTest extends TestCase
 	}
 
 	/**
+	 * Served under CGI, the request is environment. What a PHP process started from there is given
+	 * is what {@see Process::CHILD_ENV} keeps, whatever else the server put there; a command line
+	 * passes its environment on.
+	 */
+	public function testAProcessServingRequestsPassesOnlyWhatItKeeps(): void
+	{
+		$inherited = [
+			'PATH'                  => '/usr/local/bin:/usr/bin',
+			'HOME'                  => '/var/www',
+			'TMPDIR'                => '/srv/tmp',
+			'LANG'                  => 'C.UTF-8',
+			'LC_ALL'                => 'C.UTF-8',
+			'TZ'                    => 'UTC',
+			'HTTP_COOKIE'           => 'OZSID=secret',
+			'HTTP_AUTHORIZATION'    => 'Bearer secret',
+			'REQUEST_METHOD'        => 'GET',
+			'SSL_CLIENT_S_DN'       => 'CN=someone',
+			'UNIQUE_ID'             => 'aBc',
+			'CONTEXT_DOCUMENT_ROOT' => '/srv/www',
+			'RR_MODE'               => 'http',
+			'FRANKENPHP_WORKER'     => '1',
+			'OZ_RUNTIME'            => 'worker',
+			'APP_SECRET'            => 'a site\'s own FastCGI parameter',
+		];
+
+		$env = Process::childEnv(false, $inherited, ['OZ_JOB' => 'given', 'HOME' => '/home/job']);
+
+		self::assertSame([
+			'PATH'                  => '/usr/local/bin:/usr/bin',
+			'HOME'                  => '/home/job',
+			'TMPDIR'                => '/srv/tmp',
+			'LANG'                  => 'C.UTF-8',
+			'LC_ALL'                => 'C.UTF-8',
+			'TZ'                    => 'UTC',
+			'HTTP_COOKIE'           => false,
+			'HTTP_AUTHORIZATION'    => false,
+			'REQUEST_METHOD'        => false,
+			'SSL_CLIENT_S_DN'       => false,
+			'UNIQUE_ID'             => false,
+			'CONTEXT_DOCUMENT_ROOT' => false,
+			'RR_MODE'               => false,
+			'FRANKENPHP_WORKER'     => false,
+			'OZ_RUNTIME'            => false,
+			'APP_SECRET'            => false,
+			'OZ_JOB'                => 'given',
+		], $env);
+
+		self::assertSame([], Process::childEnv(false, [], null));
+
+		// The command line: what it was given, and the rest inherited.
+		self::assertNull(Process::childEnv(true, $inherited, null));
+		self::assertSame(['OZ_JOB' => 'given'], Process::childEnv(true, $inherited, ['OZ_JOB' => 'given']));
+	}
+
+	/**
+	 * Every PHP process is built the one way: this PHP, and, on this command line, its environment.
+	 */
+	public function testAPhpProcessIsStartedWithThePhpBinary(): void
+	{
+		$process = Process::php(['-r', 'echo getenv("OZ_PHP_PROCESS_PROBE");'], null, ['OZ_PHP_PROCESS_PROBE' => 'yes']);
+
+		self::assertSame(\escapeshellarg(\PHP_BINARY) . " '-r' 'echo getenv(\"OZ_PHP_PROCESS_PROBE\");'", $process->getCommandLine());
+		self::assertSame('yes', $process->mustRun()->getOutput());
+	}
+
+	public function testThePhpNamesAreThisVersionsFirst(): void
+	{
+		self::assertSame(['php8.5', 'php85', 'php'], Process::phpNames('8.5'));
+		self::assertSame(['php10.12', 'php1012', 'php'], Process::phpNames('10.12'));
+	}
+
+	/**
+	 * This machine's PATH, as {@see LocalHost} reads it: the directories in order, and in each the
+	 * names in order; a directory or a file that cannot be run is passed over.
+	 */
+	public function testThisMachineIsAskedForAnExecutableOnItsPath(): void
+	{
+		\mkdir($this->root . '/a/php', 0o775, true);
+		$this->file('a/php85', 0o644);
+
+		self::assertTrue(\is_dir($this->root . '/a/php'));
+
+		$b_php   = $this->exe('b/php');
+		$c_php85 = $this->exe('c/php85');
+		$path    = \getenv('PATH');
+		$host    = new LocalHost();
+
+		\putenv('PATH=' . \implode(\PATH_SEPARATOR, ['', $this->root . '/a', $this->root . '/b', $this->root . '/c']));
+
+		try {
+			// A name is preferred over another within a directory only.
+			self::assertSame($b_php, $host->findExecutable(['php85', 'php']));
+			self::assertSame($c_php85, $host->findExecutable(['php85']));
+			self::assertNull($host->findExecutable(['php8.5']));
+			self::assertNull($host->findExecutable([]));
+
+			self::assertTrue($host->hasBinary('php'));
+			self::assertFalse($host->hasBinary('php8.5'));
+
+			// `a/php` is a directory, found on PATH before `b/php`: never a binary.
+			\putenv('PATH=' . $this->root . '/a');
+
+			self::assertFalse($host->hasBinary('php'));
+			self::assertFalse($host->hasBinary('php85'));
+		} finally {
+			\putenv(false === $path ? 'PATH' : 'PATH=' . $path);
+		}
+
+		self::assertTrue($host->isExecutableFile($b_php));
+		self::assertFalse($host->isExecutableFile($this->root . '/a/php'));
+		self::assertFalse($host->isExecutableFile($this->root . '/a/php85'));
+	}
+
+	/**
+	 * The PHP of a host deployed to: the one given, which must be an executable file there; else,
+	 * on this machine, this machine's.
+	 */
+	public function testTheHostsPhpIsTheOneGivenOrThisMachines(): void
+	{
+		$host  = new LocalHost();
+		$given = $this->exe('opt/php/bin/php');
+
+		self::assertSame($given, Process::hostPhpBinary($host, $given));
+		self::assertSame(\PHP_BINARY, Process::hostPhpBinary($host));
+		self::assertSame(\PHP_BINARY, Process::hostPhpBinary($host, ''));
+
+		foreach (['opt/php/bin/php', $this->root . '/nowhere/php', $this->file('opt/php/bin/php-ro', 0o644)] as $bad) {
+			try {
+				Process::hostPhpBinary($host, $bad);
+				self::fail('An unusable --php was accepted: ' . $bad);
+			} catch (RuntimeException $e) {
+				self::assertStringContainsString(
+					\sprintf('--php is "%s", which is not the absolute path of an executable file on this machine', $bad),
+					$e->getMessage()
+				);
+			}
+		}
+	}
+
+	/**
 	 * This suite is the command line, and its sandbox sets nothing.
 	 */
 	public function testThisProcessStartsWithItsOwnBinary(): void
@@ -268,69 +409,11 @@ final class PhpBinaryTest extends TestCase
 	 */
 	private function exe(string $relative): string
 	{
-		return $this->file($relative, 0o755);
+		return ExecutableTree::file($this->root, $relative);
 	}
 
 	private function file(string $relative, int $mode): string
 	{
-		$path = $this->root . \DIRECTORY_SEPARATOR . $relative;
-
-		if (!\is_dir(\dirname($path))) {
-			\mkdir(\dirname($path), 0o775, true);
-		}
-
-		// Never run: the resolver only looks.
-		\file_put_contents($path, "#!/bin/sh\nexit 99\n");
-		\chmod($path, $mode);
-
-		return $path;
-	}
-
-	/**
-	 * A directory whose files can be executable. The image's TMPDIR is a tmpfs mounted `noexec`,
-	 * where `is_executable()` is false of every file, which would make each case here pass or fail
-	 * for that reason alone; so the first temporary directory that can is taken, and one that cannot
-	 * fails the test rather than passing it.
-	 */
-	private static function fixtureRoot(): string
-	{
-		foreach ([\sys_get_temp_dir(), '/tmp', '/var/tmp'] as $dir) {
-			$probe = $dir . \DIRECTORY_SEPARATOR . 'oz_php_binary_probe_' . \getmypid();
-
-			if (!\is_dir($dir) || !\is_writable($dir) || false === @\file_put_contents($probe, '')) {
-				continue;
-			}
-
-			\chmod($probe, 0o755);
-			$executable = \is_executable($probe);
-			\unlink($probe);
-
-			if ($executable) {
-				return $dir;
-			}
-		}
-
-		self::fail('No temporary directory here can hold an executable file.');
-	}
-
-	private static function remove(string $path): void
-	{
-		if (\is_link($path) || \is_file($path)) {
-			\unlink($path);
-
-			return;
-		}
-
-		if (!\is_dir($path)) {
-			return;
-		}
-
-		foreach (\scandir($path) ?: [] as $entry) {
-			if ('.' !== $entry && '..' !== $entry) {
-				self::remove($path . \DIRECTORY_SEPARATOR . $entry);
-			}
-		}
-
-		\rmdir($path);
+		return ExecutableTree::file($this->root, $relative, $mode);
 	}
 }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Deploy;
 
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Cli\Server\ProvisionStep;
@@ -78,7 +79,9 @@ final readonly class Releaser
 	 * @param bool         $migrations whether to run pending migrations
 	 * @param null|string  $health_url a URL that must answer 2xx after the swap
 	 * @param list<string> $restart    systemd units to restart after the swap
-	 * @param string       $php        the PHP binary
+	 * @param null|string  $php        the PHP command line of the host the release is made on;
+	 *                                  this machine's by default ({@see Process::phpBinary()}), and
+	 *                                  {@see Process::hostPhpBinary()} answers another host's
 	 * @param string       $archive    a tar.gz archive to deploy instead of a repository
 	 * @param bool         $maintenance whether to hold the instance under maintenance from the
 	 *                                  migrations to the restart (`oz maintenance`)
@@ -93,11 +96,19 @@ final readonly class Releaser
 		private bool $migrations = true,
 		private ?string $health_url = null,
 		private array $restart = [],
-		private string $php = \PHP_BINARY,
+		private ?string $php = null,
 		private string $archive = '',
 		private bool $maintenance = false,
 		private ?int $retry_after = null,
 	) {}
+
+	/**
+	 * The PHP command line the release's `oz` commands run with.
+	 */
+	public function php(): string
+	{
+		return $this->php ?? Process::phpBinary();
+	}
 
 	/**
 	 * The release name this run uses.
@@ -119,6 +130,7 @@ final readonly class Releaser
 		$release = ReleaseLayout::releaseDir($this->root, $name);
 		$current = ReleaseLayout::currentLink($this->root);
 		$oz      = $release . DS . 'vendor' . DS . 'bin' . DS . 'oz';
+		$php     = \escapeshellarg($this->php());
 		$steps   = [];
 
 		$steps[] = new ProvisionStep(
@@ -174,7 +186,7 @@ final readonly class Releaser
 		$steps[] = new ProvisionStep(
 			'link-public',
 			'Create this release\'s state directories and public files symlinks.',
-			[\sprintf('cd %s && %s %s project link', \escapeshellarg($release), $this->php, \escapeshellarg($oz))],
+			[\sprintf('cd %s && %s %s project link', \escapeshellarg($release), $php, \escapeshellarg($oz))],
 		);
 
 		$steps[] = new ProvisionStep(
@@ -184,7 +196,7 @@ final readonly class Releaser
 				\sprintf(
 					'cd %s && %s %s db build --build-all --class-only',
 					\escapeshellarg($release),
-					$this->php,
+					$php,
 					\escapeshellarg($oz)
 				),
 			],
@@ -194,7 +206,7 @@ final readonly class Releaser
 			$maintenance_on = \sprintf(
 				'cd %s && %s %s maintenance on --pause-jobs',
 				\escapeshellarg($release),
-				$this->php,
+				$php,
 				\escapeshellarg($oz)
 			);
 
@@ -217,7 +229,7 @@ final readonly class Releaser
 					\sprintf(
 						'cd %s && %s %s migrations run',
 						\escapeshellarg($release),
-						$this->php,
+						$php,
 						\escapeshellarg($oz)
 					),
 				],
@@ -233,7 +245,7 @@ final readonly class Releaser
 				\sprintf(
 					'cd %s && %s %s project build --skip-orm',
 					\escapeshellarg($release),
-					$this->php,
+					$php,
 					\escapeshellarg($oz)
 				),
 			],
@@ -271,7 +283,7 @@ final readonly class Releaser
 					\sprintf(
 						'cd %s && %s %s maintenance off',
 						\escapeshellarg($release),
-						$this->php,
+						$php,
 						\escapeshellarg($oz)
 					),
 				],
@@ -442,7 +454,7 @@ final readonly class Releaser
 		$status = \sprintf(
 			'cd %s && %s %s maintenance status',
 			\escapeshellarg($dir),
-			$this->php,
+			\escapeshellarg($this->php()),
 			\escapeshellarg($dir . DS . 'vendor' . DS . 'bin' . DS . 'oz')
 		);
 

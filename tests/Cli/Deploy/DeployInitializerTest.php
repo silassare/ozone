@@ -19,6 +19,7 @@ use OZONE\Core\Cli\Deploy\DeployInitializer;
 use OZONE\Core\Cli\Deploy\DeployPlan;
 use OZONE\Core\Cli\Deploy\DeployTemplates;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Tests\Support\ExecutableTree;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -157,6 +158,36 @@ final class DeployInitializerTest extends TestCase
 		self::assertStringContainsString('-worker@.service', $joined);
 	}
 
+	/**
+	 * The units run `oz` with the PHP given (`--php`), which must be an executable file; else with
+	 * this machine's, which the rest of the plan already takes the server to be.
+	 */
+	public function testTheUnitsRunOzWithThePhpGivenOrThisMachines(): void
+	{
+		$root = ExecutableTree::create();
+
+		try {
+			$given = ExecutableTree::file($root, 'opt/php/bin/php');
+
+			foreach ([$given => $given, '' => \PHP_BINARY] as $option => $php) {
+				$units = self::systemdUnits(new DeployInitializer(DeployInitializer::TARGET_BARE, php: $option));
+
+				self::assertCount(2, $units);
+
+				foreach ($units as $path => $content) {
+					self::assertStringContainsString('ExecStart=' . $php . ' ', $content, $path);
+				}
+			}
+
+			$this->expectException(RuntimeException::class);
+			$this->expectExceptionMessage('--php is "' . $root . '/nowhere/php", which is not the absolute path');
+
+			new DeployInitializer(DeployInitializer::TARGET_BARE, php: $root . '/nowhere/php')->plan();
+		} finally {
+			ExecutableTree::remove($root);
+		}
+	}
+
 	public function testBareCronCanBeTheSchedulerProcess(): void
 	{
 		$units = [];
@@ -255,6 +286,24 @@ final class DeployInitializerTest extends TestCase
 
 		self::assertStringContainsString('/var/www/probe/.ozone/logs/*.log {', $rendered);
 		self::assertStringContainsString('su deploy deploy', $rendered);
+	}
+
+	/**
+	 * The systemd services of a plan, by path: the units that run `oz` (a timer runs nothing).
+	 *
+	 * @return array<string, string>
+	 */
+	private static function systemdUnits(DeployInitializer $initializer): array
+	{
+		$units = [];
+
+		foreach ($initializer->plan()->files() as $file) {
+			if (\str_contains($file->path, 'systemd') && \str_ends_with($file->path, '.service')) {
+				$units[$file->path] = $file->content;
+			}
+		}
+
+		return $units;
 	}
 
 	private static function preloadIni(DeployInitializer $initializer): ?DeployFile

@@ -20,6 +20,8 @@ use Kli\Types\KliTypeNumber;
 use Kli\Types\KliTypeString;
 use Override;
 use OZONE\Core\Cli\Command;
+use OZONE\Core\Cli\Process;
+use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Maintenance\Maintenance;
 use OZONE\Core\Queue\JobsManager;
@@ -215,6 +217,13 @@ final class JobsCmd extends Command
 
 			$jobs_supervisor->option('user', 'u')
 				->description('OS user to run the workers as.')
+				->string();
+
+			$jobs_supervisor->option('php')
+				->description(
+					'The absolute path of the PHP command line the workers run with; this machine\'s by'
+						. ' default (OZ_PHP_CLI_BINARY, or the one running `oz`).'
+				)
 				->string();
 
 			$jobs_supervisor->option('output', 'o')
@@ -493,7 +502,17 @@ final class JobsCmd extends Command
 		$bin = \dirname(OZ_OZONE_DIR) . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz';
 
 		$program_name = 'ozone-worker-' . $queue;
-		$command      = \sprintf('php %s jobs work --queue=%s --memory=%d --sleep=%d', $bin, $queue, $memory, $sleep);
+		// The PHP that supervisord starts the workers with: named, not left to supervisord's PATH,
+		// where a plain `php` may be another version's or no PHP at all.
+		$php          = Process::hostPhpBinary(new LocalHost(), (string) ($args->get('php') ?? ''));
+		$command      = \sprintf(
+			'%s %s jobs work --queue=%s --memory=%d --sleep=%d',
+			$php,
+			$bin,
+			$queue,
+			$memory,
+			$sleep
+		);
 		$log_file     = $log_dir . '/worker-' . $queue . '.log';
 
 		$lines   = [];

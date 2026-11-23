@@ -15,8 +15,10 @@ namespace OZONE\Core\Cli;
 
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\OZone;
+use OZONE\Core\Runtime\Runtime;
 use PHPUtils\FS\PathUtils;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessSignaledException;
@@ -39,8 +41,9 @@ use Symfony\Component\Process\Process as SymfonyProcess;
  * intact and the signal kept on the object, so a caller reads it where it reads every other failure
  * and words it with the step it belongs to ({@see killedPhrase()}).
  *
- * A process running PHP is started with {@see phpBinary()}, never with `PHP_BINARY`, which is the
- * command line's only when this process is one.
+ * A process running PHP is started with {@see php()}: with {@see phpBinary()}, never with
+ * `PHP_BINARY`, which is the command line's only when this process is one, and, from a process that
+ * serves requests, with {@see CHILD_ENV} of its environment and nothing else.
  */
 final class Process extends SymfonyProcess
 {
@@ -60,6 +63,22 @@ final class Process extends SymfonyProcess
 	 * that same executable.
 	 */
 	private const array CLI_SAPIS = ['cli', 'cli-server'];
+
+	/**
+	 * The variables a PHP process started from a process that serves requests is given of its
+	 * environment, every other one removed: where programs are found and files written (PATH, HOME,
+	 * TMPDIR), and what a program's text and clock read (LANG, LC_ALL, TZ).
+	 *
+	 * A list of what is kept, not of what is dropped. Under CGI the request itself is environment
+	 * -- every header as `HTTP_*`, the cookie and the `Authorization` among them, and whatever the
+	 * server adds (`SSL_CLIENT_*`, `UNIQUE_ID`, `CONTEXT_*`, a site's own FastCGI parameters) -- and
+	 * a list of what to drop is out of date with the first server that adds one more. The worker
+	 * servers' variables go too: `RR_MODE`, `FRANKENPHP_WORKER` or `OZ_RUNTIME` in a job's
+	 * environment would have `oz jobs run` take itself for a worker ({@see Runtime::detect()}).
+	 * The project's own values are not passed either: an OZone process in a project reads its `.env`
+	 * itself, from the file, and never from its environment.
+	 */
+	public const array CHILD_ENV = ['PATH', 'HOME', 'TMPDIR', 'LANG', 'LC_ALL', 'TZ'];
 
 	/**
 	 * The signal that killed this process: {@see killedBy()}.
@@ -195,6 +214,62 @@ final class Process extends SymfonyProcess
 	}
 
 	/**
+	 * A PHP process: `$args` run by {@see phpBinary()}, in the environment {@see childEnv()} gives
+	 * it. The way every PHP process OZone starts is built, a plugin's own included.
+	 *
+	 * @param list<string>               $args  the script and its arguments
+	 * @param null|array<string, string> $env   variables to set, over what the process inherits
+	 * @param null|float                 $timeout seconds, 0 or null for none
+	 */
+	public static function php(
+		array $args,
+		?string $cwd = null,
+		?array $env = null,
+		mixed $input = null,
+		?float $timeout = 0
+	): self {
+		return new self(
+			[self::phpBinary(), ...$args],
+			$cwd,
+			self::childEnv(Runtime::isConsole(), $_ENV + \getenv(), $env),
+			$input,
+			$timeout
+		);
+	}
+
+	/**
+	 * The environment of a PHP process, from what this one would pass on.
+	 *
+	 * A command line passes its environment on, as a shell does: null, or the variables given. A
+	 * process that serves requests -- under CGI, PHP-FPM or a worker server -- passes {@see CHILD_ENV}
+	 * and nothing else: every other variable it holds is set to false, which is how Symfony's
+	 * process is told not to pass one on. The variables given are set over that.
+	 *
+	 * @param bool                       $console   whether this process is a command line
+	 * @param array<array-key, mixed>    $inherited what it would pass on: its `$_ENV` and `getenv()`
+	 * @param null|array<string, string> $env       the variables given
+	 *
+	 * @return null|array<string, false|string>
+	 *
+	 * @internal
+	 */
+	public static function childEnv(bool $console, array $inherited, ?array $env): ?array
+	{
+		if ($console) {
+			return $env;
+		}
+
+		$clean = [];
+
+		foreach ($inherited as $name => $value) {
+			$name         = (string) $name;
+			$clean[$name] = \in_array($name, self::CHILD_ENV, true) && \is_string($value) ? $value : false;
+		}
+
+		return \array_merge($clean, $env ?? []);
+	}
+
+	/**
 	 * The PHP command-line binary to start a PHP process with -- `oz jobs run` for an async job, a
 	 * scope's build, a plugin's own script -- whatever runs this one.
 	 *
@@ -229,8 +304,60 @@ final class Process extends SymfonyProcess
 			\PHP_SAPI,
 			\PHP_BINDIR,
 			\getenv('PATH'),
-			\PHP_MAJOR_VERSION . '.' . \PHP_MINOR_VERSION
+			self::phpVersion()
 		);
+	}
+
+	/**
+	 * The PHP command-line binary of a host OZone deploys to or writes the units of
+	 * (`oz deploy run`, `oz deploy init`, `oz jobs supervisor`): the one given (`--php`), else, on
+	 * this machine, {@see phpBinary()}, else the first of {@see phpNames()} the host has on its PATH,
+	 * asked of the host itself ({@see HostInterface::findExecutable()}).
+	 *
+	 * A binary given is the absolute path of an executable file on the host, or this throws: what
+	 * was named is never swapped for a guess. The version looked for is this one, which a deploy
+	 * already expects the host to run (the PHP-FPM pool of `oz deploy init` is this version's).
+	 *
+	 * @throws RuntimeException when the binary given is unusable, or the host has none
+	 */
+	public static function hostPhpBinary(HostInterface $host, ?string $given = null): string
+	{
+		if (null !== $given && '' !== $given) {
+			if (!\str_starts_with($given, '/') || !$host->isExecutableFile($given)) {
+				throw new RuntimeException(\sprintf(
+					'--php is "%s", which is not the absolute path of an executable file on %s.',
+					$given,
+					$host->describe()
+				));
+			}
+
+			return $given;
+		}
+
+		if ($host->isLocal()) {
+			return self::phpBinary();
+		}
+
+		$names = self::phpNames(self::phpVersion());
+
+		return $host->findExecutable($names) ?? throw new RuntimeException(\sprintf(
+			'%s has none of %s on its PATH. Install the PHP command line there, or give its path with --php.',
+			$host->describe(),
+			\implode(', ', $names)
+		));
+	}
+
+	/**
+	 * The names a PHP command line goes by, most specific first: this version's own (`php8.5` as
+	 * Debian names it, `php85` as Alpine does), since a plain `php` may be another version's.
+	 *
+	 * @param string $version `major.minor`
+	 *
+	 * @return list<string>
+	 */
+	public static function phpNames(string $version): array
+	{
+		return ['php' . $version, 'php' . \str_replace('.', '', $version), 'php'];
 	}
 
 	/**
@@ -303,7 +430,7 @@ final class Process extends SymfonyProcess
 		}
 
 		$dirs  = \array_values(\array_unique(\array_filter($dirs, static fn (string $dir): bool => '' !== $dir)));
-		$names = ['php' . $version, 'php' . \str_replace('.', '', $version), 'php'];
+		$names = self::phpNames($version);
 
 		foreach ($dirs as $dir) {
 			foreach ($names as $name) {
@@ -401,6 +528,14 @@ final class Process extends SymfonyProcess
 		return '' === $said
 			? 'It printed nothing.'
 			: 'What it printed before it died:' . \PHP_EOL . $said;
+	}
+
+	/**
+	 * The version of this PHP, `major.minor`.
+	 */
+	private static function phpVersion(): string
+	{
+		return \PHP_MAJOR_VERSION . '.' . \PHP_MINOR_VERSION;
 	}
 
 	private static function phraseFor(int $signal): string

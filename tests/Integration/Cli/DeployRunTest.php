@@ -101,6 +101,51 @@ final class DeployRunTest extends TestCase
 		self::assertDirectoryDoesNotExist(ReleaseLayout::releasesDir(self::$root));
 	}
 
+	/**
+	 * The release's `oz` commands run with the PHP of the host: on this machine, the one running
+	 * `oz`, unless `--php` names another, which must be an executable file there.
+	 */
+	public function testTheReleaseRunsWithThePhpOfTheHost(): void
+	{
+		// The steps are printed wrapped to the terminal's width.
+		$said = static fn (Process $proc): string => (string) \preg_replace(
+			'~\s+~',
+			' ',
+			$proc->getOutput() . $proc->getErrorOutput()
+		);
+
+		$proc = self::deploy(['--dry-run']);
+		$proc->mustRun();
+
+		self::assertStringContainsString(' && ' . \escapeshellarg(\PHP_BINARY) . ' ', $said($proc));
+
+		// Another path to the same PHP, so the release could run with it: what is named is used.
+		$link = \dirname(self::$root) . \DIRECTORY_SEPARATOR . 'deploy-run-php';
+
+		@\unlink($link);
+		\symlink(\PHP_BINARY, $link);
+
+		try {
+			$proc = self::deploy(['--dry-run', '--php=' . $link]);
+			$proc->mustRun();
+
+			self::assertStringContainsString(' && ' . \escapeshellarg($link) . ' ', $said($proc));
+			self::assertStringNotContainsString(\escapeshellarg(\PHP_BINARY), $said($proc));
+		} finally {
+			\unlink($link);
+		}
+
+		$proc = self::deploy(['--dry-run', '--php=/nowhere/php']);
+		$proc->run();
+
+		self::assertNotSame(0, $proc->getExitCode());
+		self::assertStringContainsString(
+			'--php is "/nowhere/php", which is not the absolute path of an executable file on this machine',
+			$said($proc)
+		);
+		self::assertDirectoryDoesNotExist(ReleaseLayout::releasesDir(self::$root));
+	}
+
 	public function testADeployRootWithoutTheSharedEnvIsRefused(): void
 	{
 		$env = self::$root . \DIRECTORY_SEPARATOR . '.env';

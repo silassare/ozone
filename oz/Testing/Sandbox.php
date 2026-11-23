@@ -92,7 +92,6 @@ final class Sandbox
 		// `oz db build` does. A separate process builds them, so whoever boots next finds the
 		// classes present.
 		$build = [
-			Process::phpBinary(),
 			__DIR__ . \DIRECTORY_SEPARATOR . 'sandbox_build.php',
 			self::autoloadFile(),
 			$dir,
@@ -106,7 +105,7 @@ final class Sandbox
 			$build[] = '--settings=' . $source;
 		}
 
-		new Process($build)->mustRun();
+		Process::php($build)->mustRun();
 	}
 
 	/**

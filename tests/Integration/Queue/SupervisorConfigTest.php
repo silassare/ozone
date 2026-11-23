@@ -92,6 +92,41 @@ final class SupervisorConfigTest extends TestCase
 	}
 
 	/**
+	 * The workers run with a PHP named in full, never a `php` left to supervisord's PATH: this
+	 * machine's, or the one `--php` names, which must be an executable file.
+	 */
+	public function testTheWorkersRunWithThePhpNamed(): void
+	{
+		self::assertNotNull(self::$project, 'Project not initialized. Did testSetup pass?');
+
+		$proc = self::project()->oz('jobs', 'supervisor');
+		$proc->mustRun();
+
+		self::assertStringContainsString('command=' . \PHP_BINARY . ' ', $proc->getOutput());
+
+		// Another path to the same PHP: what is named is used.
+		$link = self::project()->getPath() . '/supervisor-php';
+
+		@\unlink($link);
+		\symlink(\PHP_BINARY, $link);
+
+		try {
+			$proc = self::project()->oz('jobs', 'supervisor', '--php=' . $link);
+			$proc->mustRun();
+
+			self::assertStringContainsString('command=' . $link . ' ', $proc->getOutput());
+		} finally {
+			\unlink($link);
+		}
+
+		$proc = self::project()->oz('jobs', 'supervisor', '--php=/nowhere/php');
+		$proc->run();
+
+		self::assertNotSame(0, $proc->getExitCode());
+		self::assertStringContainsString('--php is "/nowhere/php"', $proc->getOutput() . $proc->getErrorOutput());
+	}
+
+	/**
 	 * --workers=3 sets numprocs=3.
 	 */
 	public function testWorkersOption(): void

@@ -2,6 +2,16 @@
 
 ### Breaking changes
 
+- **`Cli\Server\Interfaces\HostInterface` has two more methods**, `findExecutable(array $names)`
+  and `isExecutableFile(string $path)`, which a host of a project's own has to implement:
+  `oz deploy run` asks the server for its PHP through them. `hasBinary()` is answered through
+  `findExecutable()` on both hosts OZone ships, so it means one thing on both: an executable file on
+  the host's PATH. `LocalHost` took a directory of that name for one, and `SshHost` asked
+  `command -v`, which also answers a shell builtin, a function or an alias.
+- **`oz jobs supervisor` writes the PHP binary in full** (`Process::hostPhpBinary()`: this machine's,
+  or `--php`) where it wrote `php`, which supervisord looked up on its own PATH: another version's
+  PHP, or none.
+
 - **`/robots.txt` is a route, answered in every scope by a provider, and no longer a file.** The
   `oz:robots` route (`Web\RobotsTxt`, `GET /robots.txt`, `text/plain; charset=utf-8`) answers what
   the class named in `OZ_ROBOTS_TXT_PROVIDER` (`oz.request`) returns: a
@@ -354,6 +364,14 @@
 - `oz_files` has a new column, `file_scan_state` (`FS\Enums\FileScanState`, default `unscanned`): projects must create and run a migration (`oz migrations create`, `oz migrations run`).
 
 ### Added
+
+- **`Process::php($args, $cwd, $env, ...)` starts a PHP process** -- with `Process::phpBinary()`,
+  and, from a process that serves requests, in a clean environment -- and is how every PHP process
+  OZone starts is built: an async job, a scope's build, `oz project serve`, the test kit's. A
+  plugin starting a PHP process of its own uses it too.
+- **`--php` names the PHP command line of a deploy's host** (`oz deploy run`, and for the units it
+  writes, `oz deploy init --target=bare` and `oz jobs supervisor`). Without it, `oz deploy run` asks
+  the host (`Process::hostPhpBinary()`).
 
 - **`OZ_PHP_CLI_BINARY` (`oz.config`, or the `.env`) names the PHP command-line binary OZone starts
   a PHP process with**, and `Cli\Process::phpBinary()` is the one place that binary is decided: an
@@ -792,6 +810,23 @@
   then documents). A file's kind is stored when its row is written (`oz_files.kind`), so a row
   written before keeps the kind it was given; nothing migrates it.
 
+- **A PHP process started from a request carried the request's environment.** Under CGI the
+  request is environment: an async job a request's cron tick started inherited it. The installed
+  `symfony/process` (6.4.49) already drops the `HTTP_*` and CGI names from a child started outside
+  the command line, by a list of names; what a server adds besides -- `SSL_CLIENT_*`, `UNIQUE_ID`,
+  `CONTEXT_*`, a site's own FastCGI parameters -- went on to the job, and the `^6.3` OZone requires
+  does not promise that list. A worker server's `RR_MODE`, `FRANKENPHP_WORKER` or `OZ_RUNTIME` went
+  too, which `oz jobs run` reads to decide it is a worker. From a process that serves requests,
+  `Process::php()` passes `Process::CHILD_ENV` (PATH, HOME, TMPDIR, LANG, LC_ALL, TZ) and nothing
+  else; the job reads the project's `.env` from the file, as every OZone process does. A command
+  line passes its environment on, as before.
+- **`oz deploy run --host` ran the release's `oz` commands with this machine's PHP path**, and
+  `oz deploy init --target=bare` wrote it into the systemd units: `PHP_BINARY` of the process
+  running `oz`, which on another server may not exist or be another version. `oz deploy run` asks
+  the host for its own now (the first of `php8.x`, `php8x`, `php` on its PATH, directory by
+  directory), `--php` names one, and the commands quote it. `oz deploy init`, which writes files for
+  this machine's layout (its project path, its PHP-FPM version), takes this machine's
+  (`OZ_PHP_CLI_BINARY` included) or `--php`.
 - **An async job started by a request ran nothing.** Cron's requests mode runs a tick in the process
   that served the request, and a task of that tick running a queue with an async worker's job
   started `oz jobs run` with `PHP_BINARY`: under PHP-FPM, php-cgi or FrankenPHP (where it is empty)

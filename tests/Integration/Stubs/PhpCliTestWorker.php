@@ -19,7 +19,7 @@ use OZONE\Core\Utils\JSONResult;
 
 /**
  * An async worker: the job runs in a process of its own, `oz jobs run`, and says which SAPI that
- * process ran under.
+ * process ran under and what its environment held.
  */
 final class PhpCliTestWorker implements WorkerInterface
 {
@@ -40,7 +40,11 @@ final class PhpCliTestWorker implements WorkerInterface
 	public function work(JobContractInterface $job): static
 	{
 		$this->result = new JSONResult();
-		\file_put_contents($this->flagFile, \json_encode(['sapi' => \PHP_SAPI, 'pid' => \getmypid()]));
+		\file_put_contents($this->flagFile, \json_encode([
+			'sapi' => \PHP_SAPI,
+			'pid'  => \getmypid(),
+			'env'  => \getenv(),
+		]));
 		$this->result->setDone();
 
 		return $this;

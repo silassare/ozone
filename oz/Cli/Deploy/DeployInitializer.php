@@ -16,6 +16,8 @@ namespace OZONE\Core\Cli\Deploy;
 use InvalidArgumentException;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Cli\Process;
+use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
@@ -66,6 +68,10 @@ final readonly class DeployInitializer
 	 * @param string       $max_body the largest request body to accept
 	 * @param bool         $preload  for a bare server: whether PHP-FPM preloads the project
 	 * @param string       $cron     for a bare server: {@see self::CRON_TIMER} or {@see self::CRON_DAEMON}
+	 * @param null|string  $php      for a bare server: the PHP command line its units run `oz` with;
+	 *                               by default this machine's ({@see Process::hostPhpBinary()}),
+	 *                               which the rest of the plan already takes the server to be: the
+	 *                               project's paths and the PHP-FPM pool's version are this one's
 	 */
 	public function __construct(
 		private string $target = self::TARGET_DOCKER,
@@ -77,6 +83,7 @@ final readonly class DeployInitializer
 		private string $max_body = '64M',
 		private bool $preload = true,
 		private string $cron = self::CRON_TIMER,
+		private ?string $php = null,
 	) {
 		if (!\in_array($this->target, [self::TARGET_DOCKER, self::TARGET_BARE], true)) {
 			throw new InvalidArgumentException(\sprintf('Unknown deploy target "%s".', $this->target));
@@ -221,7 +228,7 @@ final readonly class DeployInitializer
 			));
 		}
 
-		$php = \PHP_BINARY;
+		$php = Process::hostPhpBinary(new LocalHost(), $this->php);
 		$oz  = $project . 'vendor' . DS . 'bin' . DS . 'oz';
 
 		$cron_tokens = [
