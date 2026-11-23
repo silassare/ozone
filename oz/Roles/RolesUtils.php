@@ -89,27 +89,40 @@ class RolesUtils
 		static $result = null;
 
 		if (null === $result) {
-			$class = Settings::get('oz.roles', 'OZ_ROLE_ENUM_CLASS');
-
-			if (!\class_exists($class)) {
-				(throw new RuntimeException(\sprintf(
-					'Class "%s" does not exist',
-					$class
-				)))->suspectConfig('oz.roles', 'OZ_ROLE_ENUM_CLASS');
-			}
-
-			if (!\is_subclass_of($class, RoleInterface::class)) {
-				(throw new RuntimeException(\sprintf(
-					'Class "%s" is not a subclass of "%s"',
-					$class,
-					RoleInterface::class
-				)))->suspectConfig('oz.roles', 'OZ_ROLE_ENUM_CLASS');
-			}
-
-			$result = $class;
+			$result = self::checkRoleEnumClass(Settings::get('oz.roles', 'OZ_ROLE_ENUM_CLASS'));
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Checks that a class can be the role enum: an existing class implementing {@see RoleInterface}.
+	 *
+	 * Apart from {@see self::getRoleEnumClass()}, which resolves the setting once per process, so the
+	 * check can be asked of any value.
+	 *
+	 * @return class-string<RoleInterface>
+	 *
+	 * @throws RuntimeException naming `OZ_ROLE_ENUM_CLASS` as the suspect
+	 */
+	public static function checkRoleEnumClass(mixed $class): string
+	{
+		if (!\is_string($class) || !\class_exists($class)) {
+			throw new RuntimeException(\sprintf(
+				'Class "%s" does not exist',
+				\is_string($class) ? $class : \get_debug_type($class)
+			))->suspectConfig('oz.roles', 'OZ_ROLE_ENUM_CLASS');
+		}
+
+		if (!\is_subclass_of($class, RoleInterface::class)) {
+			throw new RuntimeException(\sprintf(
+				'Class "%s" is not a subclass of "%s"',
+				$class,
+				RoleInterface::class
+			))->suspectConfig('oz.roles', 'OZ_ROLE_ENUM_CLASS');
+		}
+
+		return $class;
 	}
 
 	/**

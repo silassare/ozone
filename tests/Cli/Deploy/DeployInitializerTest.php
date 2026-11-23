@@ -27,8 +27,8 @@ use PHPUnit\Framework\TestCase;
  * Class DeployInitializerTest.
  *
  * Building a plan writes nothing, so what it would generate is asserted here. `DeployInitTest`
- * (integration) then runs the command in a real project, and the nginx file it produces is checked
- * with a real `nginx -t`.
+ * (integration) then runs the command in a real project and reads the files it writes; no web
+ * server reads them there, so an nginx file is checked as text, never by `nginx -t`.
  *
  * @internal
  */

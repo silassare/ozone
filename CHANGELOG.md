@@ -714,6 +714,15 @@
 
 ### Fixed
 
+- **An unusable `OZ_ROLE_ENUM_CLASS` was reported without naming the setting.** The exception was
+  thrown before `suspectConfig()` was called on it, so the hint pointing at `oz.roles` /
+  `OZ_ROLE_ENUM_CLASS` never reached it. The check is `RolesUtils::checkRoleEnumClass()` now, which
+  `getRoleEnumClass()` calls, and the exception carries its suspect.
+- **An API scope's `.htaccess` sent every path to OZone, existing files included**, so the public
+  files behind its `static` link reached OZone, which maps no route for them, and answered 404 under
+  Apache while nginx and a web scope served them.
+  It serves an existing file or directory as the web scope's does, `/robots.txt` still going to the
+  route first. An existing scope keeps the `.htaccess` it was given.
 - **A URI read from a request named the server's port where the client used the default one.** A
   `Host` header without a port took `SERVER_PORT`, so behind a port mapping with no proxy (a
   container publishing 80 on 8080) every absolute URI built from the request -- a link to another

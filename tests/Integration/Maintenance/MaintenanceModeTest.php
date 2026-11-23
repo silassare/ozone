@@ -99,7 +99,7 @@ final class MaintenanceModeTest extends TestCase
 				[$server, , $port] = $proj->startServer($scope, self::HOST);
 
 				self::$servers[]      = $server;
-				self::$ports[$scope] = $port;
+				self::$ports[$scope]  = $port;
 			}
 		} catch (RuntimeException $e) {
 			self::stopServers();
@@ -472,9 +472,7 @@ final class MaintenanceModeTest extends TestCase
 		self::assertIsArray($out, $proc->getOutput() . $proc->getErrorOutput());
 
 		/** @var array<string, mixed> $data */
-		$data = \is_array($out['data'] ?? null) ? $out['data'] : [];
-
-		return $data;
+		return \is_array($out['data'] ?? null) ? $out['data'] : [];
 	}
 
 	private static function stopServers(): void

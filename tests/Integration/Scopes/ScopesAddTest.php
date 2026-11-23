@@ -117,6 +117,22 @@ final class ScopesAddTest extends TestCase
 		self::assertFileDoesNotExist(self::path('public/web/robots.txt'));
 	}
 
+	/**
+	 * An API scope serves what its document root holds, as a web scope does: the public files behind
+	 * its `static` link are files, and nothing else routes them.
+	 */
+	public function testEveryScopeServesAnExistingFileAndRoutesTheRest(): void
+	{
+		foreach (['myapi', 'web'] as $scope) {
+			self::assertMatchesRegularExpression(
+				'~RewriteCond %\{REQUEST_FILENAME\} !-d\s+RewriteCond %\{REQUEST_FILENAME\} !-f\s+'
+					. 'RewriteCond %\{REQUEST_URI\}\s+!\^/favicon\\\\\.ico\s+RewriteRule \(\.\*\)\s+index\.php \[L\]~',
+				(string) \file_get_contents(self::path("public/{$scope}/.htaccess")),
+				$scope
+			);
+		}
+	}
+
 	public function testMyapiRequestSettingsContainsOrigin(): void
 	{
 		$settings = require self::path('scopes/myapi/settings/oz.request.php');

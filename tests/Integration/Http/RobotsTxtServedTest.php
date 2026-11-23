@@ -119,11 +119,15 @@ final class RobotsTxtServedTest extends TestCase
 			);
 		}
 
-		// A web scope serves the files of its document root: robots.txt is sent on before that.
-		self::assertMatchesRegularExpression(
-			'~RewriteRule \^robots\\\\\.txt\$\s+index\.php \[L\]\s+RewriteCond %\{REQUEST_FILENAME\} !-d~',
-			self::read('public/www/.htaccess')
-		);
+		// Both serve the files of their document root: robots.txt is sent on before that.
+		foreach (['api', 'www'] as $scope) {
+			self::assertMatchesRegularExpression(
+				'~RewriteRule \^robots\\\\\.txt\$\s+index\.php \[L\](?:\s+#[^\n]*)*'
+					. '\s+RewriteCond %\{REQUEST_FILENAME\} !-d~',
+				self::read("public/{$scope}/.htaccess"),
+				$scope
+			);
+		}
 	}
 
 	public function testTheRouteAnswersTheDefaultInEveryScope(): void
@@ -199,8 +203,8 @@ final class RobotsTxtServedTest extends TestCase
 
 		$proj->writeFile('public/api/robots.txt', self::OLD_FILE);
 		$proj->writeFile('public/api/.htaccess', \str_replace(
-			"\tRewriteCond %{REQUEST_URI}  !^/favicon\\.ico\n",
-			self::OLD_EXEMPTION . "\tRewriteCond %{REQUEST_URI}  !^/favicon\\.ico\n",
+			"\tRewriteCond %{REQUEST_URI}      !^/favicon\\.ico\n",
+			self::OLD_EXEMPTION . "\tRewriteCond %{REQUEST_URI}      !^/favicon\\.ico\n",
 			$api_htaccess
 		));
 		$proj->writeFile('public/www/robots.txt', "User-agent: *\nAllow: /\n");

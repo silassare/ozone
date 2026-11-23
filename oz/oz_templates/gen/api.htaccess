@@ -27,9 +27,15 @@ Options -Indexes -Multiviews +FollowSymlinks
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-	# Everything but the entry point and the favicon is OZone's: /robots.txt included, which is a
-	# route even where a file of that name was left here.
-	RewriteCond %{REQUEST_URI}  !^/index\.php
-	RewriteCond %{REQUEST_URI}  !^/favicon\.ico
-	RewriteRule (.*)			index.php [L]
+	# /robots.txt is OZone's route, even where a file of that name was left here.
+	#
+	RewriteRule ^robots\.txt$         index.php [L]
+
+	# A file or directory that exists is served as it is (the public files behind `static`);
+	# everything else is OZone's.
+	#
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_URI}      !^/favicon\.ico
+	RewriteRule (.*)                index.php [L]
 </IfModule>
