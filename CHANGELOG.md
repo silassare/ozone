@@ -355,6 +355,14 @@
 
 ### Added
 
+- **`OZ_PUBLIC_FILES_BASE_URL` (`oz.files`) says where the web server exposes the public files
+  directory**, for the direct links of `PublicLocalStorage`: an absolute http(s) URL (a subdomain, a
+  CDN) or a path read from the root of the host being served, ending with `/`. No default, since
+  nothing exposes the directory until the web server is told to; a value of another shape is refused
+  naming the setting. `oz doctor check` has a `Public files` row: the base direct links use, or a
+  failure when direct access is on without a usable one, whose fix names
+  `https://<root host>/static/` where `oz deploy init --target=bare` wrote the root scope's vhost
+  (`DeployInitializer::serverName()` and `nginxVhostPath()`, public now).
 - **Maintenance mode**: `oz maintenance on|off|status` holds the requests of every scope, of chosen
   scopes (`--scopes=`), or of the API or the web scopes only (`--only=api|web`), and serves the rest.
   The switch is a file, `data/root/state/maintenance.json`, and not a setting, so turning it on
@@ -714,6 +722,16 @@
 
 ### Fixed
 
+- **A public file's direct link missed the file.** With `OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED`
+  (`oz.files`) on, `PublicLocalStorage::publicUri()` built the file's path in the public files
+  directory on the host of the request (`/uploads/Y/m/name`), which no web server maps: the
+  directory is `data/root/static`, linked as `static` from the root document root (`public/`) only,
+  while the `static` link of a scope's document root reaches that scope's own directory. The link is
+  now `OZ_PUBLIC_FILES_BASE_URL` (see Added) followed by that path, joined with `/` whatever the
+  server's directory separator. **A project that turned direct access on must set the base**:
+  building a link without it throws, naming both settings, rather than handing out a link that
+  answers 404. Direct access stays off by default, and links then go through the file route as
+  before.
 - **An unusable `OZ_ROLE_ENUM_CLASS` was reported without naming the setting.** The exception was
   thrown before `suspectConfig()` was called on it, so the hint pointing at `oz.roles` /
   `OZ_ROLE_ENUM_CLASS` never reached it. The check is `RolesUtils::checkRoleEnumClass()` now, which

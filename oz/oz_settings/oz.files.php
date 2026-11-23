@@ -11,6 +11,7 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\FS\Drivers\PublicLocalStorage;
 use OZONE\Core\FS\Filters\ImageFileFilterHandler;
 use OZONE\Core\FS\Filters\ImageFilterTokens;
 use OZONE\Core\FS\Images\ImageProbe;
@@ -228,6 +229,21 @@ return [
 
 	/**
 	 * Should we allow direct access to public files or serve them through a dedicated route ?
+	 *
+	 * On, a public file's link is `OZ_PUBLIC_FILES_BASE_URL` followed by its path in the public files
+	 * directory, and building one without that base is an error.
 	 */
 	'OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED' => false,
+
+	/**
+	 * Where the web server exposes the application's public files directory (`data/root/static`),
+	 * for direct links: an absolute http(s) URL (`https://cdn.example.com/`, a subdomain or a CDN) or a
+	 * path read from the root of the host being served (`/static/`), ending with `/`. No default:
+	 * nothing exposes that directory until the web server is told to, and the `static` link in a
+	 * scope's document root reaches that scope's own directory. The root document root (`public/`)
+	 * links it as `static`, so a host serving `public/` answers `https://<that host>/static/`.
+	 *
+	 * @see PublicLocalStorage::baseUrl()
+	 */
+	'OZ_PUBLIC_FILES_BASE_URL'            => null,
 ];

@@ -340,7 +340,11 @@ cache is `.ozone/cache/{scope}/`, the same slug.
 - `example.com/static/x` and `scope.example.com/static/x` are different files, and either may hold what
   no DB row tracks. But **`OZFile` rows resolve against the root pool** (a row has a storage name and a
   `Y/m/name` ref, no scope), so the local drivers use `app()->getPublicFilesDir()` /
-  `getPrivateFilesDir()`: a scope's own pool is never an `OZFile` storage target.
+  `getPrivateFilesDir()`: a scope's own pool is never an `OZFile` storage target. The root pool is
+  linked from `public/static` only, which no scope's vhost serves, so **a direct link
+  (`OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED`) is built on `OZ_PUBLIC_FILES_BASE_URL`**, where the
+  project says it exposed that directory, and never on the request's host: there is no default, and
+  direct access without a base throws (`oz doctor check` fails on it).
 - **`FilesManager::cd()` moves the manager in place**: never walk one that was passed in
   (`StateLayout::dirAt()` builds a fresh one for that reason).
 

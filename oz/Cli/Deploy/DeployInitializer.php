@@ -168,11 +168,11 @@ final readonly class DeployInitializer
 
 		foreach ($this->scopes() as $scope_name) {
 			$scope       = $app->getScope($scope_name);
-			$server_name = $this->serverName($scope_name);
+			$server_name = self::serverName($scope_name);
 			$pool        = $slug . '-' . $scope_name;
 
 			$plan->add(new DeployFile(
-				'deploy' . DS . 'nginx' . DS . $server_name . '.conf',
+				self::nginxVhostPath($scope_name),
 				DeployTemplates::render('nginx.vhost.conf', [
 					'scope'         => $scope_name,
 					'project'       => $project_name,
@@ -309,7 +309,7 @@ final readonly class DeployInitializer
 	 * is not reachable that way -- and generating every vhost with the running scope's host would be
 	 * worse than useless.
 	 */
-	private function serverName(string $scope_name): string
+	public static function serverName(string $scope_name): string
 	{
 		$scope = app()->getScope($scope_name);
 
@@ -336,6 +336,14 @@ final readonly class DeployInitializer
 		// A name the operator has to edit, rather than a vhost that silently answers on the wrong
 		// host.
 		return $scope_name . '.example.com';
+	}
+
+	/**
+	 * Where the bare target writes the nginx vhost of a scope, relative to the project directory.
+	 */
+	public static function nginxVhostPath(string $scope_name): string
+	{
+		return 'deploy' . DS . 'nginx' . DS . self::serverName($scope_name) . '.conf';
 	}
 
 	/**

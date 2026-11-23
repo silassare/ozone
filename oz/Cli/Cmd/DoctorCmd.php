@@ -21,12 +21,16 @@ use Kli\Table\KliTable;
 use Kli\Table\KliTableHeader;
 use Override;
 use OZONE\Core\App\InstanceLayout;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Build\ProjectBuilder;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\CronRunner;
+use OZONE\Core\Cli\Deploy\DeployInitializer;
 use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\Utils\ErrorUtils;
+use OZONE\Core\FS\Drivers\PublicLocalStorage;
 use OZONE\Core\Hooks\Events\DoctorCheckHook;
 use OZONE\Core\Lang\Message\PluralRules;
 use OZONE\Core\Lang\Polyglot;
@@ -36,6 +40,8 @@ use OZONE\Core\Messaging\Messenger;
 use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
+use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Web\DefaultRobotsTxtProvider;
 use ReflectionFunction;
 use Throwable;
@@ -261,6 +267,7 @@ final class DoctorCmd extends Command
 			$this->cronChecks(),
 			$this->messagingChecks(),
 			$this->translationChecks(),
+			self::publicFilesChecks(),
 			$this->robotsTxtChecks()
 		);
 	}
@@ -372,6 +379,62 @@ final class DoctorCmd extends Command
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * Where direct links to public files point: a failure when direct access is on and
+	 * `OZ_PUBLIC_FILES_BASE_URL` is missing or invalid, since every link would then throw.
+	 *
+	 * Where `oz deploy init --target=bare` wrote the root scope's vhost, the fix names the URL it
+	 * serves the public files directory on: its document root is `public/`, which links that
+	 * directory.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	public static function publicFilesChecks(): array
+	{
+		$name = 'Public files';
+
+		if (!Settings::get('oz.files', 'OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED')) {
+			return [self::row($name, self::OK, 'served through the file route (direct access off)', '')];
+		}
+
+		try {
+			$base = PublicLocalStorage::baseUrl();
+		} catch (RuntimeException $e) {
+			return [self::row($name, self::FAIL, $e->getMessage(), self::publicFilesFix())];
+		}
+
+		if (null === $base) {
+			return [self::row(
+				$name,
+				self::FAIL,
+				'direct access is on and OZ_PUBLIC_FILES_BASE_URL (oz.files) is not set',
+				self::publicFilesFix()
+			)];
+		}
+
+		return [self::row($name, self::OK, 'linked at ' . $base, '')];
+	}
+
+	/**
+	 * How to set `OZ_PUBLIC_FILES_BASE_URL`, with the URL of the root scope's vhost when there is one.
+	 */
+	private static function publicFilesFix(): string
+	{
+		$fix  = 'Set OZ_PUBLIC_FILES_BASE_URL (oz.files) to the URL the web server, a subdomain or a CDN'
+			. ' serves the public files directory on, or turn OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED off.';
+		$root = ScopeInterface::ROOT_SCOPE;
+
+		if (\is_file(app()->getProjectDir()->resolve(DeployInitializer::nginxVhostPath($root)))) {
+			$fix .= \sprintf(
+				' The root vhost of "oz deploy init" serves it: https://%s/%s/',
+				DeployInitializer::serverName($root),
+				StateLayout::PUBLIC_LINK
+			);
+		}
+
+		return $fix;
 	}
 
 	/**
