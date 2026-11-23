@@ -542,8 +542,10 @@ final class JobsManager
 		// than OZ_PROJECT_DIR.'bin/oz', because freshly scaffolded projects do not
 		// have a project-level bin/ directory; the binary lives inside the package.
 		$bin = \dirname(OZ_OZONE_DIR) . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz';
+		// Not PHP_BINARY: a request runs this when its cron tick runs a queue, and its binary is
+		// php-fpm, php-cgi or a server's, none of which runs a script.
 		$cmd = [
-			\PHP_BINARY,
+			Process::phpBinary(),
 			$bin,
 			'jobs',
 			'run',

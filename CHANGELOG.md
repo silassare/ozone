@@ -355,6 +355,21 @@
 
 ### Added
 
+- **`OZ_PHP_CLI_BINARY` (`oz.config`, or the `.env`) names the PHP command-line binary OZone starts
+  a PHP process with**, and `Cli\Process::phpBinary()` is the one place that binary is decided: an
+  async job's `oz jobs run`, a scope's build (`oz project build`), `oz project serve`'s `php -S`,
+  and the test kit's `Sandbox` and `OZTestProject` processes all start with it, and so can a
+  plugin's own PHP process. Null by default: `PHP_BINARY` where this process is the command line
+  (the `cli` SAPI, or the built-in server, a mode of the same executable), else a `php` beside
+  `PHP_BINARY`, in `PHP_BINDIR` or on PATH, this version's own name first in each (`php8.5`,
+  `php85`, then `php`), never this process's own binary. Nothing is run to find out. A setting that
+  is not the absolute path of an executable file is an error, never a reason to guess, and so is
+  finding nothing; both name the setting (`suspectConfig()`). It sits in `oz.config` because that
+  group cannot be written at runtime (`Settings::set()` refuses it): the value is a program OZone
+  executes. `oz doctor check` shows the binary resolved in a `PHP CLI` row, with
+  `(OZ_PHP_CLI_BINARY)` when the setting chose it, and fails that row on an unusable setting.
+  `Process::which()` is the PATH lookup `oz doctor check` already did, now public.
+
 - **A route of any scope of the project can be called as an anonymous visitor, in process**:
   `Context::callAnonymously($route_name, $params, $query, $scope, $language)` (through
   `Navigator::callAnonymously()`), from a request, a command or a job. It answers the `Response` a
@@ -770,6 +785,19 @@
 - `REST\Enums\RESTFulAction`, the action table driving `RESTFulService` routes and docs (`REST\RESTFulApiDoc`); `RESTFulService::beforeAction()` / `afterAction()` hooks and `configureRoute()` for per-action guards, forms or middlewares; `RESTFulService::routeName()` accepts a `RESTFulAction`.
 
 ### Fixed
+
+- **A script or a stylesheet served as `text/javascript` or `text/css` was classed a document.**
+  `FileKind::fromMime()` tested `text/` before them, so its `JS` and `CSS` branches were never
+  reached for those types. The specific types are tested first now (scripts, stylesheets, fonts,
+  then documents). A file's kind is stored when its row is written (`oz_files.kind`), so a row
+  written before keeps the kind it was given; nothing migrates it.
+
+- **An async job started by a request ran nothing.** Cron's requests mode runs a tick in the process
+  that served the request, and a task of that tick running a queue with an async worker's job
+  started `oz jobs run` with `PHP_BINARY`: under PHP-FPM, php-cgi or FrankenPHP (where it is empty)
+  that is not a command line, so the job's process never ran it, and the job stayed running and
+  locked until its lease ran out and it was reclaimed as a failed attempt. It starts with `Process::phpBinary()` now (see Added); a scope's build started the same
+  way, as could anything else that started PHP with `PHP_BINARY` outside the command line.
 
 - **Naming another scope added its stateful settings to the process's.** `app()->getScope('other')`
   -- `oz project link`, `oz deploy init`, `oz maintenance` with scopes -- built a `SubScope` whose

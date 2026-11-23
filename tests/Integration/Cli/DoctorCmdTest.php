@@ -95,6 +95,56 @@ final class DoctorCmdTest extends TestCase
 		// The generated boot file says a project is starting before it requires the autoloader, so
 		// the error handlers are up before it and the app file run.
 		self::assertSame('ok', $by_name['Boot-time errors']);
+		self::assertSame('ok', $by_name['PHP CLI']);
+	}
+
+	/**
+	 * The PHP binary OZone starts a PHP process with: the one `OZ_PHP_CLI_BINARY` names, or this
+	 * command line's; and a setting that names no executable file fails the check, naming it.
+	 */
+	#[DataProvider('provideDbConfig')]
+	public function testDoctorShowsThePhpCliBinaryAndFailsOnAnUnusableSetting(DbTestConfig $config): void
+	{
+		$proj = self::getProject($config);
+
+		$row = static function () use ($proj): array {
+			$proc = $proj->oz('doctor', 'check', '--json');
+			$proc->run();
+
+			$out  = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
+			$rows = \array_column($out['data']['checks'], null, 'name');
+
+			self::assertArrayHasKey('PHP CLI', $rows, $proc->getOutput());
+
+			return $rows['PHP CLI'];
+		};
+
+		$binary = \PHP_BINARY;
+
+		try {
+			$proj->writeEnv(['OZ_PHP_CLI_BINARY' => '/nowhere/php']);
+
+			$failed = $row();
+
+			self::assertSame('fail', $failed['status']);
+			self::assertStringContainsString('OZ_PHP_CLI_BINARY is "/nowhere/php"', $failed['detail']);
+			self::assertStringContainsString('Set OZ_PHP_CLI_BINARY (oz.config, or the .env)', $failed['fix']);
+
+			$proj->writeEnv(['OZ_PHP_CLI_BINARY' => $binary]);
+
+			self::assertSame(
+				['status' => 'ok', 'detail' => $binary . ' (OZ_PHP_CLI_BINARY)'],
+				\array_intersect_key($row(), ['status' => true, 'detail' => true])
+			);
+		} finally {
+			// Empty is not set: the command line's own binary.
+			$proj->writeEnv(['OZ_PHP_CLI_BINARY' => '']);
+		}
+
+		self::assertSame(
+			['status' => 'ok', 'detail' => \PHP_BINARY],
+			\array_intersect_key($row(), ['status' => true, 'detail' => true])
+		);
 	}
 
 	#[DataProvider('provideDbConfig')]

@@ -351,7 +351,7 @@ final class ProjectCmd extends Command
 		$router = OZ_OZONE_DIR . 'server.php';
 
 		$cmd = [
-			\PHP_BINARY,
+			Process::phpBinary(),
 			'-S',
 			"{$host}:{$port}",
 			'-t',

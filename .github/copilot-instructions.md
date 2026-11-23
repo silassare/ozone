@@ -1066,7 +1066,8 @@ CANCELLED (terminal)
 - `lock()` is atomic (`UPDATE ... WHERE locked = false`); stores skip jobs whose `run_after` is ahead.
   A lock that fails means another worker was first, which `run()` passes over rather than counting.
 - **Async workers** (`isAsync()`): `runJob()` locks, sets RUNNING and spawns
-  `oz jobs run --store=X --job=<ref> --force` **without releasing the lock** — the subprocess owns it
+  `oz jobs run --store=X --job=<ref> --force` (with `Process::phpBinary()`: this may be a request's
+  process) **without releasing the lock** — the subprocess owns it
   and releases it through `finish()`. If spawning throws, `runJob()`'s catch finishes (and unlocks)
   exactly once.
 - `Queue::setMaxConcurrent()` demotes async workers to synchronous runs above the limit. Chained jobs
@@ -1242,6 +1243,16 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   process throws OZone's `RuntimeException` naming the signal, not Symfony's naming a code. A caller
   words its own failure with the phrase (`Provision step "x" was killed by signal 9 (...) on: ...`);
   what it must not do is add a catch of its own or read `getTermSignal()`.
+- **A PHP process is started with `Process::phpBinary()`, never `PHP_BINARY`**, which is the
+  command line's only when this process is one: a request's cron tick (requests mode) starts an
+  async job's `oz jobs run` from php-fpm, php-cgi or FrankenPHP (where it is empty). The resolver is
+  the one owner of that binary: `OZ_PHP_CLI_BINARY` (`oz.config`, a group no request can write,
+  since it names a program OZone executes) when set, and then strictly an executable file; else
+  `PHP_BINARY` under a command-line SAPI; else a `php` beside it, in `PHP_BINDIR`, then on PATH,
+  this version's name first; else an error naming the setting. It runs nothing to find out.
+  `findPhpBinary()` holds the rules with the facts of a process passed in, which is how they are
+  tested. Not its business: the PHP that `oz deploy` writes into units or runs on a target host,
+  which is that host's.
 
 - **`oz project build`** compiles for production what requests would compile at first use: per
   scope, in a process set up as the scope's `index.php` (`Cli\Build\ScopeBuilder`: its recorded

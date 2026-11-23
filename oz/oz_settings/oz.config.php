@@ -43,4 +43,18 @@ return [
 	 * Show a welcome page at the root URL in web context when no route found.
 	 */
 	'OZ_SHOW_WELCOME_PAGE'      => true,
+
+	/**
+	 * The absolute path of the PHP command-line binary OZone starts a PHP process with (an async
+	 * job's `oz jobs run`, a scope's build), {@see \OZONE\Core\Cli\Process::phpBinary()}.
+	 *
+	 * Null: `PHP_BINARY` where this process is the command line, else a `php` found beside it, in
+	 * `PHP_BINDIR` or on PATH. Set it where a request runs a cron tick (no scheduler) on a server
+	 * whose CLI is none of those, or is not the version the server runs. A path that is not an
+	 * executable file is an error, never a reason to guess. Here and not in a group a request can
+	 * write, since it names a program OZone executes.
+	 *
+	 * @default null
+	 */
+	'OZ_PHP_CLI_BINARY'         => env('OZ_PHP_CLI_BINARY'),
 ];

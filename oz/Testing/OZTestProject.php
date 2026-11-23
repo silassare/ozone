@@ -132,7 +132,7 @@ final class OZTestProject
 
 			$create = new Process(
 				[
-					\PHP_BINARY,
+					Process::phpBinary(),
 					$ozone_root . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz',
 					'project',
 					'create',
@@ -334,7 +334,7 @@ final class OZTestProject
 	{
 		return new Process(
 			[
-				\PHP_BINARY,
+				Process::phpBinary(),
 				self::ozoneRoot() . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz',
 				...$args,
 			],

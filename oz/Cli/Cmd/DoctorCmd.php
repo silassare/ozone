@@ -26,6 +26,7 @@ use OZONE\Core\Cli\Build\ProjectBuilder;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\CronRunner;
 use OZONE\Core\Cli\Deploy\DeployInitializer;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -172,17 +173,43 @@ final class DoctorCmd extends Command
 		}
 
 		foreach (['composer' => 'Composer', 'git' => 'git'] as $bin => $label) {
-			$found = null !== self::which($bin);
+			$found = Process::which($bin);
 
 			$checks[] = self::row(
 				$label,
-				$found ? self::OK : self::WARN,
-				$found ? (string) self::which($bin) : 'not on PATH',
-				$found ? '' : \sprintf('Install %s and make sure it is on PATH.', $label)
+				null !== $found ? self::OK : self::WARN,
+				$found ?? 'not on PATH',
+				null !== $found ? '' : \sprintf('Install %s and make sure it is on PATH.', $label)
 			);
 		}
 
+		$checks[] = self::phpCliCheck();
+
 		return $checks;
+	}
+
+	/**
+	 * The PHP binary this process starts a PHP process with ({@see Process::phpBinary()}). On the
+	 * command line it is this one unless `OZ_PHP_CLI_BINARY` says otherwise, so what fails here is
+	 * mostly the setting, which a request would have refused the same way.
+	 *
+	 * @return array{name: string, status: string, detail: string, fix: string}
+	 */
+	private static function phpCliCheck(): array
+	{
+		try {
+			$binary = Process::phpBinary();
+		} catch (RuntimeException $e) {
+			return self::row('PHP CLI', self::FAIL, $e->getMessage(), \sprintf(
+				'Set %s (%s, or the .env) to the absolute path of the PHP command-line binary.',
+				Process::PHP_CLI_SETTING,
+				Process::PHP_CLI_SETTING_GROUP
+			));
+		}
+
+		$detail = null === Process::configuredPhpBinary() ? $binary : $binary . ' (' . Process::PHP_CLI_SETTING . ')';
+
+		return self::row('PHP CLI', self::OK, $detail, '');
 	}
 
 	/**
@@ -915,27 +942,5 @@ final class DoctorCmd extends Command
 		}
 
 		return $t->getMessage();
-	}
-
-	/**
-	 * The absolute path of an executable on PATH, or null.
-	 */
-	private static function which(string $bin): ?string
-	{
-		$paths = \explode(\PATH_SEPARATOR, (string) \getenv('PATH'));
-
-		foreach ($paths as $dir) {
-			if ('' === $dir) {
-				continue;
-			}
-
-			$path = \rtrim($dir, DS) . DS . $bin;
-
-			if (\is_file($path) && \is_executable($path)) {
-				return $path;
-			}
-		}
-
-		return null;
 	}
 }

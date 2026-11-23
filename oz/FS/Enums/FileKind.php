@@ -48,20 +48,7 @@ enum FileKind: string
 			return self::VIDEO;
 		}
 
-		if (\str_starts_with($mime, 'text/')) {
-			return self::DOCUMENT;
-		}
-		if (
-			\str_starts_with($mime, 'application/pdf')
-			|| \str_starts_with($mime, 'application/msword')
-			|| \str_starts_with($mime, 'application/vnd.ms-excel')
-			|| \str_starts_with($mime, 'application/vnd.ms-powerpoint')
-			|| \str_starts_with($mime, 'application/vnd.openxmlformats-officedocument')
-			|| \str_starts_with($mime, 'application/vnd.oasis.opendocument')
-		) {
-			return self::DOCUMENT;
-		}
-
+		// The specific `text/` types before the whole of it, which would take them for documents.
 		if (\str_starts_with($mime, 'text/javascript') || \str_starts_with($mime, 'application/javascript')) {
 			return self::JS;
 		}
@@ -72,6 +59,21 @@ enum FileKind: string
 
 		if (\str_starts_with($mime, 'font/') || \str_starts_with($mime, 'application/font-')) {
 			return self::FONT;
+		}
+
+		if (\str_starts_with($mime, 'text/')) {
+			return self::DOCUMENT;
+		}
+
+		if (
+			\str_starts_with($mime, 'application/pdf')
+			|| \str_starts_with($mime, 'application/msword')
+			|| \str_starts_with($mime, 'application/vnd.ms-excel')
+			|| \str_starts_with($mime, 'application/vnd.ms-powerpoint')
+			|| \str_starts_with($mime, 'application/vnd.openxmlformats-officedocument')
+			|| \str_starts_with($mime, 'application/vnd.oasis.opendocument')
+		) {
+			return self::DOCUMENT;
 		}
 
 		return self::OTHER;

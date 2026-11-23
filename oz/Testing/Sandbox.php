@@ -91,7 +91,12 @@ final class Sandbox
 		// The ORM classes are generated in the project, under its own release's build directory, as
 		// `oz db build` does. A separate process builds them, so whoever boots next finds the
 		// classes present.
-		$build = [\PHP_BINARY, __DIR__ . \DIRECTORY_SEPARATOR . 'sandbox_build.php', self::autoloadFile(), $dir];
+		$build = [
+			Process::phpBinary(),
+			__DIR__ . \DIRECTORY_SEPARATOR . 'sandbox_build.php',
+			self::autoloadFile(),
+			$dir,
+		];
 
 		if ($installed) {
 			$build[] = '--installed';

@@ -93,7 +93,7 @@ final class ProjectBuilder
 		// No deadline of its own: a deploy step is bounded by the host that runs it, and a build
 		// started by hand is interrupted by hand.
 		$process = new Process(
-			[\PHP_BINARY, __DIR__ . DS . 'scope_build.php', $scope],
+			[Process::phpBinary(), __DIR__ . DS . 'scope_build.php', $scope],
 			OZ_PROJECT_DIR,
 			null,
 			null,
