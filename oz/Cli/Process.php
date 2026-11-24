@@ -41,9 +41,12 @@ use Symfony\Component\Process\Process as SymfonyProcess;
  * intact and the signal kept on the object, so a caller reads it where it reads every other failure
  * and words it with the step it belongs to ({@see killedPhrase()}).
  *
- * A process running PHP is started with {@see php()}: with {@see phpBinary()}, never with
- * `PHP_BINARY`, which is the command line's only when this process is one, and, from a process that
- * serves requests, with {@see CHILD_ENV} of its environment and nothing else.
+ * A process started while this one serves requests is given {@see CHILD_ENV} of its environment
+ * and what its caller passes, nothing else ({@see start()}): whoever built it, so no caller can
+ * forget it. A command that needs more names it.
+ *
+ * A process running PHP is started with {@see php()}, with {@see phpBinary()}: never with
+ * `PHP_BINARY`, which is the command line's only when this process is one.
  */
 final class Process extends SymfonyProcess
 {
@@ -65,9 +68,9 @@ final class Process extends SymfonyProcess
 	private const array CLI_SAPIS = ['cli', 'cli-server'];
 
 	/**
-	 * The variables a PHP process started from a process that serves requests is given of its
-	 * environment, every other one removed: where programs are found and files written (PATH, HOME,
-	 * TMPDIR), and what a program's text and clock read (LANG, LC_ALL, TZ).
+	 * The variables a process started while this one serves requests is given of its environment,
+	 * every other one removed: where programs are found and files written (PATH, HOME, TMPDIR), and
+	 * what a program's text and clock read (LANG, LC_ALL, TZ).
 	 *
 	 * A list of what is kept, not of what is dropped. Under CGI the request itself is environment
 	 * -- every header as `HTTP_*`, the cookie and the `Authorization` among them, and whatever the
@@ -110,6 +113,27 @@ final class Process extends SymfonyProcess
 		}
 
 		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * While this process serves requests, the process is given {@see CHILD_ENV} of this one's
+	 * environment and the variables its caller passed -- to the constructor, to `setEnv()` or here --
+	 * and nothing else ({@see childEnv()}). Here, where `run()`, `mustRun()` and `restart()` all
+	 * start, so that whoever built the process cannot leave it out. A command line passes its
+	 * environment on, as before.
+	 */
+	#[Override]
+	public function start(?callable $callback = null, array $env = []): void
+	{
+		if (!Runtime::isConsole()) {
+			/** @var array<string, false|string> $given */
+			$given = $env + $this->getEnv();
+			$env   = self::childEnv(false, $_ENV + \getenv(), $given) ?? [];
+		}
+
+		parent::start($callback, $env);
 	}
 
 	/**
@@ -214,8 +238,8 @@ final class Process extends SymfonyProcess
 	}
 
 	/**
-	 * A PHP process: `$args` run by {@see phpBinary()}, in the environment {@see childEnv()} gives
-	 * it. The way every PHP process OZone starts is built, a plugin's own included.
+	 * A PHP process: `$args` run by {@see phpBinary()}. The way every PHP process OZone starts is
+	 * built, a plugin's own included; its environment is what every process gets ({@see start()}).
 	 *
 	 * @param list<string>               $args  the script and its arguments
 	 * @param null|array<string, string> $env   variables to set, over what the process inherits
@@ -228,26 +252,20 @@ final class Process extends SymfonyProcess
 		mixed $input = null,
 		?float $timeout = 0
 	): self {
-		return new self(
-			[self::phpBinary(), ...$args],
-			$cwd,
-			self::childEnv(Runtime::isConsole(), $_ENV + \getenv(), $env),
-			$input,
-			$timeout
-		);
+		return new self([self::phpBinary(), ...$args], $cwd, $env, $input, $timeout);
 	}
 
 	/**
-	 * The environment of a PHP process, from what this one would pass on.
+	 * The environment of a process this one starts, from what it would pass on.
 	 *
 	 * A command line passes its environment on, as a shell does: null, or the variables given. A
 	 * process that serves requests -- under CGI, PHP-FPM or a worker server -- passes {@see CHILD_ENV}
 	 * and nothing else: every other variable it holds is set to false, which is how Symfony's
 	 * process is told not to pass one on. The variables given are set over that.
 	 *
-	 * @param bool                       $console   whether this process is a command line
-	 * @param array<array-key, mixed>    $inherited what it would pass on: its `$_ENV` and `getenv()`
-	 * @param null|array<string, string> $env       the variables given
+	 * @param bool                             $console   whether this process is a command line
+	 * @param array<array-key, mixed>          $inherited what it would pass on: its `$_ENV` and `getenv()`
+	 * @param null|array<string, false|string> $env       the variables given (false: not passed on)
 	 *
 	 * @return null|array<string, false|string>
 	 *

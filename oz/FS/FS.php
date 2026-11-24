@@ -418,20 +418,10 @@ class FS
 
 			return \finfo_file($finfo, $file_path);
 		}
+		// ext-fileinfo is required: no shell fallback, which would be a process started while serving
+		// a request outside the environment rule of `Process`.
 		if (\function_exists('mime_content_type')) {
 			return \mime_content_type($file_path);
-		}
-		if (false === \stripos(\ini_get('disable_functions'), 'shell_exec')) {
-			$file = \escapeshellarg($file_path);
-
-			/** @psalm-suppress ForbiddenCode */
-			$mime = \shell_exec('file -bi ' . $file);
-
-			if ($mime) {
-				$parts = \explode(';', $mime);
-
-				return \trim($parts[0]);
-			}
 		}
 
 		return false;

@@ -24,6 +24,8 @@ use OZONE\Core\Utils\JSONResult;
 /**
  * A cron task that, wherever the tick runs it, dispatches a job of an async worker and runs its
  * queue: from a request's tick, the job's process is started by the process serving the request.
+ * And a command task, a program of the project's that is not PHP, which writes down the environment
+ * it was started with.
  */
 final class PhpCliTestBootHookReceiver implements BootHookReceiverInterface
 {
@@ -46,6 +48,14 @@ final class PhpCliTestBootHookReceiver implements BootHookReceiverInterface
 
 				$result->setDone();
 			}, 'php-cli-test-task')->everyMinute();
+
+			// Absolute paths: the request this may run from has no PATH, as a PHP-FPM pool's does not.
+			Cron::command(
+				['/bin/sh', '-c', '/usr/bin/env > ' . \escapeshellarg('__PLH_ENV_FILE__')],
+				'php-cli-test-command',
+				'',
+				false
+			)->everyMinute();
 		});
 	}
 }

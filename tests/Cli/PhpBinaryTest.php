@@ -17,6 +17,8 @@ use Override;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Runtime\CgiRuntime;
+use OZONE\Core\Runtime\Runtime;
 use OZONE\Tests\Support\ExecutableTree;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -308,6 +310,57 @@ final class PhpBinaryTest extends TestCase
 		// The command line: what it was given, and the rest inherited.
 		self::assertNull(Process::childEnv(true, $inherited, null));
 		self::assertSame(['OZ_JOB' => 'given'], Process::childEnv(true, $inherited, ['OZ_JOB' => 'given']));
+	}
+
+	/**
+	 * Whoever built the process, and however it is started: while this process serves requests,
+	 * it is given the kept environment and what its caller passed, and nothing else.
+	 */
+	public function testEveryProcessStartedWhileServingRequestsGetsTheKeptEnvironment(): void
+	{
+		// In the environment as a server's variable is: Symfony passes on what `getenv()` and
+		// `$_SERVER` both hold.
+		\putenv('OZ_PROCESS_LEAK_PROBE=leaked');
+		$_SERVER['OZ_PROCESS_LEAK_PROBE'] = 'leaked';
+		Runtime::set(new CgiRuntime());
+
+		try {
+			$built = new Process(['/usr/bin/env'], null, ['OZ_GIVEN_PROBE' => 'given']);
+
+			$shell = Process::fromShellCommandline('/usr/bin/env');
+
+			$shell->setEnv(['OZ_SET_PROBE' => 'set']);
+
+			$started = new Process(['/usr/bin/env']);
+
+			$started->start(null, ['OZ_STARTED_PROBE' => 'started']);
+			$started->wait();
+
+			$outputs = [
+				'built'   => [$built->mustRun()->getOutput(), 'OZ_GIVEN_PROBE=given'],
+				'shell'   => [$shell->mustRun()->getOutput(), 'OZ_SET_PROBE=set'],
+				'started' => [$started->getOutput(), 'OZ_STARTED_PROBE=started'],
+			];
+
+			foreach ($outputs as $how => [$output, $given]) {
+				self::assertStringNotContainsString('OZ_PROCESS_LEAK_PROBE', $output, $how);
+				self::assertStringContainsString($given, $output, $how);
+				self::assertStringContainsString('PATH=' . \getenv('PATH') . "\n", $output, $how);
+			}
+		} finally {
+			Runtime::reset();
+		}
+
+		// The command line passes its environment on.
+		try {
+			self::assertStringContainsString(
+				'OZ_PROCESS_LEAK_PROBE=leaked',
+				new Process(['/usr/bin/env'])->mustRun()->getOutput()
+			);
+		} finally {
+			\putenv('OZ_PROCESS_LEAK_PROBE');
+			unset($_SERVER['OZ_PROCESS_LEAK_PROBE']);
+		}
 	}
 
 	/**

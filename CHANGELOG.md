@@ -2,6 +2,11 @@
 
 ### Breaking changes
 
+- **A process OZone starts while serving a request no longer inherits that process's environment**
+  beyond `Process::CHILD_ENV` (PATH, HOME, TMPDIR, LANG, LC_ALL, TZ): a `Cron::command()` that read
+  another variable of the web server's when cron's requests mode ran it gets it only by naming it
+  (`['env', 'NAME=value', ...]`, or `NAME=value command` for a shell command). From the command line
+  nothing changes. See Fixed.
 - **`Cli\Server\Interfaces\HostInterface` has two more methods**, `findExecutable(array $names)`
   and `isExecutableFile(string $path)`, which a host of a project's own has to implement:
   `oz deploy run` asks the server for its PHP through them. `hasBinary()` is answered through
@@ -810,6 +815,14 @@
   then documents). A file's kind is stored when its row is written (`oz_files.kind`), so a row
   written before keeps the kind it was given; nothing migrates it.
 
+- **A command a request's cron tick ran carried the request's environment too**, as any process
+  OZone started while serving a request did: a project's `Cron::command()` (`CommandTask`) under
+  cron's requests mode, the one not PHP. The rule is in `Process::start()` now, for every process
+  however it was built (`new Process()`, `fromShellCommandline()`, `Process::php()`) and however it
+  is started (`run()`, `mustRun()`, `start()`, `restart()`): `Process::CHILD_ENV` of the serving
+  process's environment, and the variables the caller passed (constructor, `setEnv()`, `start()`).
+  A command that needs another variable names it. A command line passes its environment on, as
+  before.
 - **A PHP process started from a request carried the request's environment.** Under CGI the
   request is environment: an async job a request's cron tick started inherited it. The installed
   `symfony/process` (6.4.49) already drops the `HTTP_*` and CGI names from a child started outside

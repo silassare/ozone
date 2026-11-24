@@ -1252,12 +1252,15 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   `PHP_BINDIR`, then on PATH, this version's names first (`Process::phpNames()`); else an error
   naming the setting. It runs nothing to find out. `findPhpBinary()` holds the rules with the facts
   of a process passed in, which is how they are tested.
-  **Its environment, from a process that serves requests, is `Process::CHILD_ENV` and nothing
-  else** (`childEnv()`): a list of what is kept, because under CGI the request is environment --
-  the cookie and the credentials, and whatever a server adds -- and a list of what to drop is out of
-  date with the next server. The worker servers' variables go with it: `RR_MODE`, `OZ_RUNTIME` in a
-  job's environment would make `oz jobs run` take itself for a worker. A project's values are not
-  passed: an OZone process reads its `.env` from the file. A command line passes its own on.
+  **Any process started while serving requests gets `Process::CHILD_ENV` and what its caller
+  passes, nothing else** -- PHP or not, a cron `CommandTask` included: `Process::start()` applies
+  it (`childEnv()`), where `run()`, `mustRun()` and `restart()` all start, so no caller can leave it
+  out; a command that needs more names it. A list of what is kept, because under CGI the request is
+  environment -- the cookie and the credentials, and whatever a server adds -- and a list of what to
+  drop is out of date with the next server. The worker servers' variables go with it: `RR_MODE`,
+  `OZ_RUNTIME` in a job's environment would make `oz jobs run` take itself for a worker. A
+  project's values are not passed: an OZone process reads its `.env` from the file. A command line
+  passes its own on.
   **A host's PHP is the host's** (`Process::hostPhpBinary()`): `oz deploy run` asks the target
   (`HostInterface::findExecutable()`, the same names, directory by directory of its PATH) unless
   `--php` names one, which must be an executable file there; on this machine it is `phpBinary()`.

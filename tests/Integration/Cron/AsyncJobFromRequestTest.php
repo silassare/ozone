@@ -98,10 +98,16 @@ final class AsyncJobFromRequestTest extends TestCase
 			'namespace' => $ns,
 			'tick_file' => $tick,
 			'flag_file' => $flag,
+			'env_file'  => self::envFile($path),
 		]);
 		$proj->setSetting('oz.boot', $ns . '\PhpCliTestBootHookReceiver', true);
 		// Whatever has ticked before: the requests run the due tasks.
 		$proj->setSetting('oz.cron', 'OZ_CRON_RUNNER', 'requests');
+
+		// A directory reused from a run that was killed: what it wrote is not this run's.
+		foreach ([$tick, $flag, self::envFile($path)] as $file) {
+			@\unlink($file);
+		}
 
 		$index = $path . '/public/api/index.php';
 
@@ -168,9 +174,55 @@ final class AsyncJobFromRequestTest extends TestCase
 		));
 	}
 
+	/**
+	 * A command task, a program of the project's that is not PHP, run by the same request's tick in
+	 * the process serving the request: what it is started with is the kept environment, as every
+	 * process started while serving a request is, and nothing of the request.
+	 */
+	#[DataProvider('provideDbConfig')]
+	public function testACommandTaskRunFromARequestsTickSeesNoRequestVariable(DbTestConfig $config): void
+	{
+		$proj = self::$projects[$config->rdbms] ?? null;
+
+		self::assertNotNull($proj, 'No project: the request test of this class runs first.');
+
+		$file = self::envFile($proj->getPath());
+
+		self::assertTrue(self::waitFor($file), 'The command task should have run: ' . self::logs($proj->getPath()));
+
+		$env = [];
+
+		foreach (\explode("\n", \trim((string) \file_get_contents($file))) as $line) {
+			[$name, $value] = \explode('=', $line, 2) + ['', ''];
+			$env[$name]     = $value;
+		}
+
+		self::assertSame([], \array_values(\array_filter(
+			\array_keys($env),
+			static fn (string $name): bool => \str_starts_with($name, 'HTTP_')
+		)), 'The request\'s headers reached the command: ' . \implode(', ', \array_keys($env)));
+
+		foreach (['SSL_CLIENT_S_DN', 'UNIQUE_ID', 'CONTEXT_DOCUMENT_ROOT', 'REQUEST_METHOD', 'SCRIPT_FILENAME'] as $name) {
+			self::assertArrayNotHasKey($name, $env, 'The request\'s environment reached the command: ' . $name);
+		}
+
+		self::assertSame(['HOME' => $proj->getPath(), 'LANG' => 'C.UTF-8', 'TZ' => 'UTC'], \array_intersect_key(
+			$env,
+			['HOME' => true, 'LANG' => true, 'TZ' => true]
+		));
+	}
+
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('cron-async-from-request');
+	}
+
+	/**
+	 * Where the command task writes the environment it was started with.
+	 */
+	private static function envFile(string $path): string
+	{
+		return $path . '/command.env';
 	}
 
 	/**
