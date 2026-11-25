@@ -19,7 +19,7 @@ use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use Override;
-use OZONE\Core\Users\Countries;
+use OZONE\Core\Columns\Countries;
 
 /**
  * Class TypeCC2.

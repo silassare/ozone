@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TypePassword::class)]
 final class TypePasswordTest extends TestCase
 {
-	// Default OZ_USER_PASS_MIN_LENGTH = 6, OZ_USER_PASS_MAX_LENGTH = 60
+	// Default OZ_AUTH_USER_PASS_MIN_LENGTH = 6, OZ_AUTH_USER_PASS_MAX_LENGTH = 60
 
 	public function testAcceptsValidPassword(): void
 	{

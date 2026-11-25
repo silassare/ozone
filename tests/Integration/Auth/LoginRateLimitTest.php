@@ -83,17 +83,17 @@ final class LoginRateLimitTest extends TestCase
 		self::seedCountry($project, 'BJ');
 
 		$project->oz(
-			'users',
+			'auth-users',
 			'add',
-			'--user_civility=Mrs',
-			'--user_display_name=Jane Doe',
-			'--user_first_name=Jane',
-			'--user_last_name=Doe',
-			'--user_email=' . self::USER_EMAIL,
-			'--user_gender=Female',
-			'--user_birth_date=1990-05-17',
-			'--user_pass=' . self::USER_PASSWORD,
-			'--user_cc2=BJ',
+			'--civility=Mrs',
+			'--display_name=Jane Doe',
+			'--first_name=Jane',
+			'--last_name=Doe',
+			'--email=' . self::USER_EMAIL,
+			'--gender=Female',
+			'--birth_date=1990-05-17',
+			'--pass=' . self::USER_PASSWORD,
+			'--cc2=BJ',
 		)->mustRun();
 
 		try {
@@ -255,7 +255,7 @@ final class LoginRateLimitTest extends TestCase
 	}
 
 	/**
-	 * Seeds a country, which `oz users add` requires.
+	 * Seeds a country, which `oz auth-users add` requires.
 	 */
 	private static function seedCountry(OZTestProject $project, string $cc2): void
 	{

@@ -1,0 +1,76 @@
+<?php
+
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace OZONE\Core\Router\Guards;
+
+use Override;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Exceptions\UnauthenticatedException;
+use OZONE\Core\Exceptions\UnauthorizedException;
+use OZONE\Core\Router\RouteInfo;
+
+/**
+ * Class AuthenticatedAuthUserRouteGuard.
+ */
+final class AuthenticatedAuthUserRouteGuard extends AbstractRouteGuard
+{
+	/**
+	 * AuthenticatedAuthUserRouteGuard constructor.
+	 *
+	 * > Allowed user type may be empty.
+	 */
+	public function __construct(
+		private readonly array $allowed_user_types,
+	) {}
+
+	#[Override]
+	public function toRules(): array
+	{
+		return [
+			'types'  => $this->allowed_user_types,
+		];
+	}
+
+	#[Override]
+	public static function fromRules(array $rules): static
+	{
+		$types  = $rules['types'] ?? [];
+
+		return new self($types);
+	}
+
+	/**
+	 * @throws UnauthenticatedException|UnauthorizedException
+	 */
+	#[Override]
+	public function check(RouteInfo $ri): bool
+	{
+		$context  = $ri->getContext();
+
+		authUsers($context)->assertUserIsAuthenticated();
+
+		$u = user();
+
+		if (!empty($this->allowed_user_types)) {
+			if (!\in_array($u->getAuthUserType(), $this->allowed_user_types, true)) {
+				throw new UnauthorizedException('OZ_ERROR_USER_TYPE_NOT_ALLOWED', [
+					'_reason'     => 'User type not allowed',
+					'_user'       => AuthUsers::selector($u),
+					'_allowed'    => $this->allowed_user_types,
+				]);
+			}
+		}
+
+		return true;
+	}
+}

@@ -26,13 +26,13 @@ final class SettingsSchemaTest extends TestCase
 {
 	public function testEveryKeyOZoneDeclaresIsReadWithItsTypeAndItsDocumentation(): void
 	{
-		$found = self::setting('oz.users', 'OZ_USER_PASS_MIN_LENGTH');
+		$found = self::setting('oz.auth.users', 'OZ_AUTH_USER_PASS_MIN_LENGTH');
 
 		self::assertSame('int', $found['type']);
 		self::assertSame(6, $found['default']);
 		self::assertFalse($found['from_env']);
 		self::assertFalse($found['client']);
-		self::assertStringContainsString('Minimum length for user password', $found['doc']);
+		self::assertStringContainsString("Minimum length for an auth user's password", $found['doc']);
 	}
 
 	/**
@@ -88,7 +88,7 @@ final class SettingsSchemaTest extends TestCase
 	 */
 	public function testTheMergeStrategyIsNeverASettingAndADocumentedKeyBesideItIsOne(): void
 	{
-		$dir = \rtrim(OZ_OZONE_DIR, '/\\') . \DIRECTORY_SEPARATOR . 'oz_settings_test_' . \bin2hex(\random_bytes(6));
+		$dir  = \rtrim(OZ_OZONE_DIR, '/\\') . \DIRECTORY_SEPARATOR . 'oz_settings_test_' . \bin2hex(\random_bytes(6));
 		$file = $dir . \DIRECTORY_SEPARATOR . 'oztest.merge.php';
 
 		\mkdir($dir, 0o775, true);

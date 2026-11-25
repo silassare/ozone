@@ -146,8 +146,8 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 	public function frontendOptions(): array
 	{
 		return [
-			'min' => (int) $this->getOption('min', Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH')),
-			'max' => (int) $this->getOption('max', Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH')),
+			'min' => (int) $this->getOption('min', Settings::get('oz.auth.users', 'OZ_AUTH_USER_PASS_MIN_LENGTH')),
+			'max' => (int) $this->getOption('max', Settings::get('oz.auth.users', 'OZ_AUTH_USER_PASS_MAX_LENGTH')),
 		];
 	}
 
@@ -164,8 +164,8 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 			return;
 		}
 
-		$def_min = Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH');
-		$def_max = Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH');
+		$def_min = Settings::get('oz.auth.users', 'OZ_AUTH_USER_PASS_MIN_LENGTH');
+		$def_max = Settings::get('oz.auth.users', 'OZ_AUTH_USER_PASS_MAX_LENGTH');
 		$min     = $this->getOption('min', $def_min);
 		$max     = $this->getOption('max', $def_max);
 

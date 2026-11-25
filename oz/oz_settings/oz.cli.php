@@ -11,14 +11,15 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\Auth\Cli\AuthUsersCmd;
 use OZONE\Core\Cli\Cmd\CronCmd;
 use OZONE\Core\Cli\Cmd\DbCmd;
 use OZONE\Core\Cli\Cmd\DeployCmd;
 use OZONE\Core\Cli\Cmd\DoctorCmd;
 use OZONE\Core\Cli\Cmd\LangCmd;
 use OZONE\Core\Cli\Cmd\PluginsCmd;
-use OZONE\Core\Cli\Cmd\RevisionsCmd;
 use OZONE\Core\Cli\Cmd\ProjectCmd;
+use OZONE\Core\Cli\Cmd\RevisionsCmd;
 use OZONE\Core\Cli\Cmd\RoutesCmd;
 use OZONE\Core\Cli\Cmd\ScopesCmd;
 use OZONE\Core\Cli\Cmd\ServerCmd;
@@ -27,7 +28,6 @@ use OZONE\Core\Cli\Cmd\SettingsCmd;
 use OZONE\Core\Maintenance\Cli\MaintenanceCmd;
 use OZONE\Core\Migrations\Cli\MigrationsCmd;
 use OZONE\Core\Queue\Cli\JobsCmd;
-use OZONE\Core\Users\Cli\UsersCmd;
 
 return [
 	'project'     => ProjectCmd::class,
@@ -36,7 +36,7 @@ return [
 	'migrations'  => MigrationsCmd::class,
 	'services'    => ServicesCmd::class,
 	'routes'      => RoutesCmd::class,
-	'users'       => UsersCmd::class,
+	'auth-users'  => AuthUsersCmd::class,
 	'cron'        => CronCmd::class,
 	'jobs'        => JobsCmd::class,
 	'settings'    => SettingsCmd::class,

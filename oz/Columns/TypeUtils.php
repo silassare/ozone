@@ -54,7 +54,7 @@ class TypeUtils
 	public static function authUserName(): TypeUsername
 	{
 		$username = new TypeUsername();
-		$username->nullable(!Settings::get('oz.users', 'OZ_USER_USERNAME_REQUIRED'));
+		$username->nullable(!Settings::get('oz.auth.users', 'OZ_AUTH_USER_USERNAME_REQUIRED'));
 
 		return $username;
 	}
@@ -66,7 +66,7 @@ class TypeUtils
 	{
 		$phone = new TypePhone();
 		$phone
-			->nullable(!Settings::get('oz.users', 'OZ_USER_PHONE_REQUIRED'));
+			->nullable(!Settings::get('oz.auth.users', 'OZ_AUTH_USER_PHONE_REQUIRED'));
 
 		return $phone;
 	}
@@ -77,7 +77,7 @@ class TypeUtils
 	public static function authUserEmail(): TypeEmail
 	{
 		$email = new TypeEmail();
-		$email->nullable(!Settings::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'));
+		$email->nullable(!Settings::get('oz.auth.users', 'OZ_AUTH_USER_EMAIL_REQUIRED'));
 
 		return $email;
 	}

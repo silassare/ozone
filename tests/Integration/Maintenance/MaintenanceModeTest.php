@@ -77,10 +77,10 @@ final class MaintenanceModeTest extends TestCase
 		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
 
-		// An administrator, as `oz users grant` makes one.
+		// An administrator, as `oz auth-users grant` makes one.
 		$proj->writeFileFromStub('SeedUser', 'seed_user.php', ['email' => self::ADMIN_EMAIL]);
 		new Process([\PHP_BINARY, 'seed_user.php'], $proj->getPath())->mustRun();
-		$proj->oz('users', 'grant', '--user=' . self::ADMIN_EMAIL, '--role=admin')->mustRun();
+		$proj->oz('auth-users', 'grant', '--user=' . self::ADMIN_EMAIL, '--role=admin')->mustRun();
 		$proj->oz('scopes', 'add', '--name=www', '--origin=http://localhost', '--api=false')->mustRun();
 		$proj->writeFileFromStub('MaintenanceTestRoutesProvider', 'app/MaintenanceTestRoutesProvider.php', [
 			'namespace' => $ns,

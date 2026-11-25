@@ -267,17 +267,17 @@ final class HttpRoutingTest extends TestCase
 		self::seedCountry('BJ');
 
 		self::proj()->oz(
-			'users',
+			'auth-users',
 			'add',
-			'--user_civility=Mrs',
-			'--user_display_name=Jane Doe',
-			'--user_first_name=Jane',
-			'--user_last_name=Doe',
-			'--user_email=jane.doe@example.com',
-			'--user_gender=Female',
-			'--user_birth_date=1990-05-17',
-			'--user_pass=Jane_Pass_42',
-			'--user_cc2=BJ',
+			'--civility=Mrs',
+			'--display_name=Jane Doe',
+			'--first_name=Jane',
+			'--last_name=Doe',
+			'--email=jane.doe@example.com',
+			'--gender=Female',
+			'--birth_date=1990-05-17',
+			'--pass=Jane_Pass_42',
+			'--cc2=BJ',
 		)->mustRun();
 
 		[$status, $body, $headers] = $this->request('POST', '/login', [
@@ -317,17 +317,17 @@ final class HttpRoutingTest extends TestCase
 		self::seedCountry('BJ');
 
 		self::proj()->oz(
-			'users',
+			'auth-users',
 			'add',
-			'--user_civility=Mr',
-			'--user_display_name=Up Loader',
-			'--user_first_name=Up',
-			'--user_last_name=Loader',
-			'--user_email=up.loader@example.com',
-			'--user_gender=Male',
-			'--user_birth_date=1990-05-17',
-			'--user_pass=Up_Pass_42',
-			'--user_cc2=BJ',
+			'--civility=Mr',
+			'--display_name=Up Loader',
+			'--first_name=Up',
+			'--last_name=Loader',
+			'--email=up.loader@example.com',
+			'--gender=Male',
+			'--birth_date=1990-05-17',
+			'--pass=Up_Pass_42',
+			'--cc2=BJ',
 		)->mustRun();
 
 		[, , $headers] = $this->request('POST', '/login', [
@@ -365,17 +365,17 @@ final class HttpRoutingTest extends TestCase
 	{
 		self::seedCountry('TG');
 		self::proj()->oz(
-			'users',
+			'auth-users',
 			'add',
-			'--user_civility=Mr',
-			'--user_display_name=Photo Grapher',
-			'--user_first_name=Photo',
-			'--user_last_name=Grapher',
-			'--user_email=photo.grapher@example.com',
-			'--user_gender=Male',
-			'--user_birth_date=1990-05-17',
-			'--user_pass=Photo_Pass_42',
-			'--user_cc2=TG',
+			'--civility=Mr',
+			'--display_name=Photo Grapher',
+			'--first_name=Photo',
+			'--last_name=Grapher',
+			'--email=photo.grapher@example.com',
+			'--gender=Male',
+			'--birth_date=1990-05-17',
+			'--pass=Photo_Pass_42',
+			'--cc2=TG',
 		)->mustRun();
 
 		[, , $headers] = $this->request('POST', '/login', [

@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TypeUsername::class)]
 final class TypeUsernameTest extends TestCase
 {
-	// OZ_USER_NAME_MIN_LENGTH defaults to 3, OZ_USER_NAME_MAX_LENGTH defaults to 60.
+	// OZ_AUTH_USER_NAME_MIN_LENGTH defaults to 3, OZ_AUTH_USER_NAME_MAX_LENGTH defaults to 60.
 
 	public function testAcceptsValidUsername(): void
 	{
@@ -106,12 +106,12 @@ final class TypeUsernameTest extends TestCase
 	 */
 	public function testThePatternRunsInUnicodeMode(): void
 	{
-		Settings::set('oz.users', 'OZ_USER_NAME_PATTERN', '~^.{2}$~');
+		Settings::set('oz.auth.users', 'OZ_AUTH_USER_NAME_PATTERN', '~^.{2}$~');
 
 		try {
 			self::assertSame("\u{e9}\u{e9}", new TypeUsername()->validate("\u{e9}\u{e9}")->getCleanValue());
 		} finally {
-			Settings::unset('oz.users', 'OZ_USER_NAME_PATTERN');
+			Settings::unset('oz.auth.users', 'OZ_AUTH_USER_NAME_PATTERN');
 		}
 	}
 }

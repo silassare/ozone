@@ -15,7 +15,7 @@ namespace OZONE\Tests\Router;
 
 use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Roles\Enums\RoleStrategy;
-use OZONE\Core\Router\Guards\UserRoleRouteGuard;
+use OZONE\Core\Router\Guards\AuthUserRoleRouteGuard;
 use OZONE\Core\Router\RouteGroup;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -28,14 +28,14 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  */
-#[CoversClass(UserRoleRouteGuard::class)]
+#[CoversClass(AuthUserRoleRouteGuard::class)]
 final class RoleGuardTest extends TestCase
 {
 	public function testAStrategyAndAnAtLeastRoleSurviveTheCompiledTable(): void
 	{
-		$guard = new UserRoleRouteGuard(['editor', 'admin'], true, RoleStrategy::GTE, 'super-admin');
+		$guard = new AuthUserRoleRouteGuard(['editor', 'admin'], true, RoleStrategy::GTE, 'super-admin');
 
-		self::assertSame($guard->toRules(), UserRoleRouteGuard::fromRules($guard->toRules())->toRules());
+		self::assertSame($guard->toRules(), AuthUserRoleRouteGuard::fromRules($guard->toRules())->toRules());
 		self::assertSame(
 			['roles' => ['editor', 'admin'], 'strict' => true, 'strategy' => 'gte', 'at_least' => 'super-admin'],
 			$guard->toRules()
@@ -44,7 +44,7 @@ final class RoleGuardTest extends TestCase
 
 	public function testRulesWrittenBeforeStrategiesReadAsTheyDid(): void
 	{
-		$guard = UserRoleRouteGuard::fromRules(['roles' => ['editor'], 'strict' => false]);
+		$guard = AuthUserRoleRouteGuard::fromRules(['roles' => ['editor'], 'strict' => false]);
 
 		self::assertSame(
 			['roles' => ['editor'], 'strict' => false, 'strategy' => 'any', 'at_least' => null],

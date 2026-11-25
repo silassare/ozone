@@ -17,12 +17,12 @@ use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\AuthUsersRepository;
 use OZONE\Core\Auth\Enums\VerificationPurpose;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
-use OZONE\Core\Users\UsersRepository;
 
 /**
  * Proves that whoever answers owns an email or a phone, for a purpose the owner is told.
@@ -78,7 +78,7 @@ abstract class OwnershipVerificationProvider extends AuthorizationProvider
 
 		if (VerificationPurpose::ACCOUNT_RECOVERY === $purpose) {
 			$given     = $fd->get(AuthUsers::FIELD_AUTH_USER_TYPE);
-			$user_type = \is_string($given) && '' !== $given ? $given : UsersRepository::DEFAULT_USER_TYPE;
+			$user_type = \is_string($given) && '' !== $given ? $given : AuthUsersRepository::DEFAULT_AUTH_USER_TYPE;
 		}
 
 		return new static($context, $identifier, $purpose, $user_type);

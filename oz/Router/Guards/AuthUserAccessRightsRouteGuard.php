@@ -1,0 +1,82 @@
+<?php
+
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace OZONE\Core\Router\Guards;
+
+use Override;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Roles\Roles;
+use OZONE\Core\Router\RouteInfo;
+
+/**
+ * Class AuthUserAccessRightsRouteGuard.
+ */
+final class AuthUserAccessRightsRouteGuard extends AbstractRouteGuard
+{
+	/**
+	 * AuthUserAccessRightsRouteGuard constructor.
+	 *
+	 * @param string[] $access_rights
+	 * @param string[] $roles
+	 */
+	public function __construct(
+		protected array $access_rights,
+		protected array $roles = []
+	) {}
+
+	#[Override]
+	public function toRules(): array
+	{
+		return [
+			'access_rights' => $this->access_rights,
+			'roles'         => $this->roles,
+		];
+	}
+
+	#[Override]
+	public static function fromRules(array $rules): static
+	{
+		$rights = $rules['access_rights'] ?? [];
+		$roles  = $rules['roles'] ?? [];
+
+		return new self($rights, $roles);
+	}
+
+	/**
+	 * @throws ForbiddenException
+	 */
+	#[Override]
+	public function check(RouteInfo $ri): bool
+	{
+		$auth   = $ri->getContext()->auth();
+		$rights = $auth->getAccessRights();
+
+		if ($rights->can(...$this->access_rights)) {
+			return true;
+		}
+
+		$user = $auth->user();
+
+		if (!empty($this->roles) && Roles::hasOneOfRoles($user, $this->roles)) {
+			return true;
+		}
+
+		throw new ForbiddenException('OZ_ERROR_MISSING_ACCESS_RIGHTS', [
+			'_reason'         => 'Missing required access rights.',
+			'_access_rights'  => $this->access_rights,
+			'_roles'          => $this->roles,
+			'_user'           => AuthUsers::selector($user),
+		]);
+	}
+}

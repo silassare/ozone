@@ -14,6 +14,7 @@ declare(strict_types=1);
 use Gobl\DBAL\Builders\NamespaceBuilder;
 use Gobl\DBAL\Builders\TableBuilder;
 use Gobl\DBAL\MigrationMode;
+use OZONE\Core\Auth\AuthUsersRepository;
 use OZONE\Core\Auth\Enums\AuthorizationState;
 use OZONE\Core\Columns\Types\TypeCC2;
 use OZONE\Core\Columns\Types\TypeUsername;
@@ -24,7 +25,6 @@ use OZONE\Core\Messaging\Enums\MessageStatus;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Roles\RolesUtils;
-use OZONE\Core\Users\UsersRepository;
 use OZONE\Core\Utils\JSONResult;
 
 return static function (NamespaceBuilder $ns): void {
@@ -35,7 +35,7 @@ return static function (NamespaceBuilder $ns): void {
 			->morphType('user')
 			->meta('api.doc.description', 'The main authentication user table storing credentials, profile info, and status.');
 
-		UsersRepository::makeAuthUserTable($tb);
+		AuthUsersRepository::makeAuthUserTable($tb);
 	});
 
 	// this table is for storing the usernames for all auth users type

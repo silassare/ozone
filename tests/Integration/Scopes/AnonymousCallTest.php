@@ -161,6 +161,14 @@ final class AnonymousCallTest extends TestCase
 	}
 
 	/**
+	 * @return array<string, array{DbTestConfig}>
+	 */
+	public static function provideDbConfig(): iterable
+	{
+		return DbTestConfig::allConfigured('anon-call');
+	}
+
+	/**
 	 * In production a scope's routes come from its own route table: the call compiles the `api`
 	 * table in the `api` scope's directory, never in the one of the scope it was made from.
 	 */
@@ -199,14 +207,6 @@ final class AnonymousCallTest extends TestCase
 	}
 
 	/**
-	 * @return array<string, array{DbTestConfig}>
-	 */
-	public static function provideDbConfig(): iterable
-	{
-		return DbTestConfig::allConfigured('anon-call');
-	}
-
-	/**
 	 * The project of an RDBMS, made and served once for the class: an `api` scope with the service,
 	 * a `www` scope with the page, a user, a country row, a cron task.
 	 */
@@ -226,17 +226,17 @@ final class AnonymousCallTest extends TestCase
 		self::prepare($proj, $config);
 
 		$proj->oz(
-			'users',
+			'auth-users',
 			'add',
-			'--user_civility=Mrs',
-			'--user_display_name=Ann Call',
-			'--user_first_name=Ann',
-			'--user_last_name=Call',
-			'--user_email=' . self::USER_EMAIL,
-			'--user_gender=Female',
-			'--user_birth_date=1990-05-17',
-			'--user_pass=' . self::USER_PASSWORD,
-			'--user_cc2=BJ',
+			'--civility=Mrs',
+			'--display_name=Ann Call',
+			'--first_name=Ann',
+			'--last_name=Call',
+			'--email=' . self::USER_EMAIL,
+			'--gender=Female',
+			'--birth_date=1990-05-17',
+			'--pass=' . self::USER_PASSWORD,
+			'--cc2=BJ',
 		)->mustRun();
 
 		foreach (['api', 'www'] as $scope) {

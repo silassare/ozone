@@ -21,8 +21,8 @@ use Gobl\DBAL\Types\TypeString;
 use InvalidArgumentException;
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\UsernameUtils;
 use OZONE\Core\Forms\Interfaces\FrontendTypeOptionsInterface;
-use OZONE\Core\Users\UsernameUtils;
 use PHPUtils\PortablePattern;
 
 /**
@@ -41,7 +41,7 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 	 */
 	public function __construct()
 	{
-		$max = (int) Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH');
+		$max = (int) Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_MAX_LENGTH');
 
 		parent::__construct(new TypeString(1, \max(3, $max) * 2));
 	}
@@ -111,11 +111,11 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 	public function frontendOptions(): array
 	{
 		$out = [
-			'min' => (int) Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH'),
-			'max' => (int) Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH'),
+			'min' => (int) Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_MIN_LENGTH'),
+			'max' => (int) Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_MAX_LENGTH'),
 		];
 
-		$pattern = (string) Settings::get('oz.users', 'OZ_USER_NAME_PATTERN');
+		$pattern = (string) Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_PATTERN');
 
 		try {
 			PortablePattern::assertPortable($pattern);
@@ -151,13 +151,13 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 			/** @var null|bool $registered */
 			$registered = $this->getOption('registered');
 
-			if ($len < Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH')) {
+			if ($len < Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_MIN_LENGTH')) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_SHORT', $debug));
 
 				return;
 			}
 
-			if ($len > Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH')) {
+			if ($len > Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_MAX_LENGTH')) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_LONG', $debug));
 
 				return;
@@ -165,7 +165,7 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 
 			// Run as a client runs it (Unicode mode, `$` at the very end): the two agree by construction,
 			// and the pattern a discovered form sends is the one checked here.
-			$pattern = PortablePattern::toPcre((string) Settings::get('oz.users', 'OZ_USER_NAME_PATTERN'));
+			$pattern = PortablePattern::toPcre((string) Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_PATTERN'));
 
 			if (!\preg_match($pattern, $value)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID_CHARACTERS', $debug));

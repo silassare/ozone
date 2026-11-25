@@ -2,7 +2,29 @@
 
 ### Breaking changes
 
-- **`UserRateLimit` and `StatefulAuthRateLimit` count per route**, as `IPRateLimit` does: their key
+- **What says "users" while serving every auth user type is named for auth users**: `oz_users` is
+  the default auth user table (type `user`), not the only one, and the names now say so. No alias is
+  kept:
+
+  | Before | After |
+  | --- | --- |
+  | namespace `OZONE\Core\Users` | folded into `OZONE\Core\Auth` (and `Columns\Countries`) |
+  | `Users\UsersRepository`, `DEFAULT_USER_TYPE` | `Auth\AuthUsersRepository`, `DEFAULT_AUTH_USER_TYPE` |
+  | `Users\Traits\UserEntityTrait` | `Auth\Traits\AuthUserEntityTrait` |
+  | `Users\AnonymousUser` | `Auth\AnonymousAuthUser` |
+  | `Users\UsernameUtils`, `Users\Services\SignUp` | `Auth\UsernameUtils`, `Auth\Services\SignUp` |
+  | `Users\Cli\UsersCmd`, `oz users add/grant` | `Auth\Cli\AuthUsersCmd`, `oz auth-users add/grant` (options by short name: `--email`) |
+  | `AuthenticatedUserRouteGuard`, `UserRoleRouteGuard`, `UserAccessRightsRouteGuard` | `AuthenticatedAuthUserRouteGuard`, `AuthUserRoleRouteGuard`, `AuthUserAccessRightsRouteGuard` |
+  | `UserRateLimit` | `AuthUserRateLimit` |
+  | settings group `oz.users`, keys `OZ_USER_*` | `oz.auth.users`, keys `OZ_AUTH_USER_*` |
+  | API doc tag `Users`, operations `Users.signUp`, `Users.picture` | `AuthUsers`, `AuthUsers.signUp`, `AuthUsers.picture` |
+
+  Kept as they were: the `AuthUser*` layer (`AuthUserInterface`, `AuthUsers`, its events and
+  methods, `makeAuthUserTable()`), `hasAuthenticatedUser()`, `withAuthenticatedUser()`,
+  `assertUser*()`, `logUserIn()`, the global `user()`, the lang keys, TNet's `_current_user`, and
+  every table and column. A project's entity classes are generated again (`oz db build`) to take the
+  renamed trait.
+- **`AuthUserRateLimit` and `StatefulAuthRateLimit` count per route**, as `IPRateLimit` does: their key
   was the user's ref or the session ID alone, so every route limited one of these ways drew on one
   quota shared by all of them, and a request to one route spent the others'. A user or a session now
   has a quota on each route (`user:{route key}:{ref}`, `session:{route key}:{session id}`, built by
@@ -378,24 +400,36 @@
 
 ### Added
 
-- **A user's picture has a route of its own, `oz:user-picture`** (`GET /users/{id}/picture[/{tokens}]`,
-  `Users\Views\UserPictureView`, in every scope as `oz:files` is), and no file key is ever in its
-  address: whether one person may see another's picture is the project's decision, made per request
-  by the class `OZ_USER_PICTURE_ACCESS` (`oz.users`) names, a `UserPictureAccessInterface`.
-  `SelfOrAdminPictureAccess` (the user and administrators) is the default; `SignedInPictureAccess`
-  and `PublicPictureAccess` ship too. The picture is served through the filter chain of `oz:files`
-  (the same bytes for the same tokens, a project's own `OZ_IMAGE_TOKENS` included, its metadata
-  always stripped), never as its original (`original` is refused, to the user too).
-  `OZ_USER_PICTURE_TOKENS` are rendered first and the tokens asked for on what they gave, so a size
-  cap or a crop holds whatever a link asks. A viewer the rule refuses gets 403 and an allowed one
-  asking for a user with no picture 404, an id no user has being a refusal, unless
-  `OZ_USER_PICTURE_FALLBACK` (one value, or `refused` and `missing` apart) names an image file or a
-  `UserPictureFallbackInterface` class drawing one (a `UserPictureImage`: a path, or bytes and
-  their type), rendered as a picture is. The answer is `Cache-Control: private, no-cache` with an
-  `ETag` from the file and the tokens, so a browser revalidates it (304) and a viewer who loses the
-  right stops seeing it. `ImageFileFilterHandler::render()` renders an image that is no stored file
-  through the same tokens and renditions, and `GetFilesView::ORIGINAL_TOKEN` /
+- **An auth user's picture has a route of its own, `oz:auth-user-picture`**
+  (`GET /auth-users/{type}/{id}/picture[/{tokens}]`, `Auth\Views\AuthUserPictureView`, in every
+  scope as `oz:files` is), for **any auth user type**: the owner is found through its type's
+  repository by id, and its picture through `AuthUserPictureInterface::getAuthUserPicture()`, which
+  every entity of a `makeAuthUserTable()` table implements (its `pic`); a type whose entity does not
+  has no picture. No file key is ever in its address: whether one may see another's picture is the
+  project's decision, made per request by the class `OZ_AUTH_USER_PICTURE_ACCESS` (`oz.auth.users`)
+  names, an `AuthUserPictureAccessInterface` taking an `AuthUserInterface`.
+  `SelfOrAdminPictureAccess` (the auth user themself, the same type and id, and administrators) is
+  the default; `SignedInPictureAccess` and `PublicPictureAccess` ship too. The picture is served
+  through the filter chain of `oz:files` (the same bytes for the same tokens, a project's own
+  `OZ_IMAGE_TOKENS` included, its metadata always stripped), never as its original (`original` is
+  refused, to the owner too). `OZ_AUTH_USER_PICTURE_TOKENS` are rendered first and the tokens asked
+  for on what they gave, so a size cap or a crop holds whatever a link asks. A viewer the rule
+  refuses gets 403 and an allowed one asking for an auth user with no picture 404 -- a type no
+  repository serves, an id no auth user of it has, or a deleted one being a refusal -- unless
+  `OZ_AUTH_USER_PICTURE_FALLBACK` (one value, or `refused` and `missing` apart) names an image file
+  or an `AuthUserPictureFallbackInterface` class drawing one (an `AuthUserPictureImage`: a path, or
+  bytes and their type), rendered as a picture is. The answer is `Cache-Control: private, no-cache`
+  with an `ETag` from the file and the tokens, so a browser revalidates it (304) and a viewer who
+  loses the right stops seeing it. `ImageFileFilterHandler::render()` renders an image that is no
+  stored file through the same tokens and renditions, and `GetFilesView::ORIGINAL_TOKEN` /
   `FILTERS_PARAM_PATTERN` name what both routes share.
+- **Sign-up and `oz auth-users add` take an auth user type**, `user` by default. `POST /signup`
+  reads `auth_user_type` and signs up only a type `OZ_AUTH_USER_SIGN_UP_TYPES` (`oz.auth.users`,
+  `['user']` by default) lists and whose table `makeAuthUserTable()` made, since sign-up is public
+  and a listed type is one anybody may create an account of; its form is the standard columns by
+  their short names, and a value for a column the chosen table lacks is refused. `oz auth-users add
+  --type` offers the same standard columns by short name (`--email`, not `--user_email`), mapped to
+  the chosen type's table. `Utils::buildTableCliOptions()` takes `$short_names` for that.
 - **A form discovery of a rate-limited route is counted against a limit of its own**, per IP and per
   route: `OZ_FORM_DISCOVERY_IP_RATE` in `OZ_FORM_DISCOVERY_IP_INTERVAL` (`oz.forms`, 120 a minute by
   default; 0 counts none), never against the route's, and reported in the `X-RateLimit-*` headers of

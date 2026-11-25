@@ -1,0 +1,171 @@
+<?php
+
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace OZONE\Core\Auth\Traits;
+
+use Gobl\DBAL\Types\Utils\JsonPatch;
+use OZONE\Core\Auth\AuthUserDataStore;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Columns\ValidatedFile;
+use OZONE\Core\Crypt\Password;
+use OZONE\Core\Db\OZFile;
+use OZONE\Core\Exceptions\RuntimeException;
+use SensitiveParameter;
+
+/**
+ * Trait AuthUserEntityTrait.
+ */
+trait AuthUserEntityTrait
+{
+	public function getAuthUserType(): string
+	{
+		return db()->getTableOrFail(self::TABLE_NAME)->getMorphType();
+	}
+
+	public function getAuthIdentifier(): string
+	{
+		$id = $this->getID();
+
+		if (empty($id)) {
+			throw new RuntimeException('Trying to get auth identifier of an unsaved user.');
+		}
+
+		return $id;
+	}
+
+	public function getAuthIdentifiers(): array
+	{
+		return [
+			self::IDENTIFIER_TYPE_ID    => $this->getID(),
+			self::IDENTIFIER_TYPE_NAME  => $this->getUsername(),
+			self::IDENTIFIER_TYPE_EMAIL => $this->getEmail(),
+			self::IDENTIFIER_TYPE_PHONE => $this->getPhone(),
+		];
+	}
+
+	public function getAuthPassword(): string
+	{
+		return $this->getPass();
+	}
+
+	public function setAuthPassword(#[SensitiveParameter] string $password_hash): static
+	{
+		$this->setPass($password_hash);
+
+		return $this;
+	}
+
+	public function getAuthUserDataStore(): AuthUserDataStore
+	{
+		return AuthUserDataStore::getInstance($this, $this->getData()->get(self::AUTH_USER_DATA_STORE_KEY, []));
+	}
+
+	public function setAuthUserDataStore(AuthUserDataStore $store): static
+	{
+		// The keys the store was written at, under the store's own key: writing the store whole
+		// would carry every one of its keys as this request read them, so a right granted by one
+		// request and two-factor enabled by another would come down to whichever answers last.
+		$operations = $store->recordedOperations();
+
+		if ([] === $operations) {
+			// Nothing recorded: either nothing was written, or something changed the data in place
+			// rather than through the store, and then only the whole store answers for it.
+			$this->setDataKey(self::AUTH_USER_DATA_STORE_KEY, $store->getData());
+
+			return $this;
+		}
+
+		$patch = new JsonPatch($this->getData());
+
+		foreach ($operations as $operation) {
+			$path = [self::AUTH_USER_DATA_STORE_KEY, ...$operation['path']];
+
+			if ('remove' === $operation['op']) {
+				$patch->removeAt($path);
+
+				continue;
+			}
+
+			$patch->setAt($path, $operation['value']);
+		}
+
+		$this->setData($patch);
+
+		return $this;
+	}
+
+	public function isAuthUserValid(): bool
+	{
+		return $this->isValid();
+	}
+
+	/**
+	 * The `pic` column every table made by `makeAuthUserTable()` has: its file, once kept.
+	 */
+	public function getAuthUserPicture(): ?OZFile
+	{
+		$pic = $this->pic;
+
+		if (!$pic instanceof ValidatedFile || $pic->isTemporary()) {
+			return null;
+		}
+
+		return $pic->loadFile();
+	}
+
+	public function save(): bool
+	{
+		if (!$this->getID()) {
+			// new user will be added
+			$phone = $this->getPhone();
+			$email = $this->getEmail();
+
+			if (empty($phone) && empty($email)) {
+				// Maybe "OZ_AUTH_USER_PHONE_REQUIRED" and "OZ_AUTH_USER_EMAIL_REQUIRED"
+				// are both set to "false" in "oz.auth.users" settings file.
+				throw new RuntimeException('Both user Phone and Email should not be empty.');
+			}
+		}
+
+		$pass = $this->getPass();
+
+		// we should not store non-hashed password
+		if (!Password::isHash($pass)) {
+			$pass = Password::hash($pass);
+			$this->setPass($pass);
+
+			// when user password change, force login again
+			// on all sessions associated with user
+			if ($this->getID()) {
+				AuthUsers::forceUserLogoutOnAllActiveSessions($this);
+			}
+		}
+
+		return parent::save();
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function toArray($hide_sensitive_data = true): array
+	{
+		$arr = parent::toArray($hide_sensitive_data);
+
+		// Sensitive data hidden or not already handled by parent toArray method,
+		// but we ensure that password is not included in the array representation
+		// of the user entity.
+		$arr[self::COL_PASS] = null;
+
+		return $arr;
+	}
+}

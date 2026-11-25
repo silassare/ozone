@@ -16,10 +16,10 @@ namespace OZONE\Core\Router\Traits;
 use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Roles\Enums\RoleStrategy;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
-use OZONE\Core\Router\Guards\AuthenticatedUserRouteGuard;
+use OZONE\Core\Router\Guards\AuthenticatedAuthUserRouteGuard;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
-use OZONE\Core\Router\Guards\UserAccessRightsRouteGuard;
-use OZONE\Core\Router\Guards\UserRoleRouteGuard;
+use OZONE\Core\Router\Guards\AuthUserAccessRightsRouteGuard;
+use OZONE\Core\Router\Guards\AuthUserRoleRouteGuard;
 use OZONE\Core\Router\RouteSharedOptions;
 
 /**
@@ -63,7 +63,7 @@ trait RouteGuardShortcutsTrait
 			'allowed_types' => $allowed_auth_user_types,
 		];
 
-		return $this->guard(static fn () => new AuthenticatedUserRouteGuard($allowed_auth_user_types));
+		return $this->guard(static fn () => new AuthenticatedAuthUserRouteGuard($allowed_auth_user_types));
 	}
 
 	/**
@@ -80,7 +80,7 @@ trait RouteGuardShortcutsTrait
 			'rights' => $rights,
 		];
 
-		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights));
+		return $this->guard(static fn () => new AuthUserAccessRightsRouteGuard($rights));
 	}
 
 	/**
@@ -101,7 +101,7 @@ trait RouteGuardShortcutsTrait
 			'roles'  => $roles,
 		];
 
-		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights, $roles));
+		return $this->guard(static fn () => new AuthUserAccessRightsRouteGuard($rights, $roles));
 	}
 
 	/**
@@ -119,7 +119,7 @@ trait RouteGuardShortcutsTrait
 			'strict' => true,
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard($roles));
+		return $this->guard(static fn () => new AuthUserRoleRouteGuard($roles));
 	}
 
 	/**
@@ -144,7 +144,7 @@ trait RouteGuardShortcutsTrait
 			'at_least' => $at_least?->value,
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard(
+		return $this->guard(static fn () => new AuthUserRoleRouteGuard(
 			\array_values($roles),
 			true,
 			$strategy,
@@ -167,7 +167,7 @@ trait RouteGuardShortcutsTrait
 			'strict' => false,
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard($roles, false));
+		return $this->guard(static fn () => new AuthUserRoleRouteGuard($roles, false));
 	}
 
 	/**
@@ -183,7 +183,7 @@ trait RouteGuardShortcutsTrait
 			'strict' => true,
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
+		return $this->guard(static fn () => new AuthUserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
 	}
 
 	/**
@@ -199,6 +199,6 @@ trait RouteGuardShortcutsTrait
 			'strict' => true,
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard([Role::SUPER_ADMIN]));
+		return $this->guard(static fn () => new AuthUserRoleRouteGuard([Role::SUPER_ADMIN]));
 	}
 }

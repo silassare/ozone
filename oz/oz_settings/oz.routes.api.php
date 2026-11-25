@@ -19,6 +19,7 @@ use OZONE\Core\Auth\Services\Login;
 use OZONE\Core\Auth\Services\Logout;
 use OZONE\Core\Auth\Services\Password;
 use OZONE\Core\Auth\Services\PhoneOwnershipVerificationService;
+use OZONE\Core\Auth\Services\SignUp;
 use OZONE\Core\Auth\Services\TNet;
 use OZONE\Core\Forms\Resume\Services\ResumableFormService;
 use OZONE\Core\FS\Services\UploadFiles;
@@ -26,7 +27,6 @@ use OZONE\Core\REST\Services\ApiDocService;
 use OZONE\Core\Services\CaptchaCode;
 use OZONE\Core\Services\LinkTo;
 use OZONE\Core\Services\QRCode;
-use OZONE\Core\Users\Services\SignUp;
 
 return [
 	UploadFiles::class                       => true,

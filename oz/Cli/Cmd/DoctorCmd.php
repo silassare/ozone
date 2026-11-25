@@ -84,6 +84,85 @@ final class DoctorCmd extends Command
 		}
 	}
 
+	/**
+	 * Whether two scopes of the project declare the same class in their own directories.
+	 *
+	 * The project namespace reads a scope's `scopes/{name}/` directory too, and a process that calls
+	 * into another scope reads that scope's as well, for good: PHP cannot unload a class. Of two
+	 * scopes declaring one class, the first to load it wins, so the other scope runs the wrong one.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	public static function scopeClassesChecks(): array
+	{
+		$prefix = \trim((string) Settings::get('oz.config', 'OZ_PROJECT_NAMESPACE'), '\\') . '\\';
+		$root   = app()->getProjectDir()->resolve('scopes');
+		$owners = [];
+
+		foreach (\glob($root . DS . '*', \GLOB_ONLYDIR) ?: [] as $dir) {
+			foreach (ClassLoader::classesUnder($prefix, $dir) as $class => $_) {
+				$first = \strstr(\substr($class, \strlen($prefix)), '\\', true);
+
+				// The scope's settings and templates are no classes, whatever their names.
+				if ('settings' !== $first && 'templates' !== $first) {
+					$owners[$class][] = \basename($dir);
+				}
+			}
+		}
+
+		$rows = [];
+
+		foreach ($owners as $class => $scopes) {
+			if (\count($scopes) > 1) {
+				$rows[] = self::row(
+					'Scope classes',
+					self::WARN,
+					\sprintf('%s is declared by the scopes %s', $class, \implode(', ', $scopes)),
+					'Rename it in all but one of them, or move it to app/ if they share it: a process'
+						. ' calling from one into another runs whichever it loaded first.'
+				);
+			}
+		}
+
+		return [] === $rows ? [self::row('Scope classes', self::OK, 'no class declared by two scopes', '')] : $rows;
+	}
+
+	/**
+	 * Where direct links to public files point: a failure when direct access is on and
+	 * `OZ_PUBLIC_FILES_BASE_URL` is missing or invalid, since every link would then throw.
+	 *
+	 * Where `oz deploy init --target=bare` wrote the root scope's vhost, the fix names the URL it
+	 * serves the public files directory on: its document root is `public/`, which links that
+	 * directory.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	public static function publicFilesChecks(): array
+	{
+		$name = 'Public files';
+
+		if (!Settings::get('oz.files', 'OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED')) {
+			return [self::row($name, self::OK, 'served through the file route (direct access off)', '')];
+		}
+
+		try {
+			$base = PublicLocalStorage::baseUrl();
+		} catch (RuntimeException $e) {
+			return [self::row($name, self::FAIL, $e->getMessage(), self::publicFilesFix())];
+		}
+
+		if (null === $base) {
+			return [self::row(
+				$name,
+				self::FAIL,
+				'direct access is on and OZ_PUBLIC_FILES_BASE_URL (oz.files) is not set',
+				self::publicFilesFix()
+			)];
+		}
+
+		return [self::row($name, self::OK, 'linked at ' . $base, '')];
+	}
+
 	#[Override]
 	protected function describe(): void
 	{
@@ -302,49 +381,6 @@ final class DoctorCmd extends Command
 	}
 
 	/**
-	 * Whether two scopes of the project declare the same class in their own directories.
-	 *
-	 * The project namespace reads a scope's `scopes/{name}/` directory too, and a process that calls
-	 * into another scope reads that scope's as well, for good: PHP cannot unload a class. Of two
-	 * scopes declaring one class, the first to load it wins, so the other scope runs the wrong one.
-	 *
-	 * @return list<array{name: string, status: string, detail: string, fix: string}>
-	 */
-	public static function scopeClassesChecks(): array
-	{
-		$prefix = \trim((string) Settings::get('oz.config', 'OZ_PROJECT_NAMESPACE'), '\\') . '\\';
-		$root   = app()->getProjectDir()->resolve('scopes');
-		$owners = [];
-
-		foreach (\glob($root . DS . '*', \GLOB_ONLYDIR) ?: [] as $dir) {
-			foreach (ClassLoader::classesUnder($prefix, $dir) as $class => $_) {
-				$first = \strstr(\substr($class, \strlen($prefix)), '\\', true);
-
-				// The scope's settings and templates are no classes, whatever their names.
-				if ('settings' !== $first && 'templates' !== $first) {
-					$owners[$class][] = \basename($dir);
-				}
-			}
-		}
-
-		$rows = [];
-
-		foreach ($owners as $class => $scopes) {
-			if (\count($scopes) > 1) {
-				$rows[] = self::row(
-					'Scope classes',
-					self::WARN,
-					\sprintf('%s is declared by the scopes %s', $class, \implode(', ', $scopes)),
-					'Rename it in all but one of them, or move it to app/ if they share it: a process'
-						. ' calling from one into another runs whichever it loaded first.'
-				);
-			}
-		}
-
-		return [] === $rows ? [self::row('Scope classes', self::OK, 'no class declared by two scopes', '')] : $rows;
-	}
-
-	/**
 	 * Whether a maintenance is in force: since when, what it holds, whether the jobs wait. A warning
 	 * while it lasts, which a release check reads past since a deploy may run under one; a failure
 	 * when its record cannot be read, which holds every scope and pauses the jobs until someone
@@ -451,42 +487,6 @@ final class DoctorCmd extends Command
 		}
 
 		return $rows;
-	}
-
-	/**
-	 * Where direct links to public files point: a failure when direct access is on and
-	 * `OZ_PUBLIC_FILES_BASE_URL` is missing or invalid, since every link would then throw.
-	 *
-	 * Where `oz deploy init --target=bare` wrote the root scope's vhost, the fix names the URL it
-	 * serves the public files directory on: its document root is `public/`, which links that
-	 * directory.
-	 *
-	 * @return list<array{name: string, status: string, detail: string, fix: string}>
-	 */
-	public static function publicFilesChecks(): array
-	{
-		$name = 'Public files';
-
-		if (!Settings::get('oz.files', 'OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED')) {
-			return [self::row($name, self::OK, 'served through the file route (direct access off)', '')];
-		}
-
-		try {
-			$base = PublicLocalStorage::baseUrl();
-		} catch (RuntimeException $e) {
-			return [self::row($name, self::FAIL, $e->getMessage(), self::publicFilesFix())];
-		}
-
-		if (null === $base) {
-			return [self::row(
-				$name,
-				self::FAIL,
-				'direct access is on and OZ_PUBLIC_FILES_BASE_URL (oz.files) is not set',
-				self::publicFilesFix()
-			)];
-		}
-
-		return [self::row($name, self::OK, 'linked at ' . $base, '')];
 	}
 
 	/**
@@ -703,7 +703,7 @@ final class DoctorCmd extends Command
 					$has_super_admin ? 'present' : 'none',
 					$has_super_admin
 						? ''
-						: 'Give the role to a user: "oz users grant --user=<id|email> --role=super-admin".'
+						: 'Give the role to an auth user: "oz auth-users grant --user=<id|email> --role=super-admin".'
 				);
 			}
 		} catch (Throwable $t) {

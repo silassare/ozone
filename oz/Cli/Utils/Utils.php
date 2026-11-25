@@ -207,10 +207,18 @@ final class Utils
 	 * write it. An option is required only when its column is not nullable and has no default, and
 	 * bool columns take `true` / `false`, `1` / `0` or `yes` / `no`.
 	 *
+	 * `$includes` and `$excludes` name columns by their full name. With `$short_names`, each option
+	 * is named by its column's name without the table's prefix (`email` and not `user_email`), so the
+	 * same options fit every table built with the same columns under another prefix.
+	 *
 	 * @return KliOption[]
 	 */
-	public static function buildTableCliOptions(Table $table, array $includes = [], array $excludes = []): array
-	{
+	public static function buildTableCliOptions(
+		Table $table,
+		array $includes = [],
+		array $excludes = [],
+		bool $short_names = false
+	): array {
 		$options = [];
 
 		if ($table->isSoftDeletable()) {
@@ -233,6 +241,7 @@ final class Utils
 				continue;
 			}
 
+			$name   = $short_names ? $column->getName() : $name;
 			$option = new KliOption($name);
 
 			if ($db_type instanceof TypeBool || $db_type->getBaseType() instanceof TypeBool) {

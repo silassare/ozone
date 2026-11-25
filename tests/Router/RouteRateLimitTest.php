@@ -24,10 +24,10 @@ use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
+use OZONE\Core\Router\Rates\AuthUserRateLimit;
 use OZONE\Core\Router\Rates\IPRateLimit;
 use OZONE\Core\Router\Rates\RateLimit;
 use OZONE\Core\Router\Rates\StatefulAuthRateLimit;
-use OZONE\Core\Router\Rates\UserRateLimit;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -51,7 +51,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RouteRateLimiter::class)]
 #[CoversClass(RateLimit::class)]
 #[CoversClass(IPRateLimit::class)]
-#[CoversClass(UserRateLimit::class)]
+#[CoversClass(AuthUserRateLimit::class)]
 #[CoversClass(StatefulAuthRateLimit::class)]
 final class RouteRateLimitTest extends TestCase
 {
@@ -149,18 +149,18 @@ final class RouteRateLimitTest extends TestCase
 			$router->get('/by-user/' . $name, static fn () => null)
 				->name('by.user.' . $name)
 				->withAuthentication(RouteRateLimitTestAuth::class)
-				->rateLimit(static fn (RouteInfo $ri) => new UserRateLimit($ri, 1, 60));
+				->rateLimit(static fn (RouteInfo $ri) => new AuthUserRateLimit($ri, 1, 60));
 		}
 
 		$a = $this->dispatch(TestUtils::route($router, 'by.user.a'), true);
 		$b = $this->dispatch(TestUtils::route($router, 'by.user.b'), true);
 
-		$this->counted[] = [$a, new UserRateLimit($a, 1, 60)];
-		$this->counted[] = [$b, new UserRateLimit($b, 1, 60)];
+		$this->counted[] = [$a, new AuthUserRateLimit($a, 1, 60)];
+		$this->counted[] = [$b, new AuthUserRateLimit($b, 1, 60)];
 
 		self::assertSame(
 			'user:' . TestUtils::route($router, 'by.user.a')->key() . ':user.4242',
-			new UserRateLimit($a, 1, 60)->key()
+			new AuthUserRateLimit($a, 1, 60)->key()
 		);
 
 		// Route b's one request was its own, not the second of a quota shared with route a.

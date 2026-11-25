@@ -17,8 +17,9 @@
   entity it registers, and that entity may hold **neither an email nor a phone** (a username of a
   messaging account, a national identity number, whatever an identity provider offers next). So
   framework code speaks `AuthUserInterface` and `AuthUsersRepositoryInterface`, never a generated user
-  class: `OZUser` is named in `oz/Users/` only (`SignUp`, `UsersCmd`, the default repository's own
-  services), and `grep -rn 'OZUser' oz/` staying inside `oz/Users/` is the check that this still holds.
+  class: `OZUser` is named nowhere in `oz/` (sign-up, `oz auth-users` and the picture route reach a
+  type's table through `AuthUsers` and `AuthUsersRepository`), and `grep -rn 'OZUser' oz/` finding
+  nothing is the check that this still holds.
   An identifier **type is an open string** end to end (`getAuthIdentifiers()` is a free map,
   `getAuthUserByIdentifierType(string $type, string $value)`, and `AuthUsers::selectorForm()`
   constrains neither); `AuthUserInterface::IDENTIFIER_TYPE_*` are well known names, **not a closed
@@ -830,7 +831,7 @@ is the stateful store. Force a logout everywhere with
 `AuthUsers::forceUserLogoutOnAllActiveSessions($user)`.
 
 **Identity** (DESIGN LAW 1): a user type is a key of `oz.auth.users.repositories` mapped to an
-`AuthUsersRepositoryInterface` (`UsersRepository::DEFAULT_USER_TYPE` is `user`, served by `oz_users`),
+`AuthUsersRepositoryInterface` (`AuthUsersRepository::DEFAULT_AUTH_USER_TYPE` is `user`, served by `oz_users`),
 and a request names the type it means (`auth_user_type`). An account is found by its id
 (`getAuthUserByIdentifier()`) or by an identifier **type and value**
 (`getAuthUserByIdentifierType()`), both strings a repository reads as it likes;
@@ -918,11 +919,14 @@ unless already a hash), `TypeCC2`, `TypeGender`, `TypeFile`. `registered()` / `n
   upload, with its CSRF token; `DELETE /upload/chunk/{ref}` drops it. The stored name is never the one
   that was sent: `FS::sanitizeFilename()` slugifies it, adds a random suffix and takes the extension
   from the type.
-- **A user's picture is never reached by a file key**: `oz:user-picture` (`Users\Views\UserPictureView`)
-  serves `oz_users.pic` to whom `OZ_USER_PICTURE_ACCESS` allows, through `FileFilters` like
-  `oz:files` and never as its original; an image that is no `OZFile` (its fallback, a rendition
-  rendered again) goes through `ImageFileFilterHandler::render()`, never a second pipeline. An id no
-  user has answers as a refusal, so 404 is only ever said to a viewer the rule allows.
+- **An auth user's picture is never reached by a file key**: `oz:auth-user-picture`
+  (`Auth\Views\AuthUserPictureView`, `/auth-users/{type}/{id}/picture`) serves the picture of any
+  auth user type whose entity is an `AuthUserPictureInterface` (every `makeAuthUserTable()` table, its
+  `pic`) to whom `OZ_AUTH_USER_PICTURE_ACCESS` allows, "self" being the same type **and** id
+  (`AuthUsers::same()`), through `FileFilters` like `oz:files` and never as its original; an image
+  that is no `OZFile` (its fallback, a rendition rendered again) goes through
+  `ImageFileFilterHandler::render()`, never a second pipeline. A type no repository serves, or an id
+  no auth user of it has, answers as a refusal, so 404 is only ever said to a viewer the rule allows.
 - **Virus scan** (`FS\Scan\FileScan`, `oz.files.scan`, off by default): every new `OZFile` goes
   through it from `FileEntityTrait::save()`, clones excepted. `sync` scans before the insert and throws
   `FileScanRejectedException` after deleting the content; `async` inserts `pending` and queues a
@@ -1496,7 +1500,7 @@ SQLite file apart.
 - HTTP errors extend `Exceptions\BaseException` (`BadRequestException` 400, `InvalidFormException`
   400, `UnauthorizedException` 401, `ForbiddenException` 403, `NotFoundException` 404,
   `MethodNotAllowedException` 405); throw them from guards, middlewares and handlers.
-- `UserEntityTrait` is applied to tables `UsersRepository::isTableSupported()` recognizes, and
+- `AuthUserEntityTrait` is applied to tables `AuthUsersRepository::isTableSupported()` recognizes, and
   `FileEntityTrait` to `oz_files`, when the ORM classes are generated.
 
 ---

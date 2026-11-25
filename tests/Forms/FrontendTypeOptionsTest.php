@@ -38,15 +38,15 @@ final class FrontendTypeOptionsTest extends TestCase
 	#[Override]
 	protected function tearDown(): void
 	{
-		Settings::unset('oz.users', 'OZ_USER_PASS_MIN_LENGTH');
-		Settings::unset('oz.users', 'OZ_USER_NAME_PATTERN');
-		Settings::unset('oz.users', 'OZ_USER_ALLOWED_GENDERS');
+		Settings::unset('oz.auth.users', 'OZ_AUTH_USER_PASS_MIN_LENGTH');
+		Settings::unset('oz.auth.users', 'OZ_AUTH_USER_NAME_PATTERN');
+		Settings::unset('oz.auth.users', 'OZ_AUTH_USER_ALLOWED_GENDERS');
 	}
 
 	/** A password that sets no length checks the settings' one, and says so. */
 	public function testAPasswordSendsTheLengthsOfTheSettings(): void
 	{
-		Settings::set('oz.users', 'OZ_USER_PASS_MIN_LENGTH', 9);
+		Settings::set('oz.auth.users', 'OZ_AUTH_USER_PASS_MIN_LENGTH', 9);
 
 		$form = new Form();
 		$form->password('pass');
@@ -54,7 +54,7 @@ final class FrontendTypeOptionsTest extends TestCase
 		$type = self::typeOf($form, 'pass');
 
 		self::assertSame(9, $type['min']);
-		self::assertSame((int) Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH'), $type['max']);
+		self::assertSame((int) Settings::get('oz.auth.users', 'OZ_AUTH_USER_PASS_MAX_LENGTH'), $type['max']);
 	}
 
 	/** Its own lengths win over the settings'. */
@@ -76,9 +76,9 @@ final class FrontendTypeOptionsTest extends TestCase
 
 		$type = self::typeOf($form, 'name');
 
-		self::assertSame((int) Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH'), $type['min']);
-		self::assertSame((int) Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH'), $type['max']);
-		self::assertSame(Settings::get('oz.users', 'OZ_USER_NAME_PATTERN'), $type['pattern']);
+		self::assertSame((int) Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_MIN_LENGTH'), $type['min']);
+		self::assertSame((int) Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_MAX_LENGTH'), $type['max']);
+		self::assertSame(Settings::get('oz.auth.users', 'OZ_AUTH_USER_NAME_PATTERN'), $type['pattern']);
 	}
 
 	/**
@@ -88,7 +88,7 @@ final class FrontendTypeOptionsTest extends TestCase
 	public function testAUsernameKeepsANonPortablePatternToItself(): void
 	{
 		// A possessive quantifier: PCRE reads it, JavaScript does not.
-		Settings::set('oz.users', 'OZ_USER_NAME_PATTERN', '~^[a-z]++$~');
+		Settings::set('oz.auth.users', 'OZ_AUTH_USER_NAME_PATTERN', '~^[a-z]++$~');
 
 		$form = new Form();
 		$form->username('name');
@@ -98,7 +98,7 @@ final class FrontendTypeOptionsTest extends TestCase
 
 	public function testAGenderSendsTheGendersItAccepts(): void
 	{
-		Settings::set('oz.users', 'OZ_USER_ALLOWED_GENDERS', ['a', 'b']);
+		Settings::set('oz.auth.users', 'OZ_AUTH_USER_ALLOWED_GENDERS', ['a', 'b']);
 
 		$form = new Form();
 		$form->gender('g');

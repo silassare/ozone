@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TypeGender::class)]
 final class TypeGenderTest extends TestCase
 {
-	// Default OZ_USER_ALLOWED_GENDERS: ['Male', 'Female', 'None', 'Other']
+	// Default OZ_AUTH_USER_ALLOWED_GENDERS: ['Male', 'Female', 'None', 'Other']
 
 	public function testAcceptsMale(): void
 	{

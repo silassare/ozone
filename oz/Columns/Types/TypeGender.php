@@ -69,7 +69,7 @@ class TypeGender extends Type implements FrontendTypeOptionsInterface
 	#[Override]
 	public function frontendOptions(): array
 	{
-		return ['allowed' => \array_values((array) Settings::get('oz.users', 'OZ_USER_ALLOWED_GENDERS'))];
+		return ['allowed' => \array_values((array) Settings::get('oz.auth.users', 'OZ_AUTH_USER_ALLOWED_GENDERS'))];
 	}
 
 	#[Override]
@@ -90,7 +90,7 @@ class TypeGender extends Type implements FrontendTypeOptionsInterface
 		];
 
 		if (null !== $value && '' !== $value) {
-			$allowed = Settings::get('oz.users', 'OZ_USER_ALLOWED_GENDERS');
+			$allowed = Settings::get('oz.auth.users', 'OZ_AUTH_USER_ALLOWED_GENDERS');
 
 			if (!\in_array($value, $allowed, true)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID', $debug));

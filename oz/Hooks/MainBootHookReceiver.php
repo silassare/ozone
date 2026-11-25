@@ -20,8 +20,11 @@ use Gobl\ORM\Utils\ORMClassKind;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\AuthUsersRepository;
 use OZONE\Core\Auth\Events\SessionHijackingDetected;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use OZONE\Core\Auth\Picture\Interfaces\AuthUserPictureInterface;
+use OZONE\Core\Auth\Traits\AuthUserEntityTrait;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\MethodNotAllowedException;
@@ -39,8 +42,6 @@ use OZONE\Core\REST\Views\ApiDocView;
 use OZONE\Core\Router\Events\RouteMethodNotAllowed;
 use OZONE\Core\Router\Events\RouteNotFound;
 use OZONE\Core\Stores\Drivers\MemoryStore;
-use OZONE\Core\Users\Traits\UserEntityTrait;
-use OZONE\Core\Users\UsersRepository;
 use OZONE\Core\Web\WebView;
 use PHPUtils\Events\Event;
 
@@ -212,40 +213,6 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	}
 
 	/**
-	 * The security headers to send, with the policy `OZ_CONTENT_SECURITY_POLICY` composes.
-	 *
-	 * A policy written out in `OZ_SECURITY_HEADERS` is the header as written, and is kept: the
-	 * directives are a default for a project to layer, never a value that overrules the one a
-	 * project stated whole. It is the rule this method's caller applies to a handler's own
-	 * header, one setting earlier.
-	 *
-	 * @param array<array-key, mixed> $headers
-	 *
-	 * @return array<array-key, mixed>
-	 */
-	private static function securityHeaders(array $headers): array
-	{
-		foreach ($headers as $name => $value) {
-			if (0 !== \strcasecmp((string) $name, ContentSecurityPolicy::HEADER)) {
-				continue;
-			}
-
-			// Null, false or empty says "do not send this header", which leaves the directives to say.
-			if (null !== $value && false !== $value && '' !== $value) {
-				return $headers;
-			}
-		}
-
-		$policy = ContentSecurityPolicy::fromSettings();
-
-		if (!$policy->isEmpty()) {
-			$headers[ContentSecurityPolicy::HEADER] = $policy->header();
-		}
-
-		return $headers;
-	}
-
-	/**
 	 * @throws Exception
 	 */
 	public static function onTableFilesGenerated(ORMTableFilesGenerated $event): void
@@ -253,16 +220,16 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$table      = $event->getTable();
 		$table_name = $table->getName();
 		$trait      = null;
-		$interface  = null;
+		$interfaces = [];
 
-		if (UsersRepository::isTableSupported($table)) {
-			$trait     = UserEntityTrait::class;
-			$interface = AuthUserInterface::class;
+		if (AuthUsersRepository::isTableSupported($table)) {
+			$trait      = AuthUserEntityTrait::class;
+			$interfaces = [AuthUserInterface::class, AuthUserPictureInterface::class];
 		} elseif ('oz_files' === $table_name) {
 			$trait = FileEntityTrait::class;
 		}
 
-		if ($interface) {
+		foreach ($interfaces as $interface) {
 			$event->getClass(ORMClassKind::ENTITY)
 				->implements($interface);
 		}
@@ -319,5 +286,39 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		if (OZone::isCliMode()) {
 			ORMTableFilesGenerated::listen([self::class, 'onTableFilesGenerated'], Event::RUN_FIRST);
 		}
+	}
+
+	/**
+	 * The security headers to send, with the policy `OZ_CONTENT_SECURITY_POLICY` composes.
+	 *
+	 * A policy written out in `OZ_SECURITY_HEADERS` is the header as written, and is kept: the
+	 * directives are a default for a project to layer, never a value that overrules the one a
+	 * project stated whole. It is the rule this method's caller applies to a handler's own
+	 * header, one setting earlier.
+	 *
+	 * @param array<array-key, mixed> $headers
+	 *
+	 * @return array<array-key, mixed>
+	 */
+	private static function securityHeaders(array $headers): array
+	{
+		foreach ($headers as $name => $value) {
+			if (0 !== \strcasecmp((string) $name, ContentSecurityPolicy::HEADER)) {
+				continue;
+			}
+
+			// Null, false or empty says "do not send this header", which leaves the directives to say.
+			if (null !== $value && false !== $value && '' !== $value) {
+				return $headers;
+			}
+		}
+
+		$policy = ContentSecurityPolicy::fromSettings();
+
+		if (!$policy->isEmpty()) {
+			$headers[ContentSecurityPolicy::HEADER] = $policy->header();
+		}
+
+		return $headers;
 	}
 }

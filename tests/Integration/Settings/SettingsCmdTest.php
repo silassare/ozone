@@ -204,7 +204,7 @@ final class SettingsCmdTest extends TestCase
 		$found = null;
 
 		foreach ($data['settings'] as $setting) {
-			if ('oz.users' === $setting['group'] && 'OZ_USER_PASS_MIN_LENGTH' === $setting['key']) {
+			if ('oz.auth.users' === $setting['group'] && 'OZ_AUTH_USER_PASS_MIN_LENGTH' === $setting['key']) {
 				$found = $setting;
 			}
 		}
@@ -212,7 +212,7 @@ final class SettingsCmdTest extends TestCase
 		self::assertNotNull($found);
 		self::assertSame(6, $found['default']);
 		self::assertSame('int', $found['type']);
-		self::assertStringContainsString('Minimum length for user password', $found['doc']);
+		self::assertStringContainsString("Minimum length for an auth user's password", $found['doc']);
 		self::assertContains('oz.auth.methods', $data['maps']);
 	}
 
@@ -228,7 +228,7 @@ final class SettingsCmdTest extends TestCase
 
 		$out = $proc->getOutput();
 
-		self::assertMatchesRegularExpression('~oz\.users\s+\d+ keys,\s+\d+ documented~', $out);
+		self::assertMatchesRegularExpression('~oz\.auth\.users\s+\d+ keys,\s+\d+ documented~', $out);
 		self::assertStringContainsString('for the client', $out);
 		self::assertStringContainsString('maps, whose keys are expressions', $out);
 	}

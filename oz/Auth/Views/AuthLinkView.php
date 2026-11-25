@@ -18,6 +18,7 @@ use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\AuthUsersRepository;
 use OZONE\Core\Auth\Enums\AuthorizationSecretType;
 use OZONE\Core\Auth\Enums\AuthorizationState;
 use OZONE\Core\Auth\Enums\VerificationPurpose;
@@ -34,7 +35,6 @@ use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Users\UsersRepository;
 use OZONE\Core\Web\WebView;
 
 /**
@@ -160,7 +160,7 @@ final class AuthLinkView extends WebView
 			return $this->recoveryForm($provider, 'OZ_VIEW_AUTH_LINK_RECOVERY_MISMATCH');
 		}
 
-		$user_type = $provider->getUserType() ?? UsersRepository::DEFAULT_USER_TYPE;
+		$user_type = $provider->getUserType() ?? AuthUsersRepository::DEFAULT_AUTH_USER_TYPE;
 		$allowed   = VerificationPolicy::providersFor(VerificationPolicy::ACCOUNT_RECOVERY, $user_type);
 
 		if (!\in_array($provider::getName(), $allowed, true)) {

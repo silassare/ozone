@@ -20,8 +20,8 @@ use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use Override;
 use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\AuthUsersRepository;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Users\UsersRepository;
 
 /**
  * Class TypePhone.
@@ -100,9 +100,9 @@ class TypePhone extends Type
 	{
 		if (isset($options['registered'])) {
 			if ($options['registered']) {
-				$this->registered($options['registered_as'] ?? UsersRepository::DEFAULT_USER_TYPE);
+				$this->registered($options['registered_as'] ?? AuthUsersRepository::DEFAULT_AUTH_USER_TYPE);
 			} else {
-				$this->notRegistered($options['registered_as'] ?? UsersRepository::DEFAULT_USER_TYPE);
+				$this->notRegistered($options['registered_as'] ?? AuthUsersRepository::DEFAULT_AUTH_USER_TYPE);
 			}
 		}
 
@@ -135,7 +135,7 @@ class TypePhone extends Type
 			// set on its own, through `setOption()`, and a user type is not optional to the lookup
 			// below. Read without it, an absent option was a `null` into a `string` parameter.
 			/** @var string $registered_as */
-			$registered_as = $this->getOption('registered_as', UsersRepository::DEFAULT_USER_TYPE);
+			$registered_as = $this->getOption('registered_as', AuthUsersRepository::DEFAULT_AUTH_USER_TYPE);
 
 			if (null !== $registered) {
 				$exists = null !== AuthUsers::identify(
