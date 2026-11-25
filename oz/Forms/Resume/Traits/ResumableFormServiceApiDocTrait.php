@@ -15,6 +15,7 @@ namespace OZONE\Core\Forms\Resume\Traits;
 
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Forms\Resume\Services\ResumableFormService;
 use OZONE\Core\REST\ApiDoc;
 
@@ -84,7 +85,12 @@ trait ResumableFormServiceApiDocTrait
 					'nullable'    => true,
 				]),
 			], 'Session started. Contains the `resume_ref` and the first form to fill.'),
-			$doc->error([], 'Too many requests (rate limit: 30 per hour per IP).', 'OZ_RATE_LIMIT_EXCEEDED', 429),
+			$doc->error(
+				[],
+				'Too many requests (rate limit: 30 per hour per IP).',
+				RateLimitReachedException::DEFAULT_MESSAGE,
+				429
+			),
 			$doc->error([], 'Provider not found or requires real context.', 'OZ_FORM_PROVIDER_NOT_FOUND', 200),
 			$doc->error([], 'Session cannot start yet (`notBefore()`).', 'OZ_FORM_SESSION_NOT_YET_ACTIVE', 200),
 		], [

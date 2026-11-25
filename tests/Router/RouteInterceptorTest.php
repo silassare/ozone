@@ -23,10 +23,11 @@ use OZONE\Core\Forms\FormDiscoveryRouteInterceptor;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
+use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
 use OZONE\Core\Router\Rates\RateLimit;
 use OZONE\Core\Router\RouteInfo;
-use OZONE\Core\Router\RouteRateLimiter;
 use OZONE\Core\Router\Router;
+use OZONE\Core\Router\RouteRateLimiter;
 use OZONE\Tests\TestUtils;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -223,7 +224,10 @@ final class RouteInterceptorTest extends TestCase
 			$this->expectException(RateLimitReachedException::class);
 			new RouteInfo(context(), $route, []);
 		} finally {
-			RouteRateLimiter::get(new RouteInfo($this->makeDiscoveryContext(), $route, []), $limit)->reset();
+			$ri = new RouteInfo(context(), $route, []);
+
+			RouteRateLimiter::get($ri, $limit)->reset();
+			RouteRateLimiter::get($ri, self::discoveryLimit($ri))->reset();
 		}
 	}
 
@@ -251,9 +255,79 @@ final class RouteInterceptorTest extends TestCase
 		}
 	}
 
+	public function testAFormDiscoveryIsCountedAgainstALimitOfItsOwn(): void
+	{
+		Settings::set('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE', 3);
+
+		$limit  = new RateLimit('test:discovery-own:' . \uniqid('', true), 1, 60);
+		$router = new Router();
+		$router->get('/rate-limited-discovered', static fn () => null)
+			->name('rate.limited.discovered')
+			->rateLimit($limit);
+
+		$route = TestUtils::route($router, 'rate.limited.discovered');
+		$ri    = new RouteInfo(context(), $route, []);
+
+		try {
+			// The route's own single attempt, spent: the discoveries are not refused for it.
+			self::assertSame(0, RouteRateLimiter::get($ri, $limit)->status()['remaining']);
+
+			for ($i = 0; $i < 3; ++$i) {
+				new RouteInfo($this->makeDiscoveryContext(), $route, []);
+			}
+
+			self::assertSame(0, RouteRateLimiter::get($ri, self::discoveryLimit($ri))->status()['remaining']);
+
+			$this->expectException(RateLimitReachedException::class);
+			new RouteInfo($this->makeDiscoveryContext(), $route, []);
+		} finally {
+			Settings::unset('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE');
+			RouteRateLimiter::get($ri, $limit)->reset();
+			RouteRateLimiter::get($ri, self::discoveryLimit($ri))->reset();
+		}
+	}
+
+	public function testNoDiscoveryIsCountedWhenItsRateIsZero(): void
+	{
+		Settings::set('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE', 0);
+
+		$limit  = new RateLimit('test:discovery-off:' . \uniqid('', true), 1, 60);
+		$router = new Router();
+		$router->get('/rate-limited-undiscovered', static fn () => null)
+			->name('rate.limited.undiscovered')
+			->rateLimit($limit);
+
+		$route = TestUtils::route($router, 'rate.limited.undiscovered');
+		$plain = new RouteInfo(context(), $route, []);
+
+		try {
+			self::assertNull(FormDiscoveryRouteInterceptor::rateLimit($plain));
+
+			for ($i = 0; $i < 5; ++$i) {
+				$ri = new RouteInfo($this->makeDiscoveryContext(), $route, []);
+				self::assertInstanceOf(FormDiscoveryRouteInterceptor::class, $ri->getInterceptor());
+			}
+		} finally {
+			Settings::unset('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE');
+			RouteRateLimiter::get($plain, $limit)->reset();
+		}
+	}
+
 	// -----------------------------------------------------------------------
 	// Helpers
 	// -----------------------------------------------------------------------
+
+	/**
+	 * The limit the route's discoveries are counted against.
+	 */
+	private static function discoveryLimit(RouteInfo $ri): RouteRateLimitInterface
+	{
+		$limit = FormDiscoveryRouteInterceptor::rateLimit($ri);
+
+		self::assertNotNull($limit);
+
+		return $limit;
+	}
 
 	private function makeDiscoveryContext(): Context
 	{

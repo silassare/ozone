@@ -22,6 +22,11 @@ use Throwable;
 class RateLimitReachedException extends BaseException
 {
 	/**
+	 * The message code a client is sent by default: what the API documentation states for a 429.
+	 */
+	public const string DEFAULT_MESSAGE = 'OZ_ERROR_RATE_LIMIT_REACHED';
+
+	/**
 	 * RateLimitReachedException constructor.
 	 *
 	 * @param null|I18nMessage|string $message  the exception message
@@ -34,7 +39,7 @@ class RateLimitReachedException extends BaseException
 		?Throwable $previous = null
 	) {
 		parent::__construct(
-			empty($message) ? 'OZ_ERROR_RATE_LIMIT_REACHED' : $message,
+			empty($message) ? self::DEFAULT_MESSAGE : $message,
 			$data,
 			$previous,
 			BaseException::RATE_LIMIT_REACHED,

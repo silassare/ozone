@@ -15,9 +15,12 @@ namespace OZONE\Core\Forms;
 
 use Override;
 use OZONE\Core\App\Service;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Forms\Resume\Services\ResumableFormService;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
+use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
+use OZONE\Core\Router\Rates\IPRateLimit;
 use OZONE\Core\Router\RouteFormDeclaration;
 use OZONE\Core\Router\RouteInfo;
 
@@ -74,5 +77,28 @@ final class FormDiscoveryRouteInterceptor implements RouteInterceptorInterface
 	public static function instance(RouteInfo $ri): static
 	{
 		return new self($ri);
+	}
+
+	/**
+	 * What a form discovery of a rate-limited route is counted against, in place of the route's own
+	 * limit: a quota of its own per IP and per route (`OZ_FORM_DISCOVERY_IP_RATE` in
+	 * `OZ_FORM_DISCOVERY_IP_INTERVAL`), so a page showing a form spends none of the attempts the route
+	 * rations, and asking for forms is bounded all the same. Null when the rate is 0: not counted.
+	 */
+	public static function rateLimit(RouteInfo $ri): ?RouteRateLimitInterface
+	{
+		$rate = (int) Settings::get('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE', 120);
+
+		if ($rate <= 0) {
+			return null;
+		}
+
+		return new IPRateLimit(
+			$ri,
+			$rate,
+			(int) Settings::get('oz.forms', 'OZ_FORM_DISCOVERY_IP_INTERVAL', 60),
+			1,
+			'form-discovery'
+		);
 	}
 }

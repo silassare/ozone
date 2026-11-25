@@ -11,6 +11,10 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\Users\Picture\Interfaces\UserPictureFallbackInterface;
+use OZONE\Core\Users\Picture\SelfOrAdminPictureAccess;
+use OZONE\Core\Users\Views\UserPictureView;
+
 return [
 	/**
 	 * Minimum age at december 31 of the current year.
@@ -60,6 +64,42 @@ return [
 	 * The size is in pixels.
 	 */
 	'OZ_USER_PIC_MIN_SIZE'    => 150,
+
+	/**
+	 * Who may see a user's picture (`oz:user-picture`, `/users/{id}/picture[/{tokens}]`): a class
+	 * implementing `OZONE\Core\Users\Picture\Interfaces\UserPictureAccessInterface`. Shipped:
+	 * `SelfOrAdminPictureAccess` (the user and administrators), `SignedInPictureAccess` (anyone signed
+	 * in) and `PublicPictureAccess` (anyone). Anyone else is refused (403).
+	 *
+	 * @see UserPictureView
+	 */
+	'OZ_USER_PICTURE_ACCESS'    => SelfOrAdminPictureAccess::class,
+
+	/**
+	 * Image tokens applied to every user picture before the ones its address asks for, so a project
+	 * shapes them all alike whatever a link asks: a square crop, a size cap, a watermark token
+	 * (`['thumb256']`). The tokens asked for are rendered on what these gave.
+	 *
+	 * @see UserPictureView
+	 */
+	'OZ_USER_PICTURE_TOKENS'    => [],
+
+	/**
+	 * What a user picture's address answers in place of a picture: one value for both cases, or
+	 * `['refused' => ..., 'missing' => ...]` -- `refused` for a viewer the access rule refuses (and an
+	 * id no user has), `missing` for an allowed viewer asking for a user with no picture. Each is:
+	 *
+	 * - `null`: the status, 403 or 404 (404 only ever to an allowed viewer);
+	 * - an image's path, from the project's root (`app/files/avatar.png`): answered with 200, rendered
+	 *   as a picture is, the forced tokens and the ones asked for included;
+	 * - a class implementing `UserPictureFallbackInterface`, which draws the image or answers null
+	 *   for the status.
+	 *
+	 * An image for `refused` says nothing of whether the user has a picture, which is why one is chosen.
+	 *
+	 * @see UserPictureFallbackInterface
+	 */
+	'OZ_USER_PICTURE_FALLBACK'  => null,
 
 	/**
 	 * Allowed gender list.

@@ -44,6 +44,16 @@ class GetFilesView extends WebView
 {
 	public const string MAIN_ROUTE = 'oz:files';
 
+	/**
+	 * The token of an image's untouched original.
+	 */
+	public const string ORIGINAL_TOKEN = 'original';
+
+	/**
+	 * What the filter tokens of an address may hold: tokens joined by `FS::FILTERS_SEPARATOR`.
+	 */
+	public const string FILTERS_PARAM_PATTERN = '[a-z0-9\~]+';
+
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -74,7 +84,7 @@ class GetFilesView extends WebView
 			'oz_file_id'        => '[0-9]+',
 			'oz_file_auth_ref'  => '[a-z0-9]{32,}',
 			'oz_file_auth_key'  => '[a-z0-9]{32,}',
-			'oz_file_filters'   => '[a-z0-9\~]+',
+			'oz_file_filters'   => self::FILTERS_PARAM_PATTERN,
 			'oz_file_extension' => '[a-z0-9]{1,10}',
 		]);
 	}
@@ -131,7 +141,7 @@ class GetFilesView extends WebView
 
 		$response = $context->getResponse();
 
-		if ('original' === $req_file_filters && self::rendersAsImage($file)) {
+		if (self::ORIGINAL_TOKEN === $req_file_filters && self::rendersAsImage($file)) {
 			// The untouched original: its metadata, without a forced watermark, for whom the project allows.
 			if (!self::originalAccess()->allows($file, $context)) {
 				throw new ForbiddenException(null, ['_reason' => 'The original of this image is not served to you.']);

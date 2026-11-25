@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace OZONE\Core\Users\Picture;
+
+use Override;
+use OZONE\Core\App\Context;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\Roles\Roles;
+use OZONE\Core\Users\Picture\Interfaces\UserPictureAccessInterface;
+
+/**
+ * The default: the user themself, and administrators.
+ */
+final class SelfOrAdminPictureAccess implements UserPictureAccessInterface
+{
+	#[Override]
+	public function allows(OZUser $owner, Context $context): bool
+	{
+		if (!$context->hasAuthenticatedUser()) {
+			return false;
+		}
+
+		$viewer = $context->auth()->user();
+
+		return (
+			$viewer->getAuthUserType() === $owner->getAuthUserType()
+			&& $viewer->getAuthIdentifier() === $owner->getAuthIdentifier()
+		) || Roles::isAdmin($viewer, false);
+	}
+}

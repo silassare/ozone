@@ -492,8 +492,9 @@ parent of another, sharing path, name, guards and middlewares without a group bl
 - **Interceptors** (`RouteInterceptorInterface`) run after guards and middlewares; the first, by
   priority descending, whose `shouldIntercept()` is true replaces the handler, and **form validation
   is then skipped** (`getCleanFormData()` is empty). It is **selected** after the guards and before
-  the middlewares (`$ri->getInterceptor()`), which is how `rateLimit()` leaves a form discovery
-  uncounted while a resume is counted. Two are always injected:
+  the middlewares (`$ri->getInterceptor()`), which is how `rateLimit()` counts a form discovery
+  against a cheaper per-IP limit of its own (`OZ_FORM_DISCOVERY_IP_RATE`) and never against the
+  route's, while a resume is counted as a submission. Two are always injected:
   `FormResumeRouteInterceptor` (priority 1: a resumable route with `X-OZONE-Form-Resume: ?1`) and
   `FormDiscoveryRouteInterceptor` (priority 0: `X-OZONE-Form-Discovery: ?1`, when
   `OZ_FORM_DISCOVERY_HEADER_ALLOWED`). Those checks are on `Request`, not `Context`.
@@ -917,6 +918,11 @@ unless already a hash), `TypeCC2`, `TypeGender`, `TypeFile`. `registered()` / `n
   upload, with its CSRF token; `DELETE /upload/chunk/{ref}` drops it. The stored name is never the one
   that was sent: `FS::sanitizeFilename()` slugifies it, adds a random suffix and takes the extension
   from the type.
+- **A user's picture is never reached by a file key**: `oz:user-picture` (`Users\Views\UserPictureView`)
+  serves `oz_users.pic` to whom `OZ_USER_PICTURE_ACCESS` allows, through `FileFilters` like
+  `oz:files` and never as its original; an image that is no `OZFile` (its fallback, a rendition
+  rendered again) goes through `ImageFileFilterHandler::render()`, never a second pipeline. An id no
+  user has answers as a refusal, so 404 is only ever said to a viewer the rule allows.
 - **Virus scan** (`FS\Scan\FileScan`, `oz.files.scan`, off by default): every new `OZFile` goes
   through it from `FileEntityTrait::save()`, clones excepted. `sync` scans before the insert and throws
   `FileScanRejectedException` after deleting the content; `async` inserts `pending` and queues a

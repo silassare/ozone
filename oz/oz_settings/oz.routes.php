@@ -16,15 +16,17 @@ use OZONE\Core\Cli\Cron\CronEndpoint;
 use OZONE\Core\FS\Views\GetFilesView;
 use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\REST\Views\ApiDocView;
+use OZONE\Core\Users\Views\UserPictureView;
 use OZONE\Core\Web\RobotsTxt;
 use OZONE\Core\Web\Views\RedirectView;
 
 return [
-	RedirectView::class  => true,
-	ApiDocView::class    => true,
-	GetFilesView::class  => true,
-	AuthLinkView::class  => true,
-	Polyglot::class      => true,
-	CronEndpoint::class  => true,
-	RobotsTxt::class     => true,
+	RedirectView::class    => true,
+	ApiDocView::class      => true,
+	GetFilesView::class    => true,
+	UserPictureView::class => true,
+	AuthLinkView::class    => true,
+	Polyglot::class        => true,
+	CronEndpoint::class    => true,
+	RobotsTxt::class       => true,
 ];

@@ -370,6 +370,29 @@
 
 ### Added
 
+- **A user's picture has a route of its own, `oz:user-picture`** (`GET /users/{id}/picture[/{tokens}]`,
+  `Users\Views\UserPictureView`, in every scope as `oz:files` is), and no file key is ever in its
+  address: whether one person may see another's picture is the project's decision, made per request
+  by the class `OZ_USER_PICTURE_ACCESS` (`oz.users`) names, a `UserPictureAccessInterface`.
+  `SelfOrAdminPictureAccess` (the user and administrators) is the default; `SignedInPictureAccess`
+  and `PublicPictureAccess` ship too. The picture is served through the filter chain of `oz:files`
+  (the same bytes for the same tokens, a project's own `OZ_IMAGE_TOKENS` included, its metadata
+  always stripped), never as its original (`original` is refused, to the user too).
+  `OZ_USER_PICTURE_TOKENS` are rendered first and the tokens asked for on what they gave, so a size
+  cap or a crop holds whatever a link asks. A viewer the rule refuses gets 403 and an allowed one
+  asking for a user with no picture 404, an id no user has being a refusal, unless
+  `OZ_USER_PICTURE_FALLBACK` (one value, or `refused` and `missing` apart) names an image file or a
+  `UserPictureFallbackInterface` class drawing one (a `UserPictureImage`: a path, or bytes and
+  their type), rendered as a picture is. The answer is `Cache-Control: private, no-cache` with an
+  `ETag` from the file and the tokens, so a browser revalidates it (304) and a viewer who loses the
+  right stops seeing it. `ImageFileFilterHandler::render()` renders an image that is no stored file
+  through the same tokens and renditions, and `GetFilesView::ORIGINAL_TOKEN` /
+  `FILTERS_PARAM_PATTERN` name what both routes share.
+- **A form discovery of a rate-limited route is counted against a limit of its own**, per IP and per
+  route: `OZ_FORM_DISCOVERY_IP_RATE` in `OZ_FORM_DISCOVERY_IP_INTERVAL` (`oz.forms`, 120 a minute by
+  default; 0 counts none), never against the route's, and reported in the `X-RateLimit-*` headers of
+  the discovery. `IPRateLimit` takes a `$kind`, which keeps such a count apart from the route's.
+
 - **`Process::php($args, $cwd, $env, ...)` starts a PHP process** -- with `Process::phpBinary()`,
   and, from a process that serves requests, in a clean environment -- and is how every PHP process
   OZone starts is built: an async job, a scope's build, `oz project serve`, the test kit's. A
@@ -809,10 +832,15 @@
 
 ### Fixed
 
+- **The API documentation of a 429 named a code nothing sends**, `OZ_RATE_LIMIT_EXCEEDED`, for
+  `POST /login` and `POST /form/:provider/init`: a rate limit answers `OZ_ERROR_RATE_LIMIT_REACHED`
+  (`RateLimitReachedException::DEFAULT_MESSAGE`, which the documentation now reads).
+
 - **Asking a route for its form counted against the route's rate limit**, so every page that shows a
   sign-in form spent one of `oz:login`'s attempts (`OZ_AUTH_LOGIN_IP_RATE`, 20 per IP a minute).
-  `rateLimit()` leaves a request uncounted when it is a form discovery (`X-OZONE-Form-Discovery`),
-  which answers the form's description and runs nothing of the route; a submission is counted as
+  `rateLimit()` does not count a form discovery (`X-OZONE-Form-Discovery`) against it, since it
+  answers the form's description and runs nothing of the route (it has a cheaper limit of its own,
+  see Added); a submission is counted as
   before, and so is a form resume, which submits too, even when it also carries the discovery
   header. A route's interceptor is now selected before its middlewares run (and still runs after
   them), which is what lets the limit tell the two apart.

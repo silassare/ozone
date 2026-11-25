@@ -27,15 +27,15 @@ final class IPRateLimit extends RateLimit
 	 * @param int       $rate     number of requests allowed in the interval
 	 * @param int       $interval the time window in which the rate limit applies
 	 * @param int       $weight   the request weight
+	 * @param string    $kind     what is counted, when a route counts some requests apart from the
+	 *                            others (a form discovery): each kind has its own quota
 	 */
-	public function __construct(RouteInfo $ri, int $rate, int $interval, int $weight = 1)
+	public function __construct(RouteInfo $ri, int $rate, int $interval, int $weight = 1, string $kind = '')
 	{
 		// Keyed per route: a bare-IP key would make every IP-limited route share one quota.
-		parent::__construct(
-			\sprintf('ip:%s:%s', $ri->route()->key(), $ri->getContext()->getUserIP() ?? ''),
-			$rate,
-			$interval,
-			$weight
-		);
+		$key = \sprintf('ip:%s:%s', $ri->route()->key(), $ri->getContext()->getUserIP() ?? '');
+
+		// After the address, which never holds it: no other kind, nor a plain count, shares the key.
+		parent::__construct('' === $kind ? $key : $key . ':' . $kind, $rate, $interval, $weight);
 	}
 }

@@ -19,6 +19,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\Rates\IPRateLimit;
 use OZONE\Core\Router\RouteInfo;
@@ -94,7 +95,7 @@ final class Login extends Service
 				$doc->error([], 'Unknown account or wrong password (never told apart).', 'OZ_AUTH_INVALID_CREDENTIALS'),
 				$doc->error([], 'Right password, but the account is not verified yet.', 'OZ_AUTH_USER_UNVERIFIED'),
 				$doc->error([], 'Too many failed attempts for this account; retry later.', 'OZ_AUTH_TOO_MUCH_ATTEMPT'),
-				$doc->error([], 'Too many login requests from this IP.', 'OZ_RATE_LIMIT_EXCEEDED', 429),
+				$doc->error([], 'Too many login requests from this IP.', RateLimitReachedException::DEFAULT_MESSAGE, 429),
 			],
 			[
 				'tags'        => [$tag->name],

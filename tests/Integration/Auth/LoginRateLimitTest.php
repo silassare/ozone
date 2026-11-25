@@ -23,7 +23,8 @@ use Symfony\Component\Process\Process;
 
 /**
  * Tests the per-IP rate limit of the login route against a real served project: asking the route
- * for its form (a form discovery) spends none of the attempts, a submission spends one.
+ * for its form (a form discovery) spends none of the attempts, a submission spends one, and the
+ * discoveries are counted against a limit of their own.
  *
  * Every request comes from 127.0.0.1, so they all draw on one quota.
  *
@@ -42,6 +43,11 @@ final class LoginRateLimitTest extends TestCase
 	 * `OZ_AUTH_LOGIN_MAX_FAILURES` (5), so the per-account lock does not answer first.
 	 */
 	private const int RATE = 3;
+
+	/**
+	 * Form discoveries allowed per IP in the window: the test makes exactly this many.
+	 */
+	private const int DISCOVERY_RATE = 3 * self::RATE + 1;
 
 	private static ?OZTestProject $project = null;
 
@@ -67,6 +73,8 @@ final class LoginRateLimitTest extends TestCase
 		$project->setSetting('oz.auth', 'OZ_AUTH_LOGIN_IP_RATE', self::RATE);
 		// Long enough that the window cannot end in the middle of the test.
 		$project->setSetting('oz.auth', 'OZ_AUTH_LOGIN_IP_INTERVAL', 3600);
+		$project->setSetting('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE', self::DISCOVERY_RATE);
+		$project->setSetting('oz.forms', 'OZ_FORM_DISCOVERY_IP_INTERVAL', 3600);
 
 		$project->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		$project->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
@@ -124,7 +132,7 @@ final class LoginRateLimitTest extends TestCase
 	public function testAFormDiscoveryDoesNotSpendALoginAttempt(): void
 	{
 		for ($i = 0; $i < 3 * self::RATE; ++$i) {
-			$this->assertDiscovered();
+			$this->assertDiscovered(self::DISCOVERY_RATE - 1 - $i);
 		}
 
 		// The first submission of the window: the quota is whole.
@@ -146,14 +154,20 @@ final class LoginRateLimitTest extends TestCase
 		self::assertSame(429, $status, $body);
 		self::assertSame('OZ_ERROR_RATE_LIMIT_REACHED', \json_decode($body, true)['msg'] ?? null, $body);
 
-		// The form is still described while the submissions are refused.
-		$this->assertDiscovered();
+		// The form is still described while the submissions are refused, until its own limit.
+		$this->assertDiscovered(0);
+
+		[$status, $body] = $this->request('POST', '/login', [self::DISCOVERY_HEADER]);
+
+		self::assertSame(429, $status, $body);
+		self::assertSame('OZ_ERROR_RATE_LIMIT_REACHED', \json_decode($body, true)['msg'] ?? null, $body);
 	}
 
 	/**
-	 * Asks the login route for its form, and asserts it was answered.
+	 * Asks the login route for its form, and asserts it was answered, with what is left of the
+	 * discoveries' own quota.
 	 */
-	private function assertDiscovered(): void
+	private function assertDiscovered(int $remaining): void
 	{
 		[$status, $body, $headers] = $this->request('POST', '/login', [self::DISCOVERY_HEADER]);
 		$data                      = \json_decode($body, true);
@@ -162,8 +176,8 @@ final class LoginRateLimitTest extends TestCase
 		self::assertSame(0, $data['error'] ?? null, $body);
 		self::assertIsArray($data['form'] ?? null, $body);
 		self::assertStringContainsString('auth_user_password', $body);
-		// Not counted, so not reported either.
-		self::assertNull(self::header($headers, 'X-RateLimit-Remaining'), $body);
+		// Counted against the discoveries' own quota, and reported as such.
+		self::assertSame((string) $remaining, self::header($headers, 'X-RateLimit-Remaining'), $body);
 	}
 
 	/**

@@ -90,10 +90,42 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 	#[Override]
 	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 	{
-		$tokens   = ImageFilterTokens::normalize($filterTokens);
-		$auto     = \in_array('auto', $tokens, true);
-		$tokens   = self::resolveFormat($tokens, $file->getMime());
-		$enforced = ImageWatermarks::enforcedFor($file);
+		return $this->render(
+			$file->getID() . ':' . $file->getKey(),
+			$file->getMime(),
+			$stream,
+			$response,
+			$filterTokens,
+			ImageWatermarks::enforcedFor($file),
+			['_file' => $file->getID()]
+		);
+	}
+
+	/**
+	 * Renders an image through the same tokens, renditions and cache as a stored file, for an image
+	 * that is not one (an image a project draws, a rendition rendered again).
+	 *
+	 * @param string               $identity     what the image is: a changed image must have another
+	 *                                           one, since its renditions are kept under it
+	 * @param string               $mime         the image's media type
+	 * @param FileStream           $stream       a fresh, unread stream of the image
+	 * @param Response             $response     the response to populate
+	 * @param string[]             $filterTokens the tokens asked for
+	 * @param null|string          $enforced     a watermark it must carry, which no token drops
+	 * @param array<string, mixed> $log_data     what a failure is logged with, never a secret
+	 */
+	public function render(
+		string $identity,
+		string $mime,
+		FileStream $stream,
+		Response $response,
+		array $filterTokens,
+		?string $enforced = null,
+		array $log_data = []
+	): Response {
+		$tokens = ImageFilterTokens::normalize($filterTokens);
+		$auto   = \in_array('auto', $tokens, true);
+		$tokens = self::resolveFormat($tokens, $mime);
 
 		// A watermark a project forces replaces any the URL asks for: it cannot be dropped.
 		if (null !== $enforced) {
@@ -103,20 +135,20 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 			$tokens[] = 'wm' . $enforced;
 		}
 
-		$mime = self::mimeOf($tokens, $file->getMime());
-		$key  = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $tokens));
+		$out  = self::mimeOf($tokens, $mime);
+		$key  = \md5($identity . ':' . \implode(',', $tokens));
 		$dir  = self::cacheDir()->cd(\substr($key, 0, 2), true);
 		$path = $dir->resolve($key);
 
 		if (!\is_file($path)) {
-			$bytes = $this->process($file, $stream, $tokens, null !== $enforced);
+			$bytes = $this->process($mime, $stream, $tokens, null !== $enforced, $log_data);
 
 			if (null === $bytes) {
-				// Not rendered: the file as it is, which is not kept as a rendition.
+				// Not rendered: the image as it is, which is not kept as a rendition.
 				$stream->rewind();
 
 				return $response
-					->withHeader('Content-type', $file->getMime())
+					->withHeader('Content-type', $mime)
 					->withBody($stream);
 			}
 
@@ -125,7 +157,7 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 		}
 
 		$response = $response
-			->withHeader('Content-type', $mime)
+			->withHeader('Content-type', $out)
 			->withHeader('Content-Length', (string) \filesize($path))
 			->withBody(FileStream::fromPath($path));
 
@@ -230,12 +262,17 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 	 * watermark is due on it or it is the plain image: then it is never served raw, and the failure is
 	 * the request's.
 	 *
-	 * @param list<string> $filterTokens
+	 * @param list<string>         $filterTokens
+	 * @param array<string, mixed> $log_data
 	 */
-	private function process(OZFile $file, FileStream $stream, array $filterTokens, bool $watermarked): ?string
-	{
+	private function process(
+		string $mime,
+		FileStream $stream,
+		array $filterTokens,
+		bool $watermarked,
+		array $log_data
+	): ?string {
 		$content = $stream->getContents();
-		$mime    = $file->getMime();
 		$plain   = [] === $filterTokens;
 
 		// The plain image: its metadata dropped without touching its pixels where that can be done,
@@ -257,13 +294,10 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 		} catch (Exception $e) {
 			// Never the raw file when it would carry what had to go: its metadata, or its watermark.
 			if ($watermarked || $plain) {
-				throw new RuntimeException('The image could not be rendered as it must be served.', [
-					'_file' => $file->getID(),
-				], $e);
+				throw new RuntimeException('The image could not be rendered as it must be served.', $log_data, $e);
 			}
 
-			oz_logger()->error('Image filter processing failed, serving the raw file.', [
-				'_file'      => $file->getID(),
+			oz_logger()->error('Image filter processing failed, serving the raw file.', $log_data + [
 				'_filters'   => $filterTokens,
 				'_exception' => $e->getMessage(),
 			]);

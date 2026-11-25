@@ -30,4 +30,25 @@ return [
 	 * @default 3600 (1 hour)
 	 */
 	'OZ_FORM_RESUME_INIT_IP_INTERVAL' => 3600,
+
+	/**
+	 * Form discoveries (`X-OZONE-Form-Discovery`) of a rate-limited route a client IP may make within
+	 * `OZ_FORM_DISCOVERY_IP_INTERVAL` seconds, per route.
+	 *
+	 * A discovery answers the route's form description and runs nothing of the route, so it is never
+	 * counted against the route's own limit (a page showing the sign-in form does not spend a sign-in
+	 * attempt); it is counted against this one, looser since it costs the server little, which still
+	 * bounds how often a form may be asked for. 0 counts none. A route with no rate limit counts no
+	 * discovery either.
+	 *
+	 * @default 120
+	 */
+	'OZ_FORM_DISCOVERY_IP_RATE'     => 120,
+
+	/**
+	 * Length in seconds of the per-IP window of `OZ_FORM_DISCOVERY_IP_RATE`.
+	 *
+	 * @default 60 (1 minute)
+	 */
+	'OZ_FORM_DISCOVERY_IP_INTERVAL' => 60,
 ];
