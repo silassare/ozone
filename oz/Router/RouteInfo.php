@@ -75,9 +75,13 @@ final class RouteInfo
 		$authenticator && $authenticator($this);
 
 		$this->callGuards();
-		$this->runMiddlewares();
 
+		// Selected before the middlewares run, so one can tell what the request will do: the rate
+		// limit does not count a form discovery against the route's quota. Only selected: the
+		// interceptor's handle() still runs after every middleware, as the handler would.
 		$this->interceptor = $this->selectInterceptor();
+
+		$this->runMiddlewares();
 	}
 
 	/**

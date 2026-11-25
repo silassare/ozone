@@ -16,13 +16,16 @@ namespace OZONE\Tests\Router;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDiscoveryRouteInterceptor;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
+use OZONE\Core\Router\Rates\RateLimit;
 use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\RouteRateLimiter;
 use OZONE\Core\Router\Router;
 use OZONE\Tests\TestUtils;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -188,6 +191,64 @@ final class RouteInterceptorTest extends TestCase
 
 		// The intercepted instance is the first one that accepts — priority 10 runs first.
 		self::assertInstanceOf(StubHighPriorityInterceptor::class, $ri->getInterceptor());
+	}
+
+	// -----------------------------------------------------------------------
+	// Rate limit and interceptors
+	// -----------------------------------------------------------------------
+
+	public function testAFormDiscoveryIsNotCountedAgainstTheRouteRateLimit(): void
+	{
+		$limit  = new RateLimit('test:discovery:' . \uniqid('', true), 2, 60);
+		$router = new Router();
+		$router->get('/rate-limited', static fn () => null)
+			->name('rate.limited')
+			->rateLimit($limit);
+
+		$route = TestUtils::route($router, 'rate.limited');
+
+		try {
+			// Five discoveries on a limit of two: none is refused, and none spends an attempt.
+			for ($i = 0; $i < 5; ++$i) {
+				$ri = new RouteInfo($this->makeDiscoveryContext(), $route, []);
+				self::assertInstanceOf(FormDiscoveryRouteInterceptor::class, $ri->getInterceptor());
+			}
+
+			self::assertSame(2, RouteRateLimiter::get($ri, $limit)->status()['remaining']);
+
+			// Both attempts are still there for the requests that submit, and the third is refused.
+			new RouteInfo(context(), $route, []);
+			new RouteInfo(context(), $route, []);
+
+			$this->expectException(RateLimitReachedException::class);
+			new RouteInfo(context(), $route, []);
+		} finally {
+			RouteRateLimiter::get(new RouteInfo($this->makeDiscoveryContext(), $route, []), $limit)->reset();
+		}
+	}
+
+	public function testARequestAnsweredByAnotherInterceptorIsCountedEvenWithTheDiscoveryHeader(): void
+	{
+		$limit  = new RateLimit('test:intercepted:' . \uniqid('', true), 2, 60);
+		$router = new Router();
+		$router->get('/rate-limited-intercepted', static fn () => null)
+			->name('rate.limited.intercepted')
+			->interceptor(StubHighPriorityInterceptor::class)
+			->rateLimit($limit);
+
+		$route = TestUtils::route($router, 'rate.limited.intercepted');
+
+		try {
+			// The discovery header is sent, but a higher-priority interceptor answers: it is counted.
+			$ri = new RouteInfo($this->makeDiscoveryContext(), $route, []);
+			self::assertInstanceOf(StubHighPriorityInterceptor::class, $ri->getInterceptor());
+			new RouteInfo($this->makeDiscoveryContext(), $route, []);
+
+			$this->expectException(RateLimitReachedException::class);
+			new RouteInfo($this->makeDiscoveryContext(), $route, []);
+		} finally {
+			RouteRateLimiter::get(new RouteInfo(context(), $route, []), $limit)->reset();
+		}
 	}
 
 	// -----------------------------------------------------------------------

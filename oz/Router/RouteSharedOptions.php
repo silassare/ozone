@@ -148,6 +148,10 @@ class RouteSharedOptions
 	/**
 	 * Defines a rate limit.
 	 *
+	 * A form discovery is not counted: it answers the route's form description and runs nothing of
+	 * the route, so a page that shows a form does not spend one of the attempts it rations. Every
+	 * other request is, a form resume included, since it submits.
+	 *
 	 * @param (callable(RouteInfo):?RouteRateLimitInterface)|RouteRateLimitInterface $limit_provider
 	 *
 	 * @return $this
@@ -155,6 +159,12 @@ class RouteSharedOptions
 	public function rateLimit(callable|RouteRateLimitInterface $limit_provider): static
 	{
 		return $this->middleware(static function (RouteInfo $ri) use ($limit_provider) {
+			// The interceptor that answers, and not the discovery header: a higher-priority one
+			// (a resume) can take a request that carries both.
+			if ($ri->getInterceptor() instanceof FormDiscoveryRouteInterceptor) {
+				return null;
+			}
+
 			if ($limit_provider instanceof RouteRateLimitInterface) {
 				$limit = $limit_provider;
 			} else {

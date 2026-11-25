@@ -491,7 +491,9 @@ parent of another, sharing path, name, guards and middlewares without a group bl
   `MethodNotAllowedException`, except an OPTIONS preflight, which passes.
 - **Interceptors** (`RouteInterceptorInterface`) run after guards and middlewares; the first, by
   priority descending, whose `shouldIntercept()` is true replaces the handler, and **form validation
-  is then skipped** (`getCleanFormData()` is empty). Two are always injected:
+  is then skipped** (`getCleanFormData()` is empty). It is **selected** after the guards and before
+  the middlewares (`$ri->getInterceptor()`), which is how `rateLimit()` leaves a form discovery
+  uncounted while a resume is counted. Two are always injected:
   `FormResumeRouteInterceptor` (priority 1: a resumable route with `X-OZONE-Form-Resume: ?1`) and
   `FormDiscoveryRouteInterceptor` (priority 0: `X-OZONE-Form-Discovery: ?1`, when
   `OZ_FORM_DISCOVERY_HEADER_ALLOWED`). Those checks are on `Request`, not `Context`.

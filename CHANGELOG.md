@@ -809,6 +809,14 @@
 
 ### Fixed
 
+- **Asking a route for its form counted against the route's rate limit**, so every page that shows a
+  sign-in form spent one of `oz:login`'s attempts (`OZ_AUTH_LOGIN_IP_RATE`, 20 per IP a minute).
+  `rateLimit()` leaves a request uncounted when it is a form discovery (`X-OZONE-Form-Discovery`),
+  which answers the form's description and runs nothing of the route; a submission is counted as
+  before, and so is a form resume, which submits too, even when it also carries the discovery
+  header. A route's interceptor is now selected before its middlewares run (and still runs after
+  them), which is what lets the limit tell the two apart.
+
 - **A script or a stylesheet served as `text/javascript` or `text/css` was classed a document.**
   `FileKind::fromMime()` tested `text/` before them, so its `JS` and `CSS` branches were never
   reached for those types. The specific types are tested first now (scripts, stylesheets, fonts,
