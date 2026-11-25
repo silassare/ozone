@@ -832,6 +832,16 @@
 
 ### Fixed
 
+- **A form discovery of a route that stacks rate limits** (a group's `rateLimit()` and the route's
+  own) was counted once per limit against its own quota, so `OZ_FORM_DISCOVERY_IP_RATE` let through
+  half as many discoveries. It is one hit per request now (`RouteInfo::claimRateLimitKey()`).
+- **The API documentation of `POST /form/:provider/init` stated "30 per hour per IP"** whatever the
+  project set: its limit is now written from `OZ_FORM_RESUME_INIT_IP_RATE` and
+  `OZ_FORM_RESUME_INIT_IP_INTERVAL`, through `ResumableFormService::initRateLimit()`, which the route
+  counts with too.
+- **The message code `OZ_RATE_LIMIT_EXCEEDED` is gone from the catalogs**: nothing sends it (a rate
+  limit answers `OZ_ERROR_RATE_LIMIT_REACHED`). A client that translated it has nothing to translate.
+
 - **The API documentation of a 429 named a code nothing sends**, `OZ_RATE_LIMIT_EXCEEDED`, for
   `POST /login` and `POST /form/:provider/init`: a rate limit answers `OZ_ERROR_RATE_LIMIT_REACHED`
   (`RateLimitReachedException::DEFAULT_MESSAGE`, which the documentation now reads).

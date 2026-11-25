@@ -33,6 +33,9 @@ trait ResumableFormServiceApiDocTrait
 
 		$resume_ref_header = Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME');
 
+		[$init_rate, $init_interval] = ResumableFormService::initRateLimit();
+		$init_limit                  = \sprintf('%d per %d seconds per IP', $init_rate, $init_interval);
+
 		$tag_desc = <<<DESC
 			Multi-step form session endpoints.
 
@@ -87,7 +90,7 @@ trait ResumableFormServiceApiDocTrait
 			], 'Session started. Contains the `resume_ref` and the first form to fill.'),
 			$doc->error(
 				[],
-				'Too many requests (rate limit: 30 per hour per IP).',
+				'Too many requests (rate limit: ' . $init_limit . ').',
 				RateLimitReachedException::DEFAULT_MESSAGE,
 				429
 			),
@@ -97,7 +100,7 @@ trait ResumableFormServiceApiDocTrait
 			'tags'        => [$tag->name],
 			'operationId' => 'Form.init',
 			'description' => 'Start a new form session. Returns `resume_ref` and the first form. '
-				. 'Rate limited to 30 requests per hour per IP.',
+				. 'Rate limited to ' . $init_limit . '.',
 			'parameters'  => [
 				$doc->parameter('provider', $doc->string($provider_param_desc), $provider_param_desc, 'path'),
 			],

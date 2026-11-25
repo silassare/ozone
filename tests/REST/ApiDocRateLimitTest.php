@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\REST;
 
 use Override;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\REST\ApiDoc;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -54,5 +55,31 @@ final class ApiDocRateLimitTest extends TestCase
 		// The sign-in and the opening of a form session, at least.
 		self::assertGreaterThanOrEqual(2, \count($found), \implode(', ', \array_keys($found)));
 		self::assertSame(\array_fill_keys(\array_keys($found), $sent), $found);
+	}
+
+	public function testTheLimitOfOpeningAFormSessionIsTheOneItsSettingsSet(): void
+	{
+		Settings::set('oz.forms', 'OZ_FORM_RESUME_INIT_IP_RATE', 7);
+		Settings::set('oz.forms', 'OZ_FORM_RESUME_INIT_IP_INTERVAL', 120);
+
+		try {
+			$paths = \json_decode(\json_encode(ApiDoc::get()->toArray()), true)['spec']['paths'];
+			$init  = null;
+
+			foreach ($paths as $operations) {
+				foreach ($operations as $operation) {
+					if (\is_array($operation) && 'Form.init' === ($operation['operationId'] ?? null)) {
+						$init = $operation;
+					}
+				}
+			}
+
+			self::assertIsArray($init);
+			self::assertStringContainsString('7 per 120 seconds per IP', $init['description']);
+			self::assertStringContainsString('7 per 120 seconds per IP', $init['responses']['429']['description']);
+		} finally {
+			Settings::unset('oz.forms', 'OZ_FORM_RESUME_INIT_IP_RATE');
+			Settings::unset('oz.forms', 'OZ_FORM_RESUME_INIT_IP_INTERVAL');
+		}
 	}
 }

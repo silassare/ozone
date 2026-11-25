@@ -55,6 +55,13 @@ final class RouteInfo
 	private array $on_success = [];
 
 	/**
+	 * The rate limit keys this dispatch was counted against once and for all.
+	 *
+	 * @var array<string, true>
+	 */
+	private array $counted_once = [];
+
+	/**
 	 * RouteInfo constructor.
 	 *
 	 * @param Context                    $context       The context
@@ -321,6 +328,26 @@ final class RouteInfo
 		$this->on_success[] = $callback;
 
 		return $this;
+	}
+
+	/**
+	 * Claims a rate limit key for this dispatch: true the first time it is claimed, false after.
+	 *
+	 * For a request that is one hit whatever the number of limits it passes through: a form
+	 * discovery is counted against the same key by every `rateLimit()` a route stacks (a group's and
+	 * its own), and must be counted once.
+	 *
+	 * @internal
+	 */
+	public function claimRateLimitKey(string $key): bool
+	{
+		if (isset($this->counted_once[$key])) {
+			return false;
+		}
+
+		$this->counted_once[$key] = true;
+
+		return true;
 	}
 
 	/**

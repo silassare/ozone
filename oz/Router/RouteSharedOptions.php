@@ -166,7 +166,8 @@ class RouteSharedOptions
 			if ($ri->getInterceptor() instanceof FormDiscoveryRouteInterceptor) {
 				$limit = FormDiscoveryRouteInterceptor::rateLimit($ri);
 
-				if (null === $limit) {
+				// One discovery is one hit, however many limits the route stacks.
+				if (null === $limit || !$ri->claimRateLimitKey($limit->key())) {
 					return null;
 				}
 			} elseif ($limit_provider instanceof RouteRateLimitInterface) {

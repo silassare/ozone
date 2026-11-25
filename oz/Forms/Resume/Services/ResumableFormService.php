@@ -85,11 +85,7 @@ final class ResumableFormService extends Service
 					->name(self::ROUTE_INIT)
 					// Opening a session is what costs the server; the steps of one already opened are not
 					// limited.
-					->rateLimit(static fn (RouteInfo $ri) => new IPRateLimit(
-						$ri,
-						(int) Settings::get('oz.forms', 'OZ_FORM_RESUME_INIT_IP_RATE'),
-						(int) Settings::get('oz.forms', 'OZ_FORM_RESUME_INIT_IP_INTERVAL')
-					));
+					->rateLimit(static fn (RouteInfo $ri) => new IPRateLimit($ri, ...self::initRateLimit()));
 
 				$router->get('/state', static fn (RouteInfo $ri) => self::standalone($ri, self::ACTION_STATE))
 					->name(self::ROUTE_STATE);
@@ -107,6 +103,20 @@ final class ResumableFormService extends Service
 					->name(self::ROUTE_EVALUATE);
 			});
 		});
+	}
+
+	/**
+	 * The per-IP limit of `init`: the sessions a client IP may open, and the window in seconds they
+	 * are counted in. What the route counts and what its documentation states.
+	 *
+	 * @return array{int, int}
+	 */
+	public static function initRateLimit(): array
+	{
+		return [
+			(int) Settings::get('oz.forms', 'OZ_FORM_RESUME_INIT_IP_RATE'),
+			(int) Settings::get('oz.forms', 'OZ_FORM_RESUME_INIT_IP_INTERVAL'),
+		];
 	}
 
 	/**

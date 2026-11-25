@@ -25,7 +25,6 @@ return [
 	'OZ_SETTINGS_CLIENT_FROM_ENV'            => 'A setting marked for the client is read from the environment.',
 	'OZ_ERROR_UNAUTHENTICATED'               => 'You must sign in first.',
 	'OZ_ERROR_RATE_LIMIT_REACHED'            => 'You have reached the request limit.',
-	'OZ_RATE_LIMIT_EXCEEDED'                 => 'Too many requests. Please try again later.',
 	'OZ_RECURSIVE_REDIRECTION'               => 'Too many redirections.',
 	'OZ_REDIRECT_HOST_NOT_ALLOWED'           => 'This server may not send you to that address.',
 	'OZ_CROSS_SITE_REQUEST_NOT_ALLOWED'      => 'Requests from this origin are not allowed.',

@@ -25,7 +25,6 @@ return [
 	'OZ_SETTINGS_CLIENT_FROM_ENV'            => "Un paramètre marqué pour le client est lu depuis l'environnement.",
 	'OZ_ERROR_UNAUTHENTICATED'               => "Vous devez vous connecter d'abord.",
 	'OZ_ERROR_RATE_LIMIT_REACHED'            => 'Vous avez atteint la limite de requêtes.',
-	'OZ_RATE_LIMIT_EXCEEDED'                 => 'Trop de requêtes. Veuillez réessayer plus tard.',
 	'OZ_RECURSIVE_REDIRECTION'               => 'Trop de redirections.',
 	'OZ_REDIRECT_HOST_NOT_ALLOWED'           => 'Ce serveur ne peut pas vous envoyer vers cette adresse.',
 	'OZ_CROSS_SITE_REQUEST_NOT_ALLOWED'      => "Requête d'une origine non autorisée.",

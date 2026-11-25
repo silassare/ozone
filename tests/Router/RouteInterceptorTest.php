@@ -287,6 +287,37 @@ final class RouteInterceptorTest extends TestCase
 		}
 	}
 
+	public function testADiscoveryIsCountedOnceUnderStackedLimits(): void
+	{
+		Settings::set('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE', 3);
+
+		$router = new Router();
+		$router->group('/stacked', static function (Router $router): void {
+			$router->get('/discovered', static fn () => null)
+				->name('rate.limited.stacked')
+				->rateLimit(new RateLimit('test:stacked-route:' . \uniqid('', true), 5, 60));
+		})->rateLimit(new RateLimit('test:stacked-group:' . \uniqid('', true), 5, 60));
+
+		$route = TestUtils::route($router, 'rate.limited.stacked');
+
+		try {
+			// Two limits on the route, three discoveries allowed: each is one of the three, not two.
+			for ($i = 0; $i < 3; ++$i) {
+				$ri = new RouteInfo($this->makeDiscoveryContext(), $route, []);
+			}
+
+			self::assertSame(0, RouteRateLimiter::get($ri, self::discoveryLimit($ri))->status()['remaining']);
+
+			$this->expectException(RateLimitReachedException::class);
+			new RouteInfo($this->makeDiscoveryContext(), $route, []);
+		} finally {
+			Settings::unset('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE');
+			$plain = new RouteInfo(context(), $route, []);
+
+			RouteRateLimiter::get($plain, self::discoveryLimit($plain))->reset();
+		}
+	}
+
 	public function testNoDiscoveryIsCountedWhenItsRateIsZero(): void
 	{
 		Settings::set('oz.forms', 'OZ_FORM_DISCOVERY_IP_RATE', 0);
