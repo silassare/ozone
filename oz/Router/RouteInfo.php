@@ -331,11 +331,11 @@ final class RouteInfo
 	}
 
 	/**
-	 * Claims a rate limit key for this dispatch: true the first time it is claimed, false after.
+	 * Claims a rate limit counter for this dispatch: true the first time it is claimed, false after.
 	 *
-	 * For a request that is one hit whatever the number of limits it passes through: a form
-	 * discovery is counted against the same key by every `rateLimit()` a route stacks (a group's and
-	 * its own), and must be counted once.
+	 * For a request that is one hit whatever the number of limits it passes through: every
+	 * `rateLimit()` a route stacks on one counter (a group's and its own) counts it once
+	 * ({@see RouteRateLimiter::counter()}).
 	 *
 	 * @internal
 	 */

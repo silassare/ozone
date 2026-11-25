@@ -154,6 +154,10 @@ class RouteSharedOptions
 	 * ({@see FormDiscoveryRouteInterceptor::rateLimit()}). Every other request is counted here, a form
 	 * resume included, since it submits.
 	 *
+	 * A request is counted once in each counter, whatever the number of limits a route stacks on it
+	 * (a group's and its own). Limits on one key with one window share a counter and each holds it to
+	 * its own rate, so the strictest governs; a limit with another window is measured in its own.
+	 *
 	 * @param (callable(RouteInfo):?RouteRateLimitInterface)|RouteRateLimitInterface $limit_provider
 	 *
 	 * @return $this
@@ -166,8 +170,7 @@ class RouteSharedOptions
 			if ($ri->getInterceptor() instanceof FormDiscoveryRouteInterceptor) {
 				$limit = FormDiscoveryRouteInterceptor::rateLimit($ri);
 
-				// One discovery is one hit, however many limits the route stacks.
-				if (null === $limit || !$ri->claimRateLimitKey($limit->key())) {
+				if (null === $limit) {
 					return null;
 				}
 			} elseif ($limit_provider instanceof RouteRateLimitInterface) {
@@ -190,7 +193,13 @@ class RouteSharedOptions
 
 			$rate_limiter = RouteRateLimiter::get($ri, $limit);
 
-			if (!$rate_limiter->hit()) {
+			// One request is one hit in a counter, however many limits share it; each of them still
+			// holds the count to its own rate, so the strictest governs.
+			$allowed = $ri->claimRateLimitKey($rate_limiter->counter())
+				? $rate_limiter->hit()
+				: $rate_limiter->allows();
+
+			if (!$allowed) {
 				throw new RateLimitReachedException();
 			}
 

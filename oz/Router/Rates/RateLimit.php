@@ -15,6 +15,7 @@ namespace OZONE\Core\Router\Rates;
 
 use Override;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
+use OZONE\Core\Router\RouteInfo;
 
 /**
  * Class RateLimit.
@@ -40,6 +41,22 @@ class RateLimit implements RouteRateLimitInterface
 	public function key(): string
 	{
 		return $this->key;
+	}
+
+	/**
+	 * The key of a quota per route: `{by}:{route key}:{who}`, then `:{kind}` when a route counts some
+	 * requests apart from the others (a form discovery). Keyed per route, because a key without the
+	 * route makes every route limited the same way share one quota.
+	 *
+	 * @param string $by   what the quota is per: `ip`, `user`, `session`
+	 * @param string $who  the address, the user or the session counted
+	 * @param string $kind what is counted apart, or empty
+	 */
+	public static function routeKey(string $by, RouteInfo $ri, string $who, string $kind = ''): string
+	{
+		$key = \sprintf('%s:%s:%s', $by, $ri->route()->key(), $who);
+
+		return '' === $kind ? $key : $key . ':' . $kind;
 	}
 
 	#[Override]

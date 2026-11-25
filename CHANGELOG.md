@@ -2,6 +2,14 @@
 
 ### Breaking changes
 
+- **`UserRateLimit` and `StatefulAuthRateLimit` count per route**, as `IPRateLimit` does: their key
+  was the user's ref or the session ID alone, so every route limited one of these ways drew on one
+  quota shared by all of them, and a request to one route spent the others'. A user or a session now
+  has a quota on each route (`user:{route key}:{ref}`, `session:{route key}:{session id}`, built by
+  `RateLimit::routeKey()`, which `IPRateLimit` uses too, its keys unchanged). A project that relied
+  on one quota across routes declares it on a group, or gives a `RateLimit` its own key; counts
+  kept under the old keys start over. Both take the `$kind` `IPRateLimit` takes.
+
 - **A process OZone starts while serving a request no longer inherits that process's environment**
   beyond `Process::CHILD_ENV` (PATH, HOME, TMPDIR, LANG, LC_ALL, TZ): a `Cron::command()` that read
   another variable of the web server's when cron's requests mode ran it gets it only by naming it
@@ -831,6 +839,18 @@
 - `REST\Enums\RESTFulAction`, the action table driving `RESTFulService` routes and docs (`REST\RESTFulApiDoc`); `RESTFulService::beforeAction()` / `afterAction()` hooks and `configureRoute()` for per-action guards, forms or middlewares; `RESTFulService::routeName()` accepts a `RESTFulAction`.
 
 ### Fixed
+
+- **A request to a route that stacks rate limits on one key was counted once per limit**: a group
+  and its route each declaring an `IPRateLimit` share the key `ip:{route key}:{ip}`, so one
+  submission spent two of the route's attempts and the group's looser limit read the same doubled
+  count. A limit is now measured in a counter of its key and its window
+  (`RouteRateLimiter::counter()`, `{key}:{interval}` in the `oz:rate_limit` store), and a request
+  is counted once in each counter (`RouteInfo::claimRateLimitKey()`, the mechanism a form discovery
+  already used). Limits on one key with one window share a counter and each holds it to its own
+  rate, so the strictest governs; a limit with another window is measured in its own, so a strict
+  limit over a minute still holds under a loose one over a second. Limits on different keys count
+  apart, as before. `RouteRateLimiter::allows()` reads a counter without adding to it. Counts kept
+  under the old keys start over.
 
 - **A form discovery of a route that stacks rate limits** (a group's `rateLimit()` and the route's
   own) was counted once per limit against its own quota, so `OZ_FORM_DISCOVERY_IP_RATE` let through

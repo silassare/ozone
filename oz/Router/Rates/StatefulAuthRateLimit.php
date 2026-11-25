@@ -27,13 +27,14 @@ final class StatefulAuthRateLimit extends RateLimit
 	 * @param int       $rate     number of requests allowed in the interval
 	 * @param int       $interval the time window in which the rate limit applies
 	 * @param int       $weight   the request weight
+	 * @param string    $kind     what is counted, when a route counts some requests apart from the
+	 *                            others: each kind has its own quota
 	 */
-	public function __construct(RouteInfo $ri, int $rate, int $interval, int $weight = 1)
+	public function __construct(RouteInfo $ri, int $rate, int $interval, int $weight = 1, string $kind = '')
 	{
-		$id = $ri->getContext()->requireStatefulAuth()->stateID();
-
+		// Per route, as every quota: the session has one on each route limited this way.
 		parent::__construct(
-			$id,
+			self::routeKey('session', $ri, $ri->getContext()->requireStatefulAuth()->stateID(), $kind),
 			$rate,
 			$interval,
 			$weight

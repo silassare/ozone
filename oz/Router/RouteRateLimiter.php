@@ -41,10 +41,20 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 		return new static($ri, $limit);
 	}
 
+	/**
+	 * The counter this limit is measured with: its key and its window. Limits on one key with one
+	 * window share it, so the strictest of their rates governs; a limit with another window has a
+	 * counter of its own, so each is measured in its own window.
+	 */
+	public function counter(): string
+	{
+		return $this->limit->key() . ':' . $this->limit->interval();
+	}
+
 	#[Override]
 	public function hit(): bool
 	{
-		$key      = $this->limit->key();
+		$key      = $this->counter();
 		$interval = $this->limit->interval();
 		$weight   = $this->limit->weight();
 		$now      = \microtime(true);
@@ -63,10 +73,21 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 		return $hits <= $this->limit->rate();
 	}
 
+	/**
+	 * Whether what was counted so far is within this limit's rate, counting nothing.
+	 *
+	 * For a limit whose counter the request was already counted in by another limit sharing it:
+	 * one count, and every limit holding it to its own rate.
+	 */
+	public function allows(): bool
+	{
+		return (int) $this->cache->get($this->counter() . ':hits', 0) <= $this->limit->rate();
+	}
+
 	#[Override]
 	public function reset(): static
 	{
-		$key = $this->limit->key();
+		$key = $this->counter();
 
 		$this->cache->delete($key . ':first_hits');
 		$this->cache->delete($key . ':hits');
@@ -78,7 +99,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	#[Override]
 	public function status(): array
 	{
-		$key      = $this->limit->key();
+		$key      = $this->counter();
 		$interval = $this->limit->interval();
 		$rate     = $this->limit->rate();
 		$now      = \microtime(true);
