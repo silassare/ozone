@@ -15,7 +15,9 @@ namespace OZONE\Core\CRUD;
 
 use Gobl\CRUD\CRUDAction;
 use Gobl\CRUD\CRUDEventProducer;
+use Gobl\CRUD\Enums\ActionType;
 use Gobl\CRUD\Events\BeforeCreate;
+use Gobl\CRUD\Events\BeforeCreateBulk;
 use Gobl\CRUD\Events\BeforeDelete;
 use Gobl\CRUD\Events\BeforeDeleteAll;
 use Gobl\CRUD\Events\BeforeRead;
@@ -38,13 +40,24 @@ use OZONE\Core\Roles\Enums\Role;
 abstract class BaseHandler extends TableCRUDListener
 {
 	/**
-	 * @var array<'create'|'create_all'|'delete'|'delete_all'|'read'|'read_all'|'update'|'update_all',AllowRuleBuilder>
+	 * By table action name ({@see TableActions}).
+	 *
+	 * @var array<string, AllowRuleBuilder>
 	 */
 	private array $allow_rules                         = [];
 	private ?AllowCheckResult $last_allow_check_result = null;
 
 	public function __construct(protected Table $table)
 	{
+		// Several rows created at once is not what a table opens by default: administrators only,
+		// unless the handler says otherwise, before this or after it (or a reader holds
+		// `{morph type}.create_bulk`).
+		$bulk = TableActions::nameOf(ActionType::CREATE_BULK);
+
+		if (!isset($this->allow_rules[$bulk])) {
+			$this->allow($bulk)->ifRole(Role::ADMIN);
+		}
+
 		$this->listen();
 	}
 
@@ -57,22 +70,13 @@ abstract class BaseHandler extends TableCRUDListener
 	}
 
 	/**
-	 * @param 'create'|'create_all'|'delete'|'delete_all'|'read'|'read_all'|'update'|'update_all' $action
+	 * The rule of a table action.
+	 *
+	 * @param string $action a table action's name ({@see TableActions::names()})
 	 */
 	public function allow(string $action): AllowRuleBuilder
 	{
-		if (
-			!\in_array($action, [
-				'create',
-				'read',
-				'update',
-				'delete',
-				'create_all',
-				'read_all',
-				'update_all',
-				'delete_all',
-			], true)
-		) {
+		if (!TableActions::isName($action)) {
 			throw new InvalidArgumentException('Invalid action: ' . $action);
 		}
 
@@ -93,7 +97,7 @@ abstract class BaseHandler extends TableCRUDListener
 	}
 
 	/**
-	 * @param 'create'|'create_all'|'delete'|'delete_all'|'read'|'read_all'|'update'|'update_all' $action
+	 * @param string $action a table action's name ({@see TableActions::names()})
 	 */
 	protected function can(string $action, CRUDAction $event): bool
 	{
@@ -139,13 +143,14 @@ abstract class BaseHandler extends TableCRUDListener
 	protected function listen(): void
 	{
 		$this->withCrud(function (CRUDEventProducer $crud): void {
-			$crud->onBeforeCreate(fn (BeforeCreate $ev) => $this->can('create', $ev));
-			$crud->onBeforeUpdate(fn (BeforeUpdate $ev) => $this->can('update', $ev));
-			$crud->onBeforeUpdateAll(fn (BeforeUpdateAll $ev) => $this->can('update_all', $ev));
-			$crud->onBeforeRead(fn (BeforeRead $ev) => $this->can('read', $ev));
-			$crud->onBeforeReadAll(fn (BeforeReadAll $ev) => $this->can('read_all', $ev));
-			$crud->onBeforeDelete(fn (BeforeDelete $ev) => $this->can('delete', $ev));
-			$crud->onBeforeDeleteAll(fn (BeforeDeleteAll $ev) => $this->can('delete_all', $ev));
+			$crud->onBeforeCreate(fn (BeforeCreate $ev) => $this->can(TableActions::nameOf(ActionType::CREATE), $ev));
+			$crud->onBeforeCreateBulk(fn (BeforeCreateBulk $ev) => $this->can(TableActions::nameOf(ActionType::CREATE_BULK), $ev));
+			$crud->onBeforeUpdate(fn (BeforeUpdate $ev) => $this->can(TableActions::nameOf(ActionType::UPDATE), $ev));
+			$crud->onBeforeUpdateAll(fn (BeforeUpdateAll $ev) => $this->can(TableActions::nameOf(ActionType::UPDATE_ALL), $ev));
+			$crud->onBeforeRead(fn (BeforeRead $ev) => $this->can(TableActions::nameOf(ActionType::READ), $ev));
+			$crud->onBeforeReadAll(fn (BeforeReadAll $ev) => $this->can(TableActions::nameOf(ActionType::READ_ALL), $ev));
+			$crud->onBeforeDelete(fn (BeforeDelete $ev) => $this->can(TableActions::nameOf(ActionType::DELETE), $ev));
+			$crud->onBeforeDeleteAll(fn (BeforeDeleteAll $ev) => $this->can(TableActions::nameOf(ActionType::DELETE_ALL), $ev));
 		});
 	}
 

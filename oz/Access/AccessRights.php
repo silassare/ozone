@@ -15,9 +15,13 @@ namespace OZONE\Core\Access;
 
 use Override;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Lang\I18nMessage;
+use OZONE\Core\Roles\Enums\RoleCheckMode;
+use OZONE\Core\Roles\Roles;
+use OZONE\Core\Roles\RolesUtils;
 use PHPUtils\Traits\ArrayCapableTrait;
 
 /**
@@ -102,8 +106,9 @@ class AccessRights implements AccessRightsInterface
 			if (!$is_wildcard && isset($this->options[$action])) {
 				$allowed = (bool) $this->options[$action];
 			} else {
-				// when it's a wildcard or the granular action is not defined
-				$allowed = false;
+				// when it's a wildcard or the granular action is not defined: `*` alone stands for every
+				// action, then each more specific wildcard decides over it
+				$allowed = (bool) ($this->options['*'] ?? false);
 				$parts   = \explode('.', $action);
 
 				// remove the last part
@@ -164,6 +169,26 @@ class AccessRights implements AccessRightsInterface
 				'_last_checked' => $last_checked,
 			]);
 		}
+	}
+
+	/**
+	 * An auth user's rights, as every check reads them: their roles' rights joined
+	 * ({@see RoleRights::of()}), then their own over them, so a right given or refused to the person
+	 * wins over their roles. A super admin starts from every action (`*`). A scoped authentication
+	 * (a key, a token) still caps them, as {@see self::__construct()} pushes its rights.
+	 */
+	public static function of(AuthUserInterface $user): self
+	{
+		// The role as the user holds it: a scoped authentication is capped by its own rights, below.
+		$super = Roles::hasRole($user, RolesUtils::superAdmin(), true, RoleCheckMode::READ);
+		$map   = $super ? ['*' => 1] : [];
+		$map = \array_replace(
+			$map,
+			RoleRights::of($user),
+			$user->getAuthUserDataStore()->getAuthUserAccessRights()->toArray()
+		);
+
+		return new self($map, false);
 	}
 
 	#[Override]

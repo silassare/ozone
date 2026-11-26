@@ -72,4 +72,11 @@ return [
 	 * only rewrites the files whose content changed.
 	 */
 	'OZ_DB_GENERATED_TIMESTAMP' => true,
+
+	/**
+	 * The most rows one request may create of one table at once: the bulk route
+	 * (`POST /{service}/bulk`) and several rows of one table written through relations alike.
+	 * `0` or `null` for no limit.
+	 */
+	'OZ_DB_CREATE_BULK_MAX_ITEMS' => 100,
 ];

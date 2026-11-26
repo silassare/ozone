@@ -205,6 +205,7 @@ final class RESTFulServiceTest extends TestCase
 		\ksort($operations);
 
 		self::assertSame([
+			'stub_rest_files.create_bulk'              => 'POST /stub-rest-files/bulk',
 			'stub_rest_files.create_one'               => 'POST /stub-rest-files',
 			'stub_rest_files.delete_all'               => 'DELETE /stub-rest-files',
 			'stub_rest_files.delete_one'               => 'DELETE /stub-rest-files/:id',

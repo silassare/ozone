@@ -946,7 +946,18 @@ unless already a hash), `TypeCC2`, `TypeGender`, `TypeFile`. `registered()` / `n
 
 `CRUD\TableCRUDListener` subclasses (registered in `oz.gobl.crud`) wrap Gobl ORM events with access
 control through `allow(): AllowRuleBuilder` (`ifRole()`, `ifRoles()`, `when()`, `onlyIfIs()`). By
-default create is allowed and delete, delete-all and update-all are denied.
+default create is allowed and delete, delete-all, update-all and **create-bulk** (several rows the
+caller gives, gobl's `CREATE_BULK`) are denied; a `BaseHandler` allows create-bulk to administrators
+unless it sets its own rule. A table's actions, and their right names (`{morph type}.{action}`), are
+one list read off gobl's `ActionType`: `CRUD\TableActions`. Several rows of one table created
+through relations in one request are a bulk create of that table.
+
+**Rights**: a role is given or refused rights (`oz_role_rights`, `Access\RoleRights`); an auth
+user's rights are their roles' joined, then their own over them, a super admin starting from `*`
+(every action) -- `AccessRights::of()`, the one place they are computed, read through
+`auth()->getAccessRights()` by every guard and CRUD check. A role holds what it was given, nothing of
+lighter roles'; only a super admin changes a role's rights. `withRole()` is the exact role: use
+`withRoles(RoleStrategy::GTE, ...)` for "this role or heavier".
 
 `register()` runs once per process and takes no context: a listener reads the request being handled
 when an event fires, with `$this->context()` (`Context::current()`) — never one kept from

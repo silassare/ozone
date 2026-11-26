@@ -152,6 +152,15 @@ final class RESTRelationWritesTest extends TestCase
 
 		$proj->writeFileFromStub('LocalClientCandidates', 'app/LocalClientCandidates.php', ['namespace' => $ns]);
 
+		// Several transactions created at once (an account with its transactions, the bulk route)
+		// are a bulk create, which nothing opens by default: opened here while `OPEN` says so.
+		$proj->writeFileFromStub('BulkCreateOpener', 'app/BulkCreateOpener.php', [
+			'namespace' => $ns,
+			'table'     => 'transactions',
+		]);
+		$proj->setSetting('oz.gobl.crud', "{$ns}\\BulkCreateOpener", true);
+		$proj->setSetting('oz.test.bulk', 'OPEN', true);
+
 		// Read by the test, which has no user to sign in.
 		$proj->setSetting('oz.api.doc', 'OZ_API_DOC_PUBLIC', true);
 
@@ -362,6 +371,111 @@ final class RESTRelationWritesTest extends TestCase
 		self::assertContains('get_candidates', $services['accounts'] ?? [], $out);
 		self::assertNotContains('get_candidates', $services['transactions'] ?? [], $out);
 		self::assertNotContains('get_candidates', $services['clients'] ?? [], $out);
+	}
+
+	/**
+	 * The bulk route: several rows at once, all or none, a refused one located by its position.
+	 */
+	#[DataProvider('provideDbConfig')]
+	public function testTheBulkRouteCreatesEveryRowOrNone(DbTestConfig $config): void
+	{
+		$account = self::account($config, 'bulk target');
+
+		[$status, $json] = self::send($config, 'POST', '/transactions/bulk', ['items' => [
+			['account_id' => $account, 'state' => 'bulk one'],
+			['account_id' => $account, 'state' => 'bulk two'],
+		]]);
+
+		self::assertSame(201, $status, \json_encode($json));
+		self::assertSame(['bulk one', 'bulk two'], \array_column($json['data']['items'] ?? [], 'transaction_state'));
+
+		// The second names no account: refused where it is, and the first not written either.
+		[$status, $json] = self::send($config, 'POST', '/transactions/bulk', ['items' => [
+			['account_id' => $account, 'state' => 'never one'],
+			['account_id' => 'not-an-account', 'state' => 'never two'],
+		]]);
+
+		self::assertSame(400, $status, \json_encode($json));
+		self::assertStringStartsWith('items.1', (string) ($json['data']['field'] ?? ''), \json_encode($json));
+
+		[, $list] = self::send($config, 'GET', "/accounts/{$account}/transactions");
+
+		self::assertNotContains('never one', \array_column($list['data']['items'] ?? [], 'transaction_state'));
+	}
+
+	/**
+	 * Closed, as it is by default: the bulk route and an account with several transactions are
+	 * refused, one transaction still created as before; and the cap holds whatever is open.
+	 */
+	#[DataProvider('provideDbConfig')]
+	public function testABulkCreateIsRefusedUntilOpenedAndCapped(DbTestConfig $config): void
+	{
+		$account = self::account($config, 'closed bulk');
+
+		self::restart($config, ['oz.test.bulk' => ['OPEN' => false]]);
+
+		try {
+			[$status, $json] = self::send($config, 'POST', '/transactions/bulk', ['items' => [
+				['account_id' => $account, 'state' => 'closed one'],
+				['account_id' => $account, 'state' => 'closed two'],
+			]]);
+
+			self::assertSame(403, $status, \json_encode($json));
+
+			[$status, $json] = self::send($config, 'POST', '/accounts', [
+				'label'        => 'two at once',
+				'transactions' => [['state' => 'a'], ['state' => 'b']],
+			]);
+
+			self::assertSame(403, $status, \json_encode($json));
+
+			[$status, $json] = self::send($config, 'POST', '/accounts', [
+				'label'        => 'one alone',
+				'transactions' => [['state' => 'alone']],
+			]);
+
+			self::assertSame(201, $status, \json_encode($json));
+		} finally {
+			self::restart($config, ['oz.test.bulk' => ['OPEN' => true], 'oz.db' => ['OZ_DB_CREATE_BULK_MAX_ITEMS' => 2]]);
+		}
+
+		try {
+			[$status, $json] = self::send($config, 'POST', '/transactions/bulk', ['items' => [
+				['account_id' => $account, 'state' => 'cap one'],
+				['account_id' => $account, 'state' => 'cap two'],
+				['account_id' => $account, 'state' => 'cap three'],
+			]]);
+
+			self::assertSame(400, $status, \json_encode($json));
+			self::assertSame('OZ_FORM_BULK_TOO_MANY_ITEMS', $json['msg'] ?? null, \json_encode($json));
+		} finally {
+			self::restart($config, ['oz.db' => ['OZ_DB_CREATE_BULK_MAX_ITEMS' => 100]]);
+		}
+	}
+
+	/**
+	 * Writes settings of the project, then starts its server again: the dev server keeps the settings
+	 * files it compiled.
+	 *
+	 * @param array<string, array<string, mixed>> $groups
+	 */
+	private static function restart(DbTestConfig $config, array $groups): void
+	{
+		$project = self::$projects[$config->rdbms] ?? null;
+
+		self::assertNotNull($project, 'The project of this database is gone.');
+
+		foreach ($groups as $group => $settings) {
+			foreach ($settings as $key => $value) {
+				$project->setSetting($group, $key, $value);
+			}
+		}
+
+		[$process] = self::$servers[$config->rdbms];
+
+		$process->stop(3);
+
+		self::$servers[$config->rdbms] = $project->startServer('api');
 	}
 
 	/**

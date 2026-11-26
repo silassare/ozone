@@ -19,6 +19,7 @@ use Gobl\CRUD\Events\AfterEntityRead;
 use Gobl\CRUD\Events\AfterEntityUpdate;
 use Gobl\CRUD\Events\BeforeColumnUpdate;
 use Gobl\CRUD\Events\BeforeCreate;
+use Gobl\CRUD\Events\BeforeCreateBulk;
 use Gobl\CRUD\Events\BeforeCreateFlush;
 use Gobl\CRUD\Events\BeforeDelete;
 use Gobl\CRUD\Events\BeforeDeleteAll;
@@ -45,6 +46,14 @@ trait TableCRUDListenerTrait
 	public function onBeforeCreate(BeforeCreate $action): bool
 	{
 		return true;
+	}
+
+	/**
+	 * Several rows at once: refused unless the listener allows it, as `deleteAll` is.
+	 */
+	public function onBeforeCreateBulk(BeforeCreateBulk $action): bool
+	{
+		return false;
 	}
 
 	public function onBeforeCreateFlush(BeforeCreateFlush $action): void {}

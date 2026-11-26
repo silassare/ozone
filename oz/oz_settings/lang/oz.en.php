@@ -129,6 +129,8 @@ return [
 	'OZ_LINK_EXPIRED'                        => 'This link has expired.',
 
 	// forms and form sessions
+	'OZ_FORM_BULK_ITEMS_INVALID'             => 'The rows to create must be a list of forms.',
+	'OZ_FORM_BULK_TOO_MANY_ITEMS'            => 'At most {max} rows can be created at once.',
 	'OZ_FORM_MISSING_REQUIRED_FIELD'         => 'A required field is missing.',
 	'OZ_FORM_PROVIDER_NOT_FOUND'             => 'Form "{provider}" not found.',
 	'OZ_FORM_PROVIDER_REQUIRES_REAL_CONTEXT' => 'This form must be filled in through its route.',
@@ -339,6 +341,20 @@ return [
 				'ROLE' => ['LABEL' => 'Role'],
 				'DATA' => ['LABEL' => 'Data'],
 				'IS_VALID' => ['LABEL' => 'Valid'],
+				'CREATED_AT' => ['LABEL' => 'Created at'],
+				'UPDATED_AT' => ['LABEL' => 'Updated at'],
+			],
+		],
+		'OZ_ROLE_RIGHTS' => [
+			'SINGULAR'    => 'Role right',
+			'PLURAL'      => 'Role rights',
+			'DESCRIPTION' => 'An access right a role is given or refused.',
+			'CHOOSE'      => 'Choose a role right',
+			'COLUMN'      => [
+				'ID' => ['LABEL' => 'ID'],
+				'ROLE' => ['LABEL' => 'Role'],
+				'ACTION' => ['LABEL' => 'Action'],
+				'ALLOWED' => ['LABEL' => 'Allowed'],
 				'CREATED_AT' => ['LABEL' => 'Created at'],
 				'UPDATED_AT' => ['LABEL' => 'Updated at'],
 			],

@@ -17,6 +17,7 @@ use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\TypeString;
 use Override;
 use OZONE\Core\Access\AtomicActionsRegistry;
+use OZONE\Core\Access\RoleRights;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Exceptions\BadRequestException;
@@ -25,6 +26,7 @@ use OZONE\Core\Exceptions\UnauthenticatedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
 use OZONE\Core\REST\ApiDoc;
+use OZONE\Core\Roles\Enums\RoleStrategy;
 use OZONE\Core\Roles\Roles;
 use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Router\RouteInfo;
@@ -47,6 +49,10 @@ class AccessRightsService extends Service
 	public const string ROUTE_DENY          = 'oz:access-rights.deny';
 
 	public const string ROUTE_UPDATE        = 'oz:access-rights.update';
+
+	public const string ROUTE_ROLES         = 'oz:access-rights.roles';
+
+	public const string ROUTE_ROLES_UPDATE  = 'oz:access-rights.roles.update';
 
 	public function readForMe(RouteInfo $ri): Response
 	{
@@ -76,6 +82,52 @@ class AccessRightsService extends Service
 		$this->json()->setData([
 			'list' => AtomicActionsRegistry::read($userAccessRights),
 		]);
+
+		return $this->respond();
+	}
+
+	/**
+	 * The matrix of roles by rights: the roles of the project's enum with their weights, every
+	 * registered action, what each role is given or refused, and whether the reader may change it.
+	 */
+	public function readRoles(RouteInfo $ri): Response
+	{
+		$roles = [];
+
+		foreach (RolesUtils::getRoleEnumClass()::cases() as $role) {
+			$roles[] = ['name' => (string) $role->value, 'weight' => $role->weight()];
+		}
+
+		$this->json()->setData([
+			'roles'    => $roles,
+			'actions'  => \array_values(AtomicActionsRegistry::getAll()),
+			'grants'   => RoleRights::all(),
+			'editable' => RoleRights::canEdit(user($ri->getContext())),
+		]);
+
+		return $this->respond();
+	}
+
+	/**
+	 * Gives a role `allow_actions` and refuses it `deny_actions`: super admins only.
+	 *
+	 * @throws BadRequestException
+	 */
+	public function updateRoles(RouteInfo $ri): Response
+	{
+		$role  = RolesUtils::normalize((string) $ri->getCleanFormField('role'));
+		$allow = \array_values(\array_map('strval', (array) $ri->getCleanFormField('allow_actions', [])));
+		$deny  = \array_values(\array_map('strval', (array) $ri->getCleanFormField('deny_actions', [])));
+
+		foreach ([...$allow, ...$deny] as $action) {
+			if (!self::isGrantable($action)) {
+				throw new BadRequestException('Access right not registered.', ['action' => $action]);
+			}
+		}
+
+		RoleRights::set($role, $allow, $deny);
+
+		$this->json()->setData(['grants' => RoleRights::all()]);
 
 		return $this->respond();
 	}
@@ -232,26 +284,38 @@ class AccessRightsService extends Service
 			$router->get('/read', static fn (RouteInfo $ri) => new self($ri)->readAsAdmin($ri))
 				->name(self::ROUTE_READ_AS_ADMIN)
 				->form(AuthUsers::selectorForm(...))
-				->withRole(RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
 
 			$router->get('/list', static fn (RouteInfo $ri) => new self($ri)->list($ri))
 				->name(self::ROUTE_LIST)
-				->withRole(RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
 
 			$router->post('/allow', static fn (RouteInfo $ri) => new self($ri)->allow($ri))
 				->name(self::ROUTE_ALLOW)
 				->form(self::buildAllowForm(...))
-				->withRole(RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
 
 			$router->post('/deny', static fn (RouteInfo $ri) => new self($ri)->deny($ri))
 				->name(self::ROUTE_DENY)
 				->form(self::buildDenyForm(...))
-				->withRole(RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
 
 			$router->post('/update', static fn (RouteInfo $ri) => new self($ri)->update($ri))
 				->name(self::ROUTE_UPDATE)
 				->form(self::buildUpdateForm(...))
-				->withRole(RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
+
+			// An administrator, or anyone heavier: `withRole()` is the exact role, and would leave a
+			// super admin out of the matrix they alone may change.
+			$router->get('/roles', static fn (RouteInfo $ri) => new self($ri)->readRoles($ri))
+				->name(self::ROUTE_ROLES)
+				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
+
+			// A role's rights are every holder's: super admins only.
+			$router->post('/roles', static fn (RouteInfo $ri) => new self($ri)->updateRoles($ri))
+				->name(self::ROUTE_ROLES_UPDATE)
+				->form(self::buildRolesForm(...))
+				->withRole(RolesUtils::superAdmin());
 		});
 	}
 
@@ -307,6 +371,29 @@ class AccessRightsService extends Service
 			'operationId' => 'Access.update',
 			'description' => 'Atomically grant and revoke access rights on a user (admin only).',
 		]);
+
+		$doc->addOperationFromRoute(self::ROUTE_ROLES, 'GET', 'Get the Rights of the Roles', [
+			$doc->success([
+				'roles'    => $doc->array($doc->object([])),
+				'actions'  => $doc->array($doc->object([])),
+				'grants'   => $doc->object([]),
+				'editable' => $doc->boolean(),
+			]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Access.readRoles',
+			'description' => 'The roles with their weights, every registered action, and what each role is given'
+				. ' (`true`) or refused (`false`); `editable` says whether the reader may change them (admin only).',
+		]);
+
+		$doc->addOperationFromRoute(self::ROUTE_ROLES_UPDATE, 'POST', 'Update the Rights of a Role', [
+			$doc->success(['grants' => $doc->object([])]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Access.updateRoles',
+			'description' => 'Give a role `allow_actions` and refuse it `deny_actions`, registered actions or'
+				. ' wildcards over them; every holder of the role follows (super admin only).',
+		]);
 	}
 
 	/**
@@ -335,6 +422,48 @@ class AccessRightsService extends Service
 			->type(new TypeString(3))
 			->multiple()
 			->required();
+
+		return $fb;
+	}
+
+	/**
+	 * Whether an action may be given or refused: a registered one, or a wildcard (`posts.*`) over
+	 * registered ones.
+	 */
+	private static function isGrantable(string $action): bool
+	{
+		if (AtomicActionsRegistry::isRegistered($action)) {
+			return true;
+		}
+
+		if (!\str_ends_with($action, '.*')) {
+			return false;
+		}
+
+		$prefix = \substr($action, 0, -1);
+
+		foreach (\array_keys(AtomicActionsRegistry::getAll()) as $registered) {
+			if (\str_starts_with((string) $registered, $prefix)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static function buildRolesForm(): Form
+	{
+		$fb = new Form();
+
+		$fb->string('role', true);
+
+		$fb->field('allow_actions')
+			->type(new TypeString(3))
+			->multiple();
+
+		$fb->field('deny_actions')
+			->type(new TypeString(3))
+			->multiple();
 
 		return $fb;
 	}

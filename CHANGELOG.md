@@ -2,6 +2,20 @@
 
 ### Breaking changes
 
+- **A table's create could never be granted as a right, and `create_all` was never checked**:
+  `RESTFulService` registered six actions per table, without `create`, while `BaseHandler` checks
+  `{morph type}.create` and `/access-rights/allow` refuses an action not registered; and
+  `BaseHandler::allow('create_all')` was accepted but no CRUD event ever asked for it. The table
+  actions are now one list read off gobl's `ActionType` (`CRUD\TableActions`): `create`,
+  `create_bulk`, `read`, `read_all`, `update`, `update_all`, `delete`, `delete_all`, used by the
+  registry, by `allow()` and by the checks. `create_all` is gone: a handler calling
+  `allow('create_all')` is refused (it never applied).
+- **Several rows of one table created through relations in one request are a bulk create**: an
+  account posted with two transactions needs `{transactions}.create_bulk` once, beside each row's
+  `create`, and a table opens it for whom it chooses. One row through a relation is a create as
+  before. `TableCRUDListenerTrait::onBeforeCreateBulk()` refuses, as `onBeforeDeleteAll()` does, so a
+  listener registered whole refuses bulk creates unless it overrides it; a table with no listener at
+  all refuses them (gobl's default).
 - **What says "users" while serving every auth user type is named for auth users**: `oz_users` is
   the default auth user table (type `user`), not the only one, and the names now say so. No alias is
   kept:
@@ -400,6 +414,22 @@
 
 ### Added
 
+- **Rights per role**: a role is given or refused access rights (`oz_role_rights`, edited live), and
+  an auth user's rights are their roles' joined -- allowed where any of their roles allows -- then
+  their own over them (`AccessRights::of()`, read by `SessionAuth` and `BasicAuth`, so every guard,
+  CRUD check and `oz:access-rights.me` follows); a scoped authentication still caps them. A role
+  holds what it was given and nothing of the lighter roles'. A super admin may do every action: the
+  root wildcard `*` now stands for every action, a more specific rule still deciding over it.
+  `GET /access-rights/roles` (`oz:access-rights.roles`, administrators) answers the roles and their
+  weights, every registered action and each role's map, and whether the reader may change it;
+  `POST /access-rights/roles` (`oz:access-rights.roles.update`, **super admins only**) gives a role
+  `allow_actions` and refuses it `deny_actions`, registered actions or wildcards over them.
+- **A bulk create**: `POST /{service}/bulk` (`RESTFulAction::CREATE_BULK`) creates `items`, one form
+  each, all or none, through gobl's `addItems()`; a refused row is located at
+  `items.{position}.{field}`. `{morph type}.create_bulk` is administrators only in every
+  `BaseHandler` by default (a handler's own rule kept, before its constructor or after). At most
+  `OZ_DB_CREATE_BULK_MAX_ITEMS` (`oz.db`, 100; `0` or `null` for no limit) rows, on the route and
+  through relations alike.
 - **A project may have no `oz_users`**: `OZ_AUTH_USER_DEFAULT_TABLE` (`oz.auth.users`, `true` by
   default) set to `false` leaves the default auth user table out of the schema and its `user` type
   out of `oz.auth.users.repositories` (`AuthUsers::repositoryClass()`), for a project whose auth
@@ -885,6 +915,9 @@
 
 ### Fixed
 
+- **A super admin was refused the access rights routes**: `/access-rights/read`, `list`, `allow`,
+  `deny` and `update` were guarded by `withRole(admin)`, which is the exact role; they now let in an
+  administrator or anyone heavier (`withRoles(RoleStrategy::GTE, null, admin)`).
 - **A request to a route that stacks rate limits on one key was counted once per limit**: a group
   and its route each declaring an `IPRateLimit` share the key `ip:{route key}:{ip}`, so one
   submission spent two of the route's attempts and the group's looser limit read the same doubled

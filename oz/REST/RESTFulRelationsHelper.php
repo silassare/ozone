@@ -171,6 +171,10 @@ final class RESTFulRelationsHelper
 			...$table->getVirtualRelations(false),
 		];
 
+		if (!$patch) {
+			$this->assertBulkCreates($relations, $req);
+		}
+
 		foreach ($relations as $relation) {
 			$relation_name    = $relation->getName();
 			$relation_payload = $req->getFormField($relation_name);
@@ -211,6 +215,61 @@ final class RESTFulRelationsHelper
 					$this->processRelative($relation, $entity, $rel_entry, $patch);
 				}
 			}
+		}
+	}
+
+	/**
+	 * Several rows of one table created through relations in one request are a bulk create of that
+	 * table: asked for once (`{morph type}.create_bulk`, administrators only by default) and capped by
+	 * `OZ_DB_CREATE_BULK_MAX_ITEMS`, before any row is written. Each row is still a create of its own.
+	 * A linked record (`ATTACH_PARAM`) is no create; a virtual relation's entries are its own.
+	 *
+	 * @param array<RelationInterface> $relations
+	 *
+	 * @throws InvalidFormException
+	 */
+	private function assertBulkCreates(array $relations, RESTFulAPIRequest $req): void
+	{
+		/** @var array<string, array{table: Table, field: string, forms: list<array<string, mixed>>}> $by_table */
+		$by_table = [];
+
+		foreach ($relations as $relation) {
+			// A virtual relation's controller is the project's own: what it creates is not known to be
+			// rows of one table.
+			if (!$relation instanceof Relation) {
+				continue;
+			}
+
+			$payload = $req->getFormField($relation->getName());
+
+			if (empty($payload) || !\is_array($payload)) {
+				continue;
+			}
+
+			$entries = $relation->isPaginated() ? $payload : [$payload];
+			$target  = $relation->getTargetTable();
+			$name    = $target->getFullName();
+
+			foreach ($entries as $entry) {
+				if (!\is_array($entry) || [] === $entry || !empty($entry[RESTFulAPIRequest::ATTACH_PARAM])) {
+					continue;
+				}
+
+				unset($entry[RESTFulAPIRequest::DELETE_PARAM]);
+
+				$by_table[$name] ??= ['table' => $target, 'field' => $relation->getName(), 'forms' => []];
+				$by_table[$name]['forms'][] = ORM::formByFullNames($target, $entry);
+			}
+		}
+
+		foreach ($by_table as $bulk) {
+			if (\count($bulk['forms']) < 2) {
+				continue;
+			}
+
+			RESTFulService::assertBulkSize(\count($bulk['forms']), $bulk['field']);
+
+			ORM::ctrl($bulk['table'])->getCRUD()->assertCreateBulk($bulk['forms']);
 		}
 	}
 

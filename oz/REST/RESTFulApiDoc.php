@@ -165,6 +165,33 @@ final class RESTFulApiDoc
 					'requestBody' => $doc->requestBody([$doc->json($s['entity_create'])]),
 				],
 			],
+			RESTFulAction::CREATE_BULK => [
+				\sprintf('Create %s', $plural),
+				[
+					$doc->success(
+						$doc->object(['items' => $doc->array($s['entity_read'])]),
+						\sprintf('The `%s` were created successfully.', $plural),
+						'OK',
+						201
+					),
+				],
+				[
+					'tags'        => [$s['tag']],
+					'description' => \sprintf(
+						'Create several `%s` at once, from `%s` (one `%s` each), all or none: a refused one is'
+							. ' located at `%s.{position}.{field}`. Administrators only, unless the table opens it;'
+							. ' at most `OZ_DB_CREATE_BULK_MAX_ITEMS` (`oz.db`) rows.',
+						$plural,
+						RESTFulService::BULK_ITEMS_FIELD,
+						$singular,
+						RESTFulService::BULK_ITEMS_FIELD
+					),
+					'operationId' => $op_id,
+					'requestBody' => $doc->requestBody([$doc->json($doc->object([
+						RESTFulService::BULK_ITEMS_FIELD => $doc->array($s['entity_create']),
+					]))]),
+				],
+			],
 			RESTFulAction::GET_ONE => [
 				\sprintf('Get %s', $singular),
 				[

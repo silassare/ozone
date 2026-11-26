@@ -24,6 +24,7 @@ use OZONE\Core\REST\RESTFulService;
 enum RESTFulAction: string
 {
 	case CREATE_ONE   = 'create_one';
+	case CREATE_BULK  = 'create_bulk';
 	case GET_ALL      = 'get_all';
 	case UPDATE_ALL   = 'update_all';
 	case DELETE_ALL   = 'delete_all';
@@ -43,7 +44,7 @@ enum RESTFulAction: string
 	public function httpMethod(): string
 	{
 		return match ($this) {
-			self::CREATE_ONE                                 => 'POST',
+			self::CREATE_ONE, self::CREATE_BULK              => 'POST',
 			self::GET_ALL, self::GET_ONE, self::GET_RELATION, self::GET_CANDIDATES => 'GET',
 			self::UPDATE_ALL, self::UPDATE_ONE               => 'PATCH',
 			self::DELETE_ALL, self::DELETE_ONE               => 'DELETE',
@@ -70,6 +71,8 @@ enum RESTFulAction: string
 	public function path(): string
 	{
 		return match ($this) {
+			// A POST on the collection, which no entry route answers: a key named `bulk` is no clash.
+			self::CREATE_BULK    => '/bulk',
 			self::GET_RELATION   => '/:' . self::RELATION_PARAM,
 			self::GET_CANDIDATES => '/relations/:' . self::CANDIDATES_RELATION_PARAM . '/candidates',
 			default              => '',

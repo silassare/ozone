@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use Override;
+use OZONE\Core\Access\AccessRights;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
@@ -156,7 +157,8 @@ class BasicAuth implements AuthenticationMethodInterface
 	#[Override]
 	public function getAccessRights(): AccessRightsInterface
 	{
-		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
+		// Their roles' rights and their own, as every check reads them.
+		return AccessRights::of($this->user());
 	}
 
 	#[Override]

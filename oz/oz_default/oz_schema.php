@@ -250,6 +250,37 @@ return static function (NamespaceBuilder $ns): void {
 		});
 	});
 
+	// What a role may do: an access right granted or refused to every auth user holding the role. A
+	// user's own rights override their roles' (`AccessRights::of()`).
+	$ns->table('oz_role_rights', static function (TableBuilder $tb): void {
+		$tb->getTable()->setPrivate();
+
+		$tb->plural('oz_role_rights')
+			->singular('oz_role_right')
+			->columnPrefix('role_right')
+			->meta('api.doc.description', 'An access right a role is given or refused.');
+
+		$tb->id();
+
+		$tb->enum('role', RolesUtils::getRoleEnumClass())
+			->setMetaKey('field.label', 'Role')
+			->setMetaKey('api.doc.description', 'The role the right is for.');
+
+		$tb->string('action')->max(255)
+			->setMetaKey('field.label', 'Action')
+			->setMetaKey('api.doc.description', 'The access right: a registered atomic action, or a wildcard (`posts.*`).');
+
+		$tb->bool('allowed')->default(true)
+			->setMetaKey('field.label', 'Allowed')
+			->setMetaKey('api.doc.description', 'Whether the role is given the right, or refused it.');
+
+		$tb->timestamps();
+
+		$tb->collectIndex(static function (TableBuilder $tb): void {
+			$tb->unique('role', 'action');
+		});
+	});
+
 	$ns->table('oz_jobs', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 

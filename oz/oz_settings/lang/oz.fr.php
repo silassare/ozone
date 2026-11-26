@@ -129,6 +129,8 @@ return [
 	'OZ_LINK_EXPIRED'                        => 'Ce lien a expiré.',
 
 	// forms and form sessions
+	'OZ_FORM_BULK_ITEMS_INVALID'             => 'Les lignes à créer doivent être une liste de formulaires.',
+	'OZ_FORM_BULK_TOO_MANY_ITEMS'            => 'Au plus {max} lignes peuvent être créées à la fois.',
 	'OZ_FORM_MISSING_REQUIRED_FIELD'         => 'Un champ obligatoire est manquant.',
 	'OZ_FORM_PROVIDER_NOT_FOUND'             => 'Formulaire « {provider} » introuvable.',
 	'OZ_FORM_PROVIDER_REQUIRES_REAL_CONTEXT' => 'Ce formulaire doit être rempli depuis sa route.',
@@ -339,6 +341,20 @@ return [
 				'ROLE' => ['LABEL' => 'Rôle'],
 				'DATA' => ['LABEL' => 'Données'],
 				'IS_VALID' => ['LABEL' => 'Valide'],
+				'CREATED_AT' => ['LABEL' => 'Créé le'],
+				'UPDATED_AT' => ['LABEL' => 'Modifié le'],
+			],
+		],
+		'OZ_ROLE_RIGHTS' => [
+			'SINGULAR'    => 'Droit de rôle',
+			'PLURAL'      => 'Droits des rôles',
+			'DESCRIPTION' => 'Un droit d\'accès accordé ou refusé à un rôle.',
+			'CHOOSE'      => 'Choisir un droit de rôle',
+			'COLUMN'      => [
+				'ID' => ['LABEL' => 'ID'],
+				'ROLE' => ['LABEL' => 'Rôle'],
+				'ACTION' => ['LABEL' => 'Action'],
+				'ALLOWED' => ['LABEL' => 'Accordé'],
 				'CREATED_AT' => ['LABEL' => 'Créé le'],
 				'UPDATED_AT' => ['LABEL' => 'Modifié le'],
 			],

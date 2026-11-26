@@ -16,6 +16,7 @@ namespace OZONE\Core\Auth\Methods;
 use ArrayObject;
 use Closure;
 use Override;
+use OZONE\Core\Access\AccessRights;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
@@ -122,7 +123,8 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	#[Override]
 	public function getAccessRights(): AccessRightsInterface
 	{
-		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
+		// Their roles' rights and their own, as every check reads them.
+		return AccessRights::of($this->user());
 	}
 
 	#[Override]

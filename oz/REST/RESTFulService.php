@@ -26,10 +26,14 @@ use Gobl\ORM\ORMEntity;
 use Gobl\ORM\ORMOptions;
 use InvalidArgumentException;
 use Override;
+use PHPUtils\Interfaces\RichExceptionInterface;
 use OZONE\Core\Access\AtomicAction;
+use OZONE\Core\CRUD\TableActions;
 use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Service;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -62,6 +66,9 @@ abstract class RESTFulService extends Service
 	public const string TABLE_NAME   = '';
 	public const string KEY_COLUMN   = 'id';
 
+	/** The field of a bulk create that carries its rows, one form each. */
+	public const string BULK_ITEMS_FIELD = 'items';
+
 	/** What a {@see self::SERVICE_NAME} looks like. */
 	public const string SERVICE_NAME_REG = '~^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$~';
 
@@ -82,6 +89,7 @@ abstract class RESTFulService extends Service
 		'delete_one'   => true,
 		'delete_all'   => true,
 		'create_one'   => true,
+		'create_bulk'  => true,
 	];
 
 	protected Table $table;
@@ -193,6 +201,97 @@ abstract class RESTFulService extends Service
 				)
 				->setData(['item' => $entity]);
 		});
+	}
+
+	/**
+	 * Creates several entries at once, from `items` (one form each).
+	 *
+	 * Asked for as one bulk create of the table (`{morph type}.create_bulk`, administrators only by
+	 * default), then each row as a create of its own, all in one transaction: a row refused leaves
+	 * none written, and its error is located at `items.{position}.{field}`. At most
+	 * `OZ_DB_CREATE_BULK_MAX_ITEMS` rows.
+	 *
+	 * @throws Throwable
+	 */
+	public function actionCreateBulk(RESTFulAPIRequest $req): void
+	{
+		$items = $req->getFormField(self::BULK_ITEMS_FIELD);
+
+		if (!\is_array($items) || [] === $items || !\array_is_list($items)) {
+			throw new InvalidFormException('OZ_FORM_BULK_ITEMS_INVALID', ['field' => self::BULK_ITEMS_FIELD]);
+		}
+
+		self::assertBulkSize(\count($items), self::BULK_ITEMS_FIELD);
+
+		$forms = [];
+
+		foreach ($items as $position => $item) {
+			if (!\is_array($item)) {
+				throw new InvalidFormException('OZ_FORM_BULK_ITEMS_INVALID', [
+					'field' => self::BULK_ITEMS_FIELD . '.' . $position,
+				]);
+			}
+
+			$forms[] = new RESTFulAPIRequest($req->getContext(), $item)->getFormData($this->table);
+		}
+
+		$controller = $this->ctrl();
+
+		try {
+			$entities = $controller->addItems($forms);
+		} catch (RichExceptionInterface $e) {
+			throw self::locatedInBulk($e, $this->table, self::BULK_ITEMS_FIELD);
+		}
+
+		$this->setResponseStatus(201);
+
+		$this->json()
+			->setDone($controller->getCRUD()->getMessage())
+			->setData(['items' => $entities]);
+	}
+
+	/**
+	 * Refuses a batch of more rows than `OZ_DB_CREATE_BULK_MAX_ITEMS` allows (`0` or `null`: no
+	 * limit), naming the field that carried them.
+	 *
+	 * @throws InvalidFormException
+	 */
+	public static function assertBulkSize(int $count, string $field): void
+	{
+		$max = (int) Settings::get('oz.db', 'OZ_DB_CREATE_BULK_MAX_ITEMS', 100);
+
+		if ($max > 0 && $count > $max) {
+			throw new InvalidFormException('OZ_FORM_BULK_TOO_MANY_ITEMS', [
+				'field' => $field,
+				'max'   => $max,
+				'count' => $count,
+			]);
+		}
+	}
+
+	/**
+	 * The error of a refused row of a bulk create, located: its field becomes
+	 * `{prefix}.{position}.{field}` (or `{prefix}.{position}` when it names none), its position the
+	 * one gobl reported as `bulk_index`.
+	 */
+	public static function locatedInBulk(RichExceptionInterface $e, Table $table, string $prefix): Throwable
+	{
+		$position = $e->getData(true)['bulk_index'] ?? null;
+
+		if (!\is_int($position)) {
+			return $e;
+		}
+
+		$converted = BaseException::tryConvert($e);
+		$field     = $converted->getData(true)['field'] ?? null;
+		$located   = $prefix . '.' . $position;
+
+		if (\is_string($field) && '' !== $field) {
+			// By the name the form uses, not the column's full name.
+			$located .= '.' . ($table->getColumn($field)?->getName() ?? $field);
+		}
+
+		return $converted->mergeData(['field' => $located]);
 	}
 
 	// ========================================================
@@ -688,18 +787,11 @@ abstract class RESTFulService extends Service
 	 */
 	protected static function registerAccessRightsActions(Table $table): void
 	{
-		$actions = [
-			'read',
-			'read_all',
-			'update',
-			'update_all',
-			'delete',
-			'delete_all',
-		];
-
 		$prefix = $table->getMorphType();
 
-		foreach ($actions as $action) {
+		// Every action a table is asked for, `create` and `create_bulk` included: a right not
+		// registered can never be granted, and a check for it never passes.
+		foreach (TableActions::names() as $action) {
 			$desc = I18n::m('OZ_ACCESS_RIGHT_DESCRIPTION', [
 				'action' => $action,
 			]);
@@ -777,6 +869,7 @@ abstract class RESTFulService extends Service
 
 		match ($action) {
 			RESTFulAction::CREATE_ONE   => $this->actionCreateOne($req),
+			RESTFulAction::CREATE_BULK  => $this->actionCreateBulk($req),
 			RESTFulAction::GET_ALL      => $this->actionGetAll($req),
 			RESTFulAction::UPDATE_ALL   => $this->actionUpdateAll($req),
 			RESTFulAction::DELETE_ALL   => $this->actionDeleteAll($req),
