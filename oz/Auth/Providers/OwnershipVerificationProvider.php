@@ -78,7 +78,7 @@ abstract class OwnershipVerificationProvider extends AuthorizationProvider
 
 		if (VerificationPurpose::ACCOUNT_RECOVERY === $purpose) {
 			$given     = $fd->get(AuthUsers::FIELD_AUTH_USER_TYPE);
-			$user_type = \is_string($given) && '' !== $given ? $given : AuthUsersRepository::DEFAULT_AUTH_USER_TYPE;
+			$user_type = \is_string($given) && '' !== $given ? $given : AuthUsersRepository::defaultType();
 		}
 
 		return new static($context, $identifier, $purpose, $user_type);

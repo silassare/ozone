@@ -37,6 +37,10 @@ use Throwable;
  */
 final class AuthUsersRepository implements AuthUsersRepositoryInterface
 {
+	/**
+	 * The auth user type of OZone's default table, `oz_users`. What is used where no type is named is
+	 * the project's setting, {@see self::defaultType()}: this is its default value.
+	 */
 	public const string DEFAULT_AUTH_USER_TYPE = 'user';
 
 	private const string TABLE_MARKER_META_KEY = 'ozone.auth_users_repository.auth_user_type';
@@ -48,6 +52,40 @@ final class AuthUsersRepository implements AuthUsersRepositoryInterface
 		private Table $table,
 		private string $user_type,
 	) {}
+
+	/**
+	 * The auth user type used where none is named (`OZ_AUTH_USER_DEFAULT_TYPE`): `user` unless the
+	 * project names another, as it must when it has no `oz_users`.
+	 *
+	 * @throws RuntimeException when no repository serves that type: every default would point at
+	 *                          nothing, so it is refused where it is first read (the schema's build
+	 *                          among them) rather than met as a missing account later
+	 */
+	public static function defaultType(): string
+	{
+		$type = Settings::get('oz.auth.users', 'OZ_AUTH_USER_DEFAULT_TYPE', self::DEFAULT_AUTH_USER_TYPE);
+		$type = \is_string($type) && '' !== $type ? $type : self::DEFAULT_AUTH_USER_TYPE;
+
+		if (null === AuthUsers::repositoryClass($type)) {
+			throw new RuntimeException(\sprintf(
+				'The default auth user type "%s" is served by no repository of oz.auth.users.repositories%s.',
+				$type,
+				self::DEFAULT_AUTH_USER_TYPE === $type && !self::hasDefaultTable()
+					? ', OZ_AUTH_USER_DEFAULT_TABLE having left oz_users out: name one of the project\'s own types'
+					: ''
+			))->suspectConfig('oz.auth.users', 'OZ_AUTH_USER_DEFAULT_TYPE');
+		}
+
+		return $type;
+	}
+
+	/**
+	 * Whether OZone's default auth user table, `oz_users`, exists (`OZ_AUTH_USER_DEFAULT_TABLE`).
+	 */
+	public static function hasDefaultTable(): bool
+	{
+		return (bool) Settings::get('oz.auth.users', 'OZ_AUTH_USER_DEFAULT_TABLE', true);
+	}
 
 	/**
 	 * Check if a given auth user table is supported by this repository.

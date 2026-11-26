@@ -400,6 +400,17 @@
 
 ### Added
 
+- **A project may have no `oz_users`**: `OZ_AUTH_USER_DEFAULT_TABLE` (`oz.auth.users`, `true` by
+  default) set to `false` leaves the default auth user table out of the schema and its `user` type
+  out of `oz.auth.users.repositories` (`AuthUsers::repositoryClass()`), for a project whose auth
+  users are all of its own `makeAuthUserTable()` tables; a migration then drops the table, reviewed
+  as any other. **The default auth user type is a setting**, `OZ_AUTH_USER_DEFAULT_TYPE` (`user` by
+  default, marked for the client): sign-up, `oz auth-users add|grant`, the email and phone columns'
+  "already registered" check and a verification naming no type read it through
+  `AuthUsersRepository::defaultType()`, which refuses a type no repository serves (the schema's build
+  included) and names `OZ_AUTH_USER_DEFAULT_TABLE` when it left `user` out. `oz doctor` says what
+  the default type is and fails one with no `makeAuthUserTable()` table; `oz auth-users` still
+  registers when it is wrong, so the doctor can say so.
 - **An auth user's picture has a route of its own, `oz:auth-user-picture`**
   (`GET /auth-users/{type}/{id}/picture[/{tokens}]`, `Auth\Views\AuthUserPictureView`, in every
   scope as `oz:files` is), for **any auth user type**: the owner is found through its type's

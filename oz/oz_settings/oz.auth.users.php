@@ -22,6 +22,24 @@ use OZONE\Core\Auth\Views\AuthUserPictureView;
  */
 return [
 	/**
+	 * Whether OZone's default auth user table, `oz_users` (type `user`), exists. `false` leaves it out
+	 * of the schema and its type out of `oz.auth.users.repositories`, for a project whose auth users
+	 * are all of its own tables; `OZ_AUTH_USER_DEFAULT_TYPE` then names one of them. Turned off on a
+	 * database holding the table, the next migration drops it, as it shows.
+	 */
+	'OZ_AUTH_USER_DEFAULT_TABLE' => true,
+
+	/**
+	 * The auth user type used where none is named: sign-up, `oz auth-users`, the email and phone
+	 * columns' "already registered" check, a verification that names no type. A type a repository of
+	 * `oz.auth.users.repositories` serves, with a table made by `makeAuthUserTable()`; anything else
+	 * is refused at boot.
+	 *
+	 * @client the type a sign-in or recovery form asks for when its definition names none
+	 */
+	'OZ_AUTH_USER_DEFAULT_TYPE' => AuthUsersRepository::DEFAULT_AUTH_USER_TYPE,
+
+	/**
 	 * Minimum age at december 31 of the current year.
 	 * This is used to compute the minimum birth date allowed for an auth user.
 	 */

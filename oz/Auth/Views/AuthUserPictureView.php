@@ -214,7 +214,7 @@ class AuthUserPictureView extends WebView
 	 */
 	private static function owner(string $type, string $id): ?AuthUserInterface
 	{
-		if (null === Settings::get('oz.auth.users.repositories', $type)) {
+		if (null === AuthUsers::repositoryClass($type)) {
 			return null;
 		}
 

@@ -831,8 +831,10 @@ is the stateful store. Force a logout everywhere with
 `AuthUsers::forceUserLogoutOnAllActiveSessions($user)`.
 
 **Identity** (DESIGN LAW 1): a user type is a key of `oz.auth.users.repositories` mapped to an
-`AuthUsersRepositoryInterface` (`AuthUsersRepository::DEFAULT_AUTH_USER_TYPE` is `user`, served by `oz_users`),
-and a request names the type it means (`auth_user_type`). An account is found by its id
+`AuthUsersRepositoryInterface` (`AuthUsersRepository::DEFAULT_AUTH_USER_TYPE` is `user`, served by `oz_users`,
+which `OZ_AUTH_USER_DEFAULT_TABLE = false` leaves out), and a request names the type it means
+(`auth_user_type`). Where nothing names one, the type is `AuthUsersRepository::defaultType()`
+(`OZ_AUTH_USER_DEFAULT_TYPE`), never the constant. An account is found by its id
 (`getAuthUserByIdentifier()`) or by an identifier **type and value**
 (`getAuthUserByIdentifierType()`), both strings a repository reads as it likes;
 `AuthUsers::identify()` / `identifyBySelector()` route to the repository of the type and validate

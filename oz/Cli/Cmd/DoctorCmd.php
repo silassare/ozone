@@ -22,6 +22,7 @@ use Kli\Table\KliTableHeader;
 use Override;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\AuthUsersRepository;
 use OZONE\Core\Cli\Build\ProjectBuilder;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\CronRunner;
@@ -82,6 +83,37 @@ final class DoctorCmd extends Command
 				\count($failed)
 			), true, 1);
 		}
+	}
+
+	/**
+	 * Whether the default auth user type (`OZ_AUTH_USER_DEFAULT_TYPE`) is one a repository serves,
+	 * with a table made by `makeAuthUserTable()`: what sign-up, `oz auth-users` and the email and
+	 * phone columns use where no type is named. A project without `oz_users` names one of its own.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	public static function defaultAuthUserTypeChecks(): array
+	{
+		$fix = 'Set OZ_AUTH_USER_DEFAULT_TYPE (oz.auth.users) to an auth user type of'
+			. ' oz.auth.users.repositories whose table makeAuthUserTable() made.';
+
+		try {
+			$type  = AuthUsersRepository::defaultType();
+			$table = db()->getTableByMorphType($type);
+		} catch (Throwable $t) {
+			return [self::row('Default auth user type', self::FAIL, self::rootCause($t), $fix)];
+		}
+
+		if (!$table || !AuthUsersRepository::isTableSupported($table)) {
+			return [self::row(
+				'Default auth user type',
+				self::FAIL,
+				\sprintf('"%s" has no table made by makeAuthUserTable()', $type),
+				$fix
+			)];
+		}
+
+		return [self::row('Default auth user type', self::OK, \sprintf('"%s" (%s)', $type, $table->getName()), '')];
 	}
 
 	/**
@@ -376,7 +408,8 @@ final class DoctorCmd extends Command
 			$this->translationChecks(),
 			self::publicFilesChecks(),
 			$this->robotsTxtChecks(),
-			self::scopeClassesChecks()
+			self::scopeClassesChecks(),
+			self::defaultAuthUserTypeChecks()
 		);
 	}
 

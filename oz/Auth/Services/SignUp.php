@@ -53,7 +53,7 @@ final class SignUp extends Service
 	public function actionSignUp(RouteInfo $ri): void
 	{
 		$form  = $ri->getCleanFormData()->getData();
-		$type  = (string) ($form[AuthUsers::FIELD_AUTH_USER_TYPE] ?? AuthUsersRepository::DEFAULT_AUTH_USER_TYPE);
+		$type  = (string) ($form[AuthUsers::FIELD_AUTH_USER_TYPE] ?? AuthUsersRepository::defaultType());
 		$table = self::signUpTable($type);
 
 		unset($form[AuthUsers::FIELD_AUTH_USER_TYPE]);
@@ -129,7 +129,7 @@ final class SignUp extends Service
 			// and the type to sign up as.
 			->form(static function () {
 				$form = Form::fromTable(
-					self::signUpTable(AuthUsersRepository::DEFAULT_AUTH_USER_TYPE)
+					self::signUpTable(AuthUsersRepository::defaultType())
 						?? throw new InternalErrorException('The default auth user type has no auth user table.')
 				);
 
@@ -160,7 +160,7 @@ final class SignUp extends Service
 				'tags'        => [$tag->name],
 				'operationId' => 'AuthUsers.signUp',
 				'description' => 'Create a new auth user, of a type `OZ_AUTH_USER_SIGN_UP_TYPES` lists (`'
-					. AuthUsers::FIELD_AUTH_USER_TYPE . '`, `' . AuthUsersRepository::DEFAULT_AUTH_USER_TYPE
+					. AuthUsers::FIELD_AUTH_USER_TYPE . '`, `' . AuthUsersRepository::defaultType()
 					. '` by default). Requires prior email or phone ownership verification where the type'
 					. ' asks for it.',
 			]

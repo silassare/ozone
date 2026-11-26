@@ -26,6 +26,7 @@ use OZONE\Core\Auth\AuthUsersRepository;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\OZone;
 use OZONE\Core\Roles\Roles;
 use OZONE\Core\Roles\RolesUtils;
@@ -48,15 +49,27 @@ final class AuthUsersCmd extends Command
 			// table it names, and the standard columns are the same in all of them.
 			$add = $this->action('add', 'Add a new auth user.');
 
-			$standard = self::table(AuthUsersRepository::DEFAULT_AUTH_USER_TYPE);
+			// A default type no repository serves is the doctor's to report: refusing it here would
+			// stop every command, `oz doctor` among them, from being registered.
+			try {
+				$default = AuthUsersRepository::defaultType();
+			} catch (RuntimeException) {
+				$default = null;
+			}
+
+			$standard = null === $default ? null : self::table($default);
 
 			if (null !== $standard) {
 				$add->addOption(...Utils::buildTableCliOptions($standard, [], self::excluded($standard), true));
 			}
-			$add->option('type', 't')
+
+			$type = $add->option('type', 't')
 				->description('The auth user type (oz.auth.users.repositories).')
-				->string(1)
-				->def(AuthUsersRepository::DEFAULT_AUTH_USER_TYPE);
+				->string(1);
+
+			if (null !== $default) {
+				$type->def($default);
+			}
 
 			$add->handler($this->add(...));
 
@@ -79,8 +92,11 @@ final class AuthUsersCmd extends Command
 				->def('');
 			$grant->option('type', 't')
 				->description('The auth user type (oz.auth.users.repositories).')
-				->string(1)
-				->def(AuthUsersRepository::DEFAULT_AUTH_USER_TYPE);
+				->string(1);
+
+			if (null !== $default) {
+				$grant->getOption('type')->getType()->def($default);
+			}
 
 			$grant->handler($this->grant(...));
 		}
@@ -167,7 +183,7 @@ final class AuthUsersCmd extends Command
 
 		$cli   = $this->getCli();
 		$named = $args->getNamedArgs();
-		$type  = (string) ($named['type'] ?? AuthUsersRepository::DEFAULT_AUTH_USER_TYPE);
+		$type  = (string) ($named['type'] ?? AuthUsersRepository::defaultType());
 
 		unset($named['type']);
 

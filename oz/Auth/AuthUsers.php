@@ -136,7 +136,7 @@ final class AuthUsers
 	public static function repository(string $user_type_name): AuthUsersRepositoryInterface
 	{
 		if (!isset(self::$repositories[$user_type_name])) {
-			$class = Settings::get('oz.auth.users.repositories', $user_type_name);
+			$class = self::repositoryClass($user_type_name);
 
 			if (!$class) {
 				throw new RuntimeException(
@@ -196,6 +196,30 @@ final class AuthUsers
 			->required();
 
 		return $form;
+	}
+
+	/**
+	 * The repository class registered for an auth user type (`oz.auth.users.repositories`), or null
+	 * when none is: OZone's own entry for `user` counts as none when the project has no `oz_users`
+	 * (`OZ_AUTH_USER_DEFAULT_TABLE`).
+	 */
+	public static function repositoryClass(string $user_type_name): ?string
+	{
+		$class = Settings::get('oz.auth.users.repositories', $user_type_name);
+
+		if (!\is_string($class) || '' === $class) {
+			return null;
+		}
+
+		if (
+			AuthUsersRepository::DEFAULT_AUTH_USER_TYPE === $user_type_name
+			&& AuthUsersRepository::class === \ltrim($class, '\\')
+			&& !AuthUsersRepository::hasDefaultTable()
+		) {
+			return null;
+		}
+
+		return $class;
 	}
 
 	/**

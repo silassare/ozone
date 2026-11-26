@@ -160,7 +160,7 @@ final class AuthLinkView extends WebView
 			return $this->recoveryForm($provider, 'OZ_VIEW_AUTH_LINK_RECOVERY_MISMATCH');
 		}
 
-		$user_type = $provider->getUserType() ?? AuthUsersRepository::DEFAULT_AUTH_USER_TYPE;
+		$user_type = $provider->getUserType() ?? AuthUsersRepository::defaultType();
 		$allowed   = VerificationPolicy::providersFor(VerificationPolicy::ACCOUNT_RECOVERY, $user_type);
 
 		if (!\in_array($provider::getName(), $allowed, true)) {

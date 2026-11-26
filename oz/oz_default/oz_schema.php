@@ -28,15 +28,19 @@ use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Utils\JSONResult;
 
 return static function (NamespaceBuilder $ns): void {
-	$ns->table('oz_users', static function (TableBuilder $tb): void {
-		$tb->plural('oz_users')
-			->singular('oz_user')
-			->columnPrefix('user')
-			->morphType('user')
-			->meta('api.doc.description', 'The main authentication user table storing credentials, profile info, and status.');
+	// The default auth user table: a project whose auth users are all of its own tables leaves it
+	// out (`OZ_AUTH_USER_DEFAULT_TABLE`).
+	if (AuthUsersRepository::hasDefaultTable()) {
+		$ns->table('oz_users', static function (TableBuilder $tb): void {
+			$tb->plural('oz_users')
+				->singular('oz_user')
+				->columnPrefix('user')
+				->morphType(AuthUsersRepository::DEFAULT_AUTH_USER_TYPE)
+				->meta('api.doc.description', 'The default auth user table, storing credentials, profile info, and status.');
 
-		AuthUsersRepository::makeAuthUserTable($tb);
-	});
+			AuthUsersRepository::makeAuthUserTable($tb);
+		});
+	}
 
 	// this table is for storing the usernames for all auth users type
 	// it's ensure uniqueness of usernames across all auth user types
