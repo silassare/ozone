@@ -127,9 +127,9 @@ final class RouterTest extends TestCase
 		$router->get('/same', static fn() => null);
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage(
+		$this->expectExceptionMessageIsOrContains(
 			'Two routes not named explicitly have the same methods, host and path, "GET /same":'
-			. ' one mapped by no route provider, the other by no route provider.'
+				. ' one mapped by no route provider, the other by no route provider.'
 		);
 
 		$router->getRoutes();
@@ -144,7 +144,7 @@ final class RouterTest extends TestCase
 		$router->get('/same', static fn() => null)->host('a.example.com');
 		$router->get('/same', static fn() => null)->host('b.example.com');
 
-		$names = \array_map(static fn (Route $route): string => $route->getName(), $router->getRoutes());
+		$names = \array_map(static fn(Route $route): string => $route->getName(), $router->getRoutes());
 
 		self::assertCount(4, \array_unique($names));
 	}
@@ -153,7 +153,7 @@ final class RouterTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/docs[/:lang]/page/:id', static fn () => null)->name('docs.page');
+		$router->get('/docs[/:lang]/page/:id', static fn() => null)->name('docs.page');
 
 		// Left out before a part that matched: absent, as it is at the end of a path, so a
 		// reader's default applies rather than an empty string.

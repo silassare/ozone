@@ -75,7 +75,7 @@ final class AuthUsersRepositoryTest extends TestCase
 		Settings::set('oz.auth.users', 'OZ_AUTH_USER_DEFAULT_TYPE', 'nobody');
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('"nobody" is served by no repository');
+		$this->expectExceptionMessageIsOrContains('"nobody" is served by no repository');
 
 		AuthUsersRepository::defaultType();
 	}

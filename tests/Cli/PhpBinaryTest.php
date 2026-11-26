@@ -252,7 +252,7 @@ final class PhpBinaryTest extends TestCase
 		}
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('any directory: there is no PHP_BINARY, PHP_BINDIR or PATH');
+		$this->expectExceptionMessageIsOrContains('any directory: there is no PHP_BINARY, PHP_BINDIR or PATH');
 
 		Process::findPhpBinary(null, '', 'frankenphp', '', false, self::VERSION);
 	}

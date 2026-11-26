@@ -47,7 +47,7 @@ final class TypePhoneTest extends TestCase
 		$type->setOption('registered', true);
 
 		$this->expectException(TypesInvalidValueException::class);
-		$this->expectExceptionMessage('OZ_FIELD_PHONE_NOT_REGISTERED');
+		$this->expectExceptionMessageIsOrContains('OZ_FIELD_PHONE_NOT_REGISTERED');
 
 		$type->validate('+1234567890');
 	}

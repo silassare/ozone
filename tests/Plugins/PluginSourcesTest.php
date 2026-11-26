@@ -193,7 +193,7 @@ final class PluginSourcesTest extends TestCase
 		$second = PluginDescribeHook::listen($add);
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage(
+		$this->expectExceptionMessageIsOrContains(
 			\sprintf('The description of plugin "%s" already has a section "pages".', NotesPlugin::class)
 		);
 

@@ -269,7 +269,7 @@ final class SettingsBundleTest extends TestCase
 			Settings::useBundles(true);
 
 			$this->expectException(RuntimeException::class);
-			$this->expectExceptionMessage('Settings group "oztest.ouroboros" was read while it was being loaded');
+			$this->expectExceptionMessageIsOrContains('Settings group "oztest.ouroboros" was read while it was being loaded');
 
 			Settings::load('oztest.ouroboros', true);
 		} finally {

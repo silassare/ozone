@@ -213,7 +213,7 @@ final class ServerOverSshTest extends TestCase
 			self::assertSame($third . '/' . $versioned, OZProcess::hostPhpBinary($host, $third . '/' . $versioned));
 
 			$this->expectException(RuntimeException::class);
-			$this->expectExceptionMessage(\sprintf(
+			$this->expectExceptionMessageIsOrContains(\sprintf(
 				'--php is "%s", which is not the absolute path of an executable file on %s.',
 				$first . '/' . $short,
 				$host->describe()

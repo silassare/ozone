@@ -169,7 +169,7 @@ final class AnonymousCallTest extends TestCase
 	public function testTheScopeIsInUseInsideAndTheCallersAfterwards(): void
 	{
 		$scope = app()->getScope(self::SCOPE);
-		$seen  = OZone::inScope($scope, static fn (): array => [
+		$seen  = OZone::inScope($scope, static fn(): array => [
 			scope()->getName(),
 			Settings::get(AnonymousCallRoutes::PROBE_GROUP, 'WHERE'),
 		]);
@@ -199,7 +199,7 @@ final class AnonymousCallTest extends TestCase
 
 		[$router, $template] = OZone::inScope(
 			app()->getScope(self::SCOPE),
-			static fn (): array => [OZone::getApiRouter(), Assets::localize('oz://' . self::TEMPLATE)]
+			static fn(): array => [OZone::getApiRouter(), Assets::localize('oz://' . self::TEMPLATE)]
 		);
 
 		self::assertNotSame($outer_router, $router);
@@ -418,7 +418,7 @@ final class AnonymousCallTest extends TestCase
 	public function testAScopeDeclaringAProcessWideGroupOtherwiseIsRefused(): void
 	{
 		try {
-			OZone::inScope(app()->getScope(self::PLUGGED), static fn (): bool => true);
+			OZone::inScope(app()->getScope(self::PLUGGED), static fn(): bool => true);
 
 			self::fail('The scope was entered.');
 		} catch (RuntimeException $e) {
@@ -444,7 +444,7 @@ final class AnonymousCallTest extends TestCase
 	{
 		for ($attempt = 0; $attempt < 2; ++$attempt) {
 			try {
-				OZone::inScope(app()->getScope(self::REENTRANT), static fn (): bool => true);
+				OZone::inScope(app()->getScope(self::REENTRANT), static fn(): bool => true);
 
 				self::fail('The scope was entered.');
 			} catch (RuntimeException $e) {
@@ -490,13 +490,13 @@ final class AnonymousCallTest extends TestCase
 	public function testNoScopeIsEnteredInsideARead(): void
 	{
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage(
+		$this->expectExceptionMessageIsOrContains(
 			'The scope "' . self::SCOPE . '" cannot be entered while only the settings of a scope are being read.'
 		);
 
 		OZone::inScope(
 			app()->getScope(self::LOGGED),
-			static fn (): bool => OZone::inScope(app()->getScope(self::SCOPE), static fn (): bool => true),
+			static fn(): bool => OZone::inScope(app()->getScope(self::SCOPE), static fn(): bool => true),
 			true
 		);
 	}
@@ -548,7 +548,7 @@ final class AnonymousCallTest extends TestCase
 	private static function signedInCaller(string $user_id): Context
 	{
 		$router = new Router();
-		$router->get('/caller', static fn () => null)
+		$router->get('/caller', static fn() => null)
 			->name('test:anon.caller')
 			->withAuthentication(HeaderTestAuth::class);
 

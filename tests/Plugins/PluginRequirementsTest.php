@@ -76,7 +76,7 @@ final class PluginRequirementsTest extends TestCase
 	public function testAPluginWhoseRequiredPluginIsDisabledIsRefusedByName(): void
 	{
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage(\sprintf(
+		$this->expectExceptionMessageIsOrContains(\sprintf(
 			'Plugin "%s" requires plugin "%s" (acme/alpha), which is disabled.',
 			BetaPlugin::class,
 			AlphaPlugin::class
@@ -96,7 +96,7 @@ final class PluginRequirementsTest extends TestCase
 	public function testPluginsRequiringEachOtherAreRefusedNamingTheCycle(): void
 	{
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage(\sprintf(
+		$this->expectExceptionMessageIsOrContains(\sprintf(
 			'Plugins require each other: %s -> %s -> %s.',
 			GammaPlugin::class,
 			DeltaPlugin::class,
@@ -130,7 +130,7 @@ final class PluginRequirementsTest extends TestCase
 	 */
 	private static function classes(array $plugins): array
 	{
-		return \array_map(static fn (PluginInterface $plugin): string => $plugin::class, $plugins);
+		return \array_map(static fn(PluginInterface $plugin): string => $plugin::class, $plugins);
 	}
 }
 

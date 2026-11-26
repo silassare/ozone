@@ -64,7 +64,7 @@ final class RouteHostTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/admin', static fn () => null)->name('admin')->host('admin.example.com');
+		$router->get('/admin', static fn() => null)->name('admin')->host('admin.example.com');
 
 		self::assertSame('admin', self::found($router, 'GET', '/admin', 'admin.example.com'));
 		// Hosts compare case-insensitively.
@@ -80,7 +80,7 @@ final class RouteHostTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/about', static fn () => null)->name('about');
+		$router->get('/about', static fn() => null)->name('about');
 
 		self::assertSame('about', self::found($router, 'GET', '/about', 'example.com'));
 		self::assertSame('about', self::found($router, 'GET', '/about', 'acme.example.com'));
@@ -105,10 +105,10 @@ final class RouteHostTest extends TestCase
 		$router = new Router();
 
 		// The host with a part was mapped first, and still loses where the literal one matches.
-		$router->get('/', static fn () => null)->name('tenant')->host('{tenant}.example.com');
-		$router->get('/', static fn () => null)->name('www')->host('www.example.com');
-		$router->get('/projects/:id', static fn () => null)->name('tenant.project')->host('{tenant}.example.com');
-		$router->get('/projects/:id', static fn () => null)->name('www.project')->host('www.example.com');
+		$router->get('/', static fn() => null)->name('tenant')->host('{tenant}.example.com');
+		$router->get('/', static fn() => null)->name('www')->host('www.example.com');
+		$router->get('/projects/:id', static fn() => null)->name('tenant.project')->host('{tenant}.example.com');
+		$router->get('/projects/:id', static fn() => null)->name('www.project')->host('www.example.com');
 
 		self::assertSame('www', self::found($router, 'GET', '/', 'www.example.com'));
 		self::assertSame('www.project', self::found($router, 'GET', '/projects/7', 'www.example.com'));
@@ -120,8 +120,8 @@ final class RouteHostTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/dashboard', static fn () => null)->name('any')->priority(1);
-		$router->get('/dashboard', static fn () => null)->name('tenant')->host('{tenant}.example.com');
+		$router->get('/dashboard', static fn() => null)->name('any')->priority(1);
+		$router->get('/dashboard', static fn() => null)->name('tenant')->host('{tenant}.example.com');
 
 		self::assertSame('any', self::found($router, 'GET', '/dashboard', 'acme.example.com'));
 	}
@@ -145,7 +145,7 @@ final class RouteHostTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/home', static fn () => null)->name('home')->host('{tenant}.example.com');
+		$router->get('/home', static fn() => null)->name('home')->host('{tenant}.example.com');
 
 		self::assertSame('home', self::found($router, 'GET', '/home', 'acme.example.com'));
 		self::assertNull(self::found($router, 'GET', '/home', 'a.b.example.com'));
@@ -155,7 +155,7 @@ final class RouteHostTest extends TestCase
 	public function testAParamAfterALiteralLabelTakesOneLabelUnlessItsPatternSaysMore(): void
 	{
 		$router = new Router();
-		$h      = static fn () => null;
+		$h      = static fn() => null;
 
 		$router->get('/v1/ping', $h)->name('one')->host('api.{domain}');
 		$router->get('/v2/ping', $h)->name('many')->host('api.{domain}')->param('domain', '[a-z0-9.-]+');
@@ -189,7 +189,7 @@ final class RouteHostTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/regional', static fn () => null)
+		$router->get('/regional', static fn() => null)
 			->name('regional')
 			->host('[{region}.]api.{domain}')
 			->param('domain', '[a-z0-9.-]+');
@@ -223,12 +223,12 @@ final class RouteHostTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/users/:tenant', static fn () => null)->name('user')->host('{tenant}.example.com');
+		$router->get('/users/:tenant', static fn() => null)->name('user')->host('{tenant}.example.com');
 
 		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionMessage(
+		$this->expectExceptionMessageIsOrContains(
 			'Route parameter name "tenant" is taken by both the host "{tenant}.example.com"'
-			. ' and the path "/users/:tenant".'
+				. ' and the path "/users/:tenant".'
 		);
 
 		$router->find('GET', '/users/1', host: 'acme.example.com');
@@ -238,7 +238,7 @@ final class RouteHostTest extends TestCase
 	public function testAHostThatIsNotAHostNameIsRefused(string $host): void
 	{
 		$router = new Router();
-		$route  = $router->get('/x', static fn () => null);
+		$route  = $router->get('/x', static fn() => null);
 
 		$this->expectException(InvalidArgumentException::class);
 
@@ -258,7 +258,7 @@ final class RouteHostTest extends TestCase
 	public function testTheHostIsInheritedAndTheInnermostWins(): void
 	{
 		$router = new Router();
-		$h      = static fn () => null;
+		$h      = static fn() => null;
 
 		$router->group('/outer', static function (Router $router) use ($h): void {
 			$router->get('/a', $h)->name('a');
@@ -390,7 +390,7 @@ final class RouteHostTest extends TestCase
 		$other = self::context('example.com', $router);
 
 		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionMessage('Missing required parameter value: tenant');
+		$this->expectExceptionMessageIsOrContains('Missing required parameter value: tenant');
 
 		$other->buildRouteUri('tenant.dashboard');
 	}
@@ -400,13 +400,13 @@ final class RouteHostTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/home', static fn () => null)
+		$router->get('/home', static fn() => null)
 			->name('home')
 			->host('{tenant}.example.com')
 			->param('tenant', $pattern);
 
 		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionMessage('is not one it matches');
+		$this->expectExceptionMessageIsOrContains('is not one it matches');
 
 		$router->buildRouteHost(self::context('example.com', $router), 'home', ['tenant' => $tenant]);
 	}

@@ -67,7 +67,7 @@ final class TypeEmailTest extends TestCase
 		$type->setOption('registered', true);
 
 		$this->expectException(TypesInvalidValueException::class);
-		$this->expectExceptionMessage('OZ_FIELD_EMAIL_NOT_REGISTERED');
+		$this->expectExceptionMessageIsOrContains('OZ_FIELD_EMAIL_NOT_REGISTERED');
 
 		$type->validate('user@example.com');
 	}

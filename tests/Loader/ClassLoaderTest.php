@@ -278,7 +278,7 @@ final class ClassLoaderTest extends TestCase
 	public function testADirectoryEntryThatNamesNoDirectoryIsRefused(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionMessage('must name the directory first');
+		$this->expectExceptionMessageIsOrContains('must name the directory first');
 
 		ClassLoader::addDirs([[]]);
 	}

@@ -114,7 +114,7 @@ final class CollectionTest extends TestCase
 		$col = new Collection();
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('A collection entry needs a name.');
+		$this->expectExceptionMessageIsOrContains('A collection entry needs a name.');
 
 		$col[] = 'bar';
 	}

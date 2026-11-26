@@ -167,7 +167,7 @@ final class RoutePathParserTest extends TestCase
 	public function testParseThrowsOnANameEndingInANewline(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionMessage('Route parameter name contains invalid characters');
+		$this->expectExceptionMessageIsOrContains('Route parameter name contains invalid characters');
 		$parser = new RoutePathParser("/users/{id\n}", $this->router);
 		$parser->parse();
 	}

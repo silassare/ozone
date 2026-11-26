@@ -69,7 +69,7 @@ final class DeployInitializerTest extends TestCase
 	public function testDockerPlanIsThePackageSample(): void
 	{
 		$plan  = new DeployInitializer(DeployInitializer::TARGET_DOCKER)->plan();
-		$paths = \array_map(static fn ($f): string => $f->path, $plan->files());
+		$paths = \array_map(static fn($f): string => $f->path, $plan->files());
 
 		self::assertContains('docker' . \DIRECTORY_SEPARATOR . 'Dockerfile', $paths);
 		self::assertContains('docker' . \DIRECTORY_SEPARATOR . 'compose.yaml', $paths);
@@ -102,13 +102,13 @@ final class DeployInitializerTest extends TestCase
 	{
 		$initializer = new DeployInitializer(DeployInitializer::TARGET_BARE);
 		$plan        = $initializer->plan();
-		$paths       = \array_map(static fn ($f): string => $f->path, $plan->files());
+		$paths       = \array_map(static fn($f): string => $f->path, $plan->files());
 		$scopes      = $initializer->scopes();
 
 		self::assertNotEmpty($scopes);
 
-		$vhosts = \array_filter($paths, static fn (string $p): bool => \str_contains($p, 'nginx'));
-		$pools  = \array_filter($paths, static fn (string $p): bool => \str_contains($p, 'php-fpm'));
+		$vhosts = \array_filter($paths, static fn(string $p): bool => \str_contains($p, 'nginx'));
+		$pools  = \array_filter($paths, static fn(string $p): bool => \str_contains($p, 'php-fpm'));
 
 		self::assertCount(\count($scopes), $vhosts);
 		self::assertCount(\count($scopes), $pools);
@@ -143,11 +143,11 @@ final class DeployInitializerTest extends TestCase
 	public function testBarePlanCarriesTheCronTimerAndTheWorkerTemplateUnit(): void
 	{
 		$paths = \array_map(
-			static fn ($f): string => $f->path,
+			static fn($f): string => $f->path,
 			new DeployInitializer(DeployInitializer::TARGET_BARE)->plan()->files()
 		);
 
-		$units = \array_values(\array_filter($paths, static fn (string $p): bool => \str_contains($p, 'systemd')));
+		$units = \array_values(\array_filter($paths, static fn(string $p): bool => \str_contains($p, 'systemd')));
 
 		self::assertCount(3, $units, 'a cron service, its timer, and the worker template unit');
 
@@ -180,7 +180,7 @@ final class DeployInitializerTest extends TestCase
 			}
 
 			$this->expectException(RuntimeException::class);
-			$this->expectExceptionMessage('--php is "' . $root . '/nowhere/php", which is not the absolute path');
+			$this->expectExceptionMessageIsOrContains('--php is "' . $root . '/nowhere/php", which is not the absolute path');
 
 			new DeployInitializer(DeployInitializer::TARGET_BARE, php: $root . '/nowhere/php')->plan();
 		} finally {
