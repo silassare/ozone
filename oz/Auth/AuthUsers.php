@@ -427,7 +427,7 @@ final class AuthUsers
 	 * Asserts that the user with the given id has at least one role in a given roles list.
 	 *
 	 * @param array<RoleInterface|string> $allowed_roles The roles list
-	 * @param null|RoleInterface          $at_least      when set and the user has none of the allowed roles,
+	 * @param null|RoleInterface          $or_at_least   when set and the user has none of the allowed roles,
 	 *                                                   a role of higher or equal weight is accepted
 	 *
 	 * @throws ForbiddenException
@@ -435,7 +435,7 @@ final class AuthUsers
 	 */
 	public function assertUserHasOneOfRoles(
 		array $allowed_roles,
-		?RoleInterface $at_least = null,
+		?RoleInterface $or_at_least = null,
 		string $message = 'OZ_ERROR_USER_IS_MISSING_REQUIRED_ROLE',
 		?array $data = [],
 		?Throwable $previous = null
@@ -444,10 +444,10 @@ final class AuthUsers
 
 		$user = $this->context->auth()->user();
 
-		if (!Roles::hasOneOfRoles($user, $allowed_roles, $at_least)) {
+		if (!Roles::hasOneOfRoles($user, $allowed_roles, $or_at_least)) {
 			throw new ForbiddenException($message, $data + [
 				'_allowed_roles' => RolesUtils::ensureRolesString($allowed_roles),
-				'_at_least_role' => $at_least?->value,
+				'_or_at_least_role' => $or_at_least?->value,
 			], $previous);
 		}
 	}

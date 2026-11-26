@@ -2,6 +2,14 @@
 
 ### Breaking changes
 
+- **"Passes whatever the list" is one name, `$or_at_least`**: the role a user weighing at least
+  passes a role rule whatever its list says. `withRoles()` takes the roles as an array and it last and
+  optional (`withRoles(RoleStrategy::ALL, [$editor, $admin], or_at_least: $super_admin)`); it is
+  renamed, positions kept, in `Roles::satisfies()`, `Roles::hasOneOfRoles()`,
+  `AuthUsers::assertUserHasOneOfRoles()` and `AllowRuleBuilder::ifRoles()`, whose `$and_when` stays
+  last. The role guard's stored rule (`AuthUserRoleRouteGuard::toRules()`, a compiled route table)
+  and the route guard descriptor say `or_at_least`; a refusal's data says `_or_at_least_role`.
+  `ifRole($at_least)` keeps its name: there it is the rule itself.
 - **A table's create could never be granted as a right, and `create_all` was never checked**:
   `RESTFulService` registered six actions per table, without `create`, while `BaseHandler` checks
   `{morph type}.create` and `/access-rights/allow` refuses an action not registered; and
@@ -622,13 +630,15 @@
   param's name as a placeholder, and its description gives the param's pattern, which a server
   variable cannot declare.
 
-- **A role guard compares by a strategy**: `withRoles(RoleStrategy $strategy, ?RoleInterface
-  $at_least, RoleInterface ...$roles)` -- any of the roles, all of them, or at least the weight of
-  the lightest (`RoleStrategy::GTE`, "an editor or above") -- and a user whose role weighs at least
-  `$at_least` passes whatever the list (`super-admin` for "the role that may do everything is not
-  stopped by a list it is not on"; null for a rule about a role rather than about power).
-  `Roles::satisfies()` is the check, `UserRoleRouteGuard` carries the strategy and the role through
-  a compiled route table, and `withRole()` and `withRoleOrAdmin()` mean what they did.
+- **A role guard compares by a strategy**: `withRoles(RoleStrategy $strategy, array $roles,
+  ?RoleInterface $or_at_least = null)` -- any of the roles, all of them, or at least the weight of
+  the lightest (`RoleStrategy::GTE`, "an editor or above": `withRoles(RoleStrategy::GTE,
+  [$editor])`) -- and a user whose role weighs at least `$or_at_least` passes whatever the list
+  (`or_at_least: $super_admin` for "the role that may do everything is not stopped by a list it is
+  not on"; none for a rule about a role rather than about power). The roles are an array so the
+  exception can come last and be left out. `Roles::satisfies()` is the check,
+  `AuthUserRoleRouteGuard` carries the strategy and the role through a compiled route table
+  (`or_at_least`), and `withRole()` (the exact role) and `withRoleOrAdmin()` mean what they did.
 
 - **A plugin adds its own checks to `oz doctor check`**: the doctor dispatches `DoctorCheckHook`
   after its own project checks, and a listener adds rows of the same shape (`add($name, $status,
@@ -917,7 +927,7 @@
 
 - **A super admin was refused the access rights routes**: `/access-rights/read`, `list`, `allow`,
   `deny` and `update` were guarded by `withRole(admin)`, which is the exact role; they now let in an
-  administrator or anyone heavier (`withRoles(RoleStrategy::GTE, null, admin)`).
+  administrator or anyone heavier (`withRoles(RoleStrategy::GTE, [admin])`).
 - **A request to a route that stacks rate limits on one key was counted once per limit**: a group
   and its route each declaring an `IPRateLimit` share the key `ip:{route key}:{ip}`, so one
   submission spent two of the route's attempts and the group's looser limit read the same doubled

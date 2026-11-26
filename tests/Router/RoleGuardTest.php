@@ -37,7 +37,7 @@ final class RoleGuardTest extends TestCase
 
 		self::assertSame($guard->toRules(), AuthUserRoleRouteGuard::fromRules($guard->toRules())->toRules());
 		self::assertSame(
-			['roles' => ['editor', 'admin'], 'strict' => true, 'strategy' => 'gte', 'at_least' => 'super-admin'],
+			['roles' => ['editor', 'admin'], 'strict' => true, 'strategy' => 'gte', 'or_at_least' => 'super-admin'],
 			$guard->toRules()
 		);
 	}
@@ -47,7 +47,7 @@ final class RoleGuardTest extends TestCase
 		$guard = AuthUserRoleRouteGuard::fromRules(['roles' => ['editor'], 'strict' => false]);
 
 		self::assertSame(
-			['roles' => ['editor'], 'strict' => false, 'strategy' => 'any', 'at_least' => null],
+			['roles' => ['editor'], 'strict' => false, 'strategy' => 'any', 'or_at_least' => null],
 			$guard->toRules()
 		);
 	}
@@ -56,15 +56,15 @@ final class RoleGuardTest extends TestCase
 	{
 		$group = new RouteGroup('/x');
 
-		$group->withRoles(RoleStrategy::ALL, Role::SUPER_ADMIN, Role::EDITOR, Role::ADMIN);
+		$group->withRoles(RoleStrategy::ALL, [Role::EDITOR, Role::ADMIN], or_at_least: Role::SUPER_ADMIN);
 
 		self::assertSame(
 			[[
-				'type'     => 'role',
-				'roles'    => ['editor', 'admin'],
-				'strict'   => false,
-				'strategy' => 'all',
-				'at_least' => 'super-admin',
+				'type'        => 'role',
+				'roles'       => ['editor', 'admin'],
+				'strict'      => false,
+				'strategy'    => 'all',
+				'or_at_least' => 'super-admin',
 			]],
 			$group->getGuardDescriptors()
 		);

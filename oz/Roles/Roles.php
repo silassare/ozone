@@ -97,7 +97,7 @@ class Roles
 	 *
 	 * @param AuthUserInterface           $user         The user
 	 * @param array<RoleInterface|string> $one_of_roles The roles list
-	 * @param null|RoleInterface          $at_least     If not null, and the user has no role in the allowed list,
+	 * @param null|RoleInterface          $or_at_least  If not null, and the user has no role in the allowed list,
 	 *                                                  it will check if the user has a role with a higher
 	 *                                                  or equal weight
 	 * @param RoleCheckMode               $check_mode   The check mode
@@ -105,7 +105,7 @@ class Roles
 	public static function hasOneOfRoles(
 		AuthUserInterface $user,
 		array $one_of_roles,
-		?RoleInterface $at_least = null,
+		?RoleInterface $or_at_least = null,
 		RoleCheckMode $check_mode = RoleCheckMode::GRANT_ACCESS
 	): bool {
 		$can_use_user_role = match ($check_mode) {
@@ -129,7 +129,7 @@ class Roles
 				return true;
 			}
 
-			if ($at_least && RolesUtils::gte($r, $at_least)) {
+			if ($or_at_least && RolesUtils::gte($r, $or_at_least)) {
 				return true;
 			}
 		}
@@ -141,7 +141,7 @@ class Roles
 	 * Whether a user's roles satisfy a list of roles compared by a strategy.
 	 *
 	 * `any` is one of them, `all` is every one of them, `gte` is a role weighing at least the
-	 * lightest of them. A user with a role weighing at least `$at_least` passes whatever the list
+	 * lightest of them. A user with a role weighing at least `$or_at_least` passes whatever the list
 	 * (`super-admin` for "the role that may do everything is not stopped by a list it is not on");
 	 * null lets nobody past the list.
 	 *
@@ -151,7 +151,7 @@ class Roles
 		AuthUserInterface $user,
 		array $roles,
 		RoleStrategy $strategy = RoleStrategy::ANY,
-		?RoleInterface $at_least = null,
+		?RoleInterface $or_at_least = null,
 		RoleCheckMode $check_mode = RoleCheckMode::GRANT_ACCESS
 	): bool {
 		// As for any role check: in a scoped auth, the user's own roles grant nothing.
@@ -165,9 +165,9 @@ class Roles
 			$held[] = $entry->getRole();
 		}
 
-		if (null !== $at_least) {
+		if (null !== $or_at_least) {
 			foreach ($held as $role) {
-				if (RolesUtils::gte($role, $at_least)) {
+				if (RolesUtils::gte($role, $or_at_least)) {
 					return true;
 				}
 			}

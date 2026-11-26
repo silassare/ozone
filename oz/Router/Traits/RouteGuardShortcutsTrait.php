@@ -126,29 +126,36 @@ trait RouteGuardShortcutsTrait
 	 * Adds a guard comparing the user's roles with these by a strategy: any of them, all of them,
 	 * or at least the weight of the lightest ({@see RoleStrategy}).
 	 *
-	 * @param null|RoleInterface $at_least a user whose role weighs at least this passes whatever the
-	 *                                     list (`super-admin`: the role that may do everything); null
-	 *                                     for a rule about a role rather than about power
+	 * ```php
+	 * ->withRoles(RoleStrategy::GTE, [RolesUtils::admin()]);                       // admin or heavier
+	 * ->withRoles(RoleStrategy::ALL, [$editor, $reviewer], or_at_least: $super);    // both, unless super
+	 * ```
+	 *
+	 * @param list<RoleInterface> $roles       the roles compared by the strategy, at least one
+	 * @param null|RoleInterface  $or_at_least a user whose role weighs at least this passes whatever
+	 *                                         the list and the strategy say (`super-admin`: the role
+	 *                                         that may do everything); null for a rule about a role
+	 *                                         rather than about power
 	 *
 	 * @return $this
 	 */
-	public function withRoles(RoleStrategy $strategy, ?RoleInterface $at_least, RoleInterface ...$roles): static
+	public function withRoles(RoleStrategy $strategy, array $roles, ?RoleInterface $or_at_least = null): static
 	{
 		$roles = self::atLeastOne($roles, 'role');
 
 		$this->guard_descriptors[] = [
-			'type'     => 'role',
-			'roles'    => \array_map(static fn ($r) => $r->value, $roles),
-			'strict'   => null === $at_least,
-			'strategy' => $strategy->value,
-			'at_least' => $at_least?->value,
+			'type'        => 'role',
+			'roles'       => \array_map(static fn (RoleInterface $r) => $r->value, $roles),
+			'strict'      => null === $or_at_least,
+			'strategy'    => $strategy->value,
+			'or_at_least' => $or_at_least?->value,
 		];
 
 		return $this->guard(static fn () => new AuthUserRoleRouteGuard(
 			\array_values($roles),
 			true,
 			$strategy,
-			null === $at_least ? null : (string) $at_least->value,
+			null === $or_at_least ? null : (string) $or_at_least->value,
 		));
 	}
 

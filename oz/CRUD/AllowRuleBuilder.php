@@ -27,7 +27,7 @@ use OZONE\Core\Roles\RolesUtils;
 class AllowRuleBuilder
 {
 	/**
-	 * @var null|array{roles:RoleInterface[], at_least:null|RoleInterface, and_when:null|callable(CRUDAction):bool}
+	 * @var null|array{roles:RoleInterface[], or_at_least:null|RoleInterface, and_when:null|callable(CRUDAction):bool}
 	 */
 	protected ?array $has_roles = null;
 
@@ -54,15 +54,18 @@ class AllowRuleBuilder
 	}
 
 	/**
+	 * Allowed to a user holding one of `$roles`, or a role weighing at least `$or_at_least`, and
+	 * then only where `$and_when` agrees.
+	 *
 	 * @param RoleInterface[]                $roles
 	 * @param null|callable(CRUDAction):bool $and_when
 	 */
-	public function ifRoles(array $roles, ?RoleInterface $at_least, ?callable $and_when = null): void
+	public function ifRoles(array $roles, ?RoleInterface $or_at_least, ?callable $and_when = null): void
 	{
 		$this->has_roles = [
-			'roles'    => $roles,
-			'at_least' => $at_least,
-			'and_when' => $and_when,
+			'roles'       => $roles,
+			'or_at_least' => $or_at_least,
+			'and_when'    => $and_when,
 		];
 	}
 
@@ -88,22 +91,22 @@ class AllowRuleBuilder
 	public function allowed(Context $context, CRUDAction $action): AllowCheckResult
 	{
 		if (isset($this->has_roles)) {
-			$roles    = $this->has_roles['roles'];
-			$at_least = $this->has_roles['at_least'];
-			$and_when = $this->has_roles['and_when'] ?? null;
+			$roles       = $this->has_roles['roles'];
+			$or_at_least = $this->has_roles['or_at_least'];
+			$and_when    = $this->has_roles['and_when'] ?? null;
 
 			if (!$context->hasAuthenticatedUser()) {
 				return AllowCheckResult::reject(I18n::m('OZ_ERROR_UNAUTHENTICATED'));
 			}
 
-			$has_role = Roles::hasOneOfRoles(user($context), $roles, $at_least);
+			$has_role = Roles::hasOneOfRoles(user($context), $roles, $or_at_least);
 
 			if (!$has_role) {
 				return AllowCheckResult::reject(I18n::m(
 					'OZ_ERROR_USER_IS_MISSING_REQUIRED_ROLE',
 					[
 						'_allowed_roles' => RolesUtils::ensureRolesString($roles),
-						'_at_least_role' => $at_least?->value,
+						'_or_at_least_role' => $or_at_least?->value,
 					]
 				));
 			}

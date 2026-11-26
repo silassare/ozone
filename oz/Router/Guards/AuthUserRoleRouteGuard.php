@@ -27,7 +27,7 @@ use OZONE\Core\Router\RouteInfo;
  * Class AuthUserRoleRouteGuard.
  *
  * The user's roles compared with a list by a strategy ({@see RoleStrategy}): any of them, all of
- * them, or at least the weight of the lightest. A user whose role weighs at least `$at_least`
+ * them, or at least the weight of the lightest. A user whose role weighs at least `$or_at_least`
  * passes whatever the list; without one, `$strict` false lets an administrator or above pass, as
  * it always has.
  */
@@ -37,35 +37,35 @@ final class AuthUserRoleRouteGuard extends AbstractRouteGuard
 	 * AuthUserRoleRouteGuard constructor.
 	 *
 	 * @param list<RoleInterface|string> $roles
-	 * @param null|string                $at_least the role a user weighing at least passes regardless
+	 * @param null|string                $or_at_least the role a user weighing at least passes regardless
 	 */
 	public function __construct(
 		private readonly array $roles,
 		private readonly bool $strict = true,
 		private readonly RoleStrategy $strategy = RoleStrategy::ANY,
-		private readonly ?string $at_least = null,
+		private readonly ?string $or_at_least = null,
 	) {}
 
 	#[Override]
 	public function toRules(): array
 	{
 		return [
-			'roles'    => $this->roles,
-			'strict'   => $this->strict,
-			'strategy' => $this->strategy->value,
-			'at_least' => $this->at_least,
+			'roles'       => $this->roles,
+			'strict'      => $this->strict,
+			'strategy'    => $this->strategy->value,
+			'or_at_least' => $this->or_at_least,
 		];
 	}
 
 	#[Override]
 	public static function fromRules(array $rules): static
 	{
-		$roles    = $rules['roles'] ?? [];
-		$strict   = $rules['strict'] ?? true;
-		$strategy = RoleStrategy::tryFrom((string) ($rules['strategy'] ?? '')) ?? RoleStrategy::ANY;
-		$at_least = $rules['at_least'] ?? null;
+		$roles       = $rules['roles'] ?? [];
+		$strict      = $rules['strict'] ?? true;
+		$strategy    = RoleStrategy::tryFrom((string) ($rules['strategy'] ?? '')) ?? RoleStrategy::ANY;
+		$or_at_least = $rules['or_at_least'] ?? null;
 
-		return new self($roles, (bool) $strict, $strategy, \is_string($at_least) ? $at_least : null);
+		return new self($roles, (bool) $strict, $strategy, \is_string($or_at_least) ? $or_at_least : null);
 	}
 
 	/**
@@ -77,11 +77,11 @@ final class AuthUserRoleRouteGuard extends AbstractRouteGuard
 		$context  = $ri->getContext();
 		$user     = $context->auth()->user();
 
-		$at_least = null !== $this->at_least
-			? RolesUtils::normalize($this->at_least)
+		$or_at_least = null !== $this->or_at_least
+			? RolesUtils::normalize($this->or_at_least)
 			: ($this->strict ? null : Role::ADMIN);
 
-		if (!Roles::satisfies($user, $this->roles, $this->strategy, $at_least)) {
+		if (!Roles::satisfies($user, $this->roles, $this->strategy, $or_at_least)) {
 			throw new ForbiddenException('OZ_ERROR_USER_IS_MISSING_REQUIRED_ROLE', [
 				'_reason'   => 'User role is not in allowed list.',
 				'_roles'    => $this->roles,

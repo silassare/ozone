@@ -957,7 +957,7 @@ user's rights are their roles' joined, then their own over them, a super admin s
 (every action) -- `AccessRights::of()`, the one place they are computed, read through
 `auth()->getAccessRights()` by every guard and CRUD check. A role holds what it was given, nothing of
 lighter roles'; only a super admin changes a role's rights. `withRole()` is the exact role: use
-`withRoles(RoleStrategy::GTE, ...)` for "this role or heavier".
+`withRoles(RoleStrategy::GTE, [$role])` for "this role or heavier" (`or_at_least:` for a role that passes whatever the list).
 
 `register()` runs once per process and takes no context: a listener reads the request being handled
 when an event fires, with `$this->context()` (`Context::current()`) — never one kept from

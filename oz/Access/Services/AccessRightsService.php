@@ -284,32 +284,32 @@ class AccessRightsService extends Service
 			$router->get('/read', static fn (RouteInfo $ri) => new self($ri)->readAsAdmin($ri))
 				->name(self::ROUTE_READ_AS_ADMIN)
 				->form(AuthUsers::selectorForm(...))
-				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, [RolesUtils::admin()]);
 
 			$router->get('/list', static fn (RouteInfo $ri) => new self($ri)->list($ri))
 				->name(self::ROUTE_LIST)
-				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, [RolesUtils::admin()]);
 
 			$router->post('/allow', static fn (RouteInfo $ri) => new self($ri)->allow($ri))
 				->name(self::ROUTE_ALLOW)
 				->form(self::buildAllowForm(...))
-				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, [RolesUtils::admin()]);
 
 			$router->post('/deny', static fn (RouteInfo $ri) => new self($ri)->deny($ri))
 				->name(self::ROUTE_DENY)
 				->form(self::buildDenyForm(...))
-				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, [RolesUtils::admin()]);
 
 			$router->post('/update', static fn (RouteInfo $ri) => new self($ri)->update($ri))
 				->name(self::ROUTE_UPDATE)
 				->form(self::buildUpdateForm(...))
-				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, [RolesUtils::admin()]);
 
 			// An administrator, or anyone heavier: `withRole()` is the exact role, and would leave a
 			// super admin out of the matrix they alone may change.
 			$router->get('/roles', static fn (RouteInfo $ri) => new self($ri)->readRoles($ri))
 				->name(self::ROUTE_ROLES)
-				->withRoles(RoleStrategy::GTE, null, RolesUtils::admin());
+				->withRoles(RoleStrategy::GTE, [RolesUtils::admin()]);
 
 			// A role's rights are every holder's: super admins only.
 			$router->post('/roles', static fn (RouteInfo $ri) => new self($ri)->updateRoles($ri))
